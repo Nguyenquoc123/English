@@ -22,13 +22,6 @@ public class Question {
     @Column(name = "questionid")
     private Long questionId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lessonid")
-    private Lesson lesson;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "courseid")
-    private Course course;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "createdby", nullable = false)
