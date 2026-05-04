@@ -75,22 +75,9 @@ public class QuestionService {
 
 	private Question buildQuestion(QuestionRequest request, User currentUser) {
 
-	    Lesson lesson = null;
-	    Course course = null;
 
-	    if (request.getLessonId() != null) {
-	        lesson = lessonRepository.findById(request.getLessonId())
-	                .orElseThrow(() -> new RuntimeException("Không tìm thấy lesson"));
-	    }
-
-	    if (request.getCourseId() != null) {
-	        course = courseRepository.findById(request.getCourseId())
-	                .orElseThrow(() -> new RuntimeException("Không tìm thấy course"));
-	    }
 
 	    Question question = Question.builder()
-	            .lesson(lesson)
-	            .course(course)
 	            .createdBy(currentUser)
 	            .questionType(request.getQuestionType())
 	            .content(request.getContent())
