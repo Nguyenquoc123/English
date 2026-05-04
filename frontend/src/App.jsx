@@ -1,3 +1,11 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/home/HomePage";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/login/DangNhap.jsx"
 import Register from "./pages/register/DangKy.jsx"
