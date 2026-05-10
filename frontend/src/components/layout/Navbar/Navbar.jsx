@@ -7,7 +7,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/dang-nhap');
   };
 
   return (
@@ -31,7 +31,7 @@ export default function Navbar() {
             Trang chủ
           </NavLink>
           <NavLink
-            to="/courses"
+            to="/danh-sach-khoa-hoc"
             className={({ isActive }) =>
               isActive ? 'navbar-link navbar-link-active' : 'navbar-link'
             }
@@ -75,8 +75,8 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login"    className="navbar-btn-text">Đăng nhập</Link>
-              <Link to="/register" className="navbar-btn-primary">Đăng ký</Link>
+              <Link to="/dang-nhap"    className="navbar-btn-text">Đăng nhập</Link>
+              <Link to="/dang-ky" className="navbar-btn-primary">Đăng ký</Link>
             </>
           )}
         </div>

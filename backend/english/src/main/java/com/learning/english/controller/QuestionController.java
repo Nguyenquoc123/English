@@ -1,38 +1,56 @@
 package com.learning.english.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.learning.english.dto.request.QuestionManyRequest;
+import com.learning.english.dto.request.QuestionAttachRequest;
+import com.learning.english.dto.request.QuestionRequest;
+import com.learning.english.dto.response.QuestionBankItemResponse;
 import com.learning.english.dto.response.QuestionResponse;
 import com.learning.english.service.QuestionService;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/cau-hoi")
+@RequestMapping("/questions")
 public class QuestionController {
 
     @Autowired
-    QuestionService questionService;
+    private QuestionService questionService;
 
-    @PostMapping(
-            value = "/batch",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public ResponseEntity<List<QuestionResponse>> themNhieuCauHoiCoFile(
-            @RequestPart("data") String data,
-            @RequestPart(value = "mediaFiles", required = false) List<MultipartFile> mediaFiles
-    ) throws Exception {
+    @GetMapping("/my-bank")
+    public List<QuestionBankItemResponse> layNganHangCauHoiCuaToi(
+            @RequestParam String questionType
+    ) {
+        return questionService.layNganHangCauHoiCuaGiaoVien(questionType);
+    }
 
-        ObjectMapper objectMapper = new ObjectMapper();
+    @PostMapping("/lessons/{lessonId}")
+    public QuestionResponse taoCauHoiVaGanVaoLesson(
+            @PathVariable Long lessonId,
+            @RequestPart("data") QuestionRequest request,
+            @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile
+    ) throws IOException {
+        request.setLessonId(lessonId);
 
-        QuestionManyRequest request = objectMapper.readValue(data, QuestionManyRequest.class);
+        return questionService.taoCauHoiVaGanVaoLesson(
+                lessonId,
+                request,
+                mediaFile
+        );
+    }
 
-        return ResponseEntity.ok(questionService.themNhieuCauHoiCoFile(request, mediaFiles));
+    @PostMapping("/lessons/{lessonId}/attach")
+    public List<QuestionResponse> ganCauHoiCuVaoLesson(
+            @PathVariable Long lessonId,
+            @RequestBody QuestionAttachRequest request
+    ) {
+        request.setLessonId(lessonId);
+
+        return questionService.ganCauHoiCuVaoLesson(
+                lessonId,
+                request
+        );
     }
 }

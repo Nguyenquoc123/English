@@ -54,18 +54,18 @@ function Login() {
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
+      console.log(data)
 
       alert("Đăng nhập thành công!");
 
-      // Chuyển trang theo role nếu cần
-      // Ví dụ:
-      // if (data.role === "Admin") {
-      //   window.location.href = "/admin";
-      // } else if (data.role === "Teacher") {
-      //   window.location.href = "/teacher";
-      // } else {
-      //   window.location.href = "/student";
-      // }
+      
+      if (data.role === "admin") {
+        window.location.href = "/admin";
+      } else if (data.role === "teacher") {
+        window.location.href = "/teacher";
+      } else {
+        window.location.href = "/danh-sach-khoa-hoc";
+      }
 
     } catch (err) {
       console.error(err);

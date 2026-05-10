@@ -15,11 +15,7 @@ public class QuestionResponse {
 
     private Long questionId;
 
-    private Long lessonId;
-
-    private Long courseId;
-
-    private Long createdBy;
+    private Long createdById;
 
     private String questionType;
 
@@ -37,9 +33,11 @@ public class QuestionResponse {
 
     private String sourceType;
 
+    private Long optionCount;
+
+    private List<QuestionOptionResponse> options;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-
-    private List<QuestionOptionResponse> options;
 }

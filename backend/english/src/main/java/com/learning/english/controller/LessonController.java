@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.learning.english.dto.request.LessonRequest;
 import com.learning.english.dto.request.LessonUpdateRequest;
+import com.learning.english.dto.response.CourseLessonListResponse;
 import com.learning.english.dto.response.LessonResponse;
+import com.learning.english.dto.response.StudentLessonResponse;
+import com.learning.english.dto.response.TeacherLessonDetailResponse;
 import com.learning.english.service.LessonService;
 
 @RestController
@@ -23,6 +26,31 @@ import com.learning.english.service.LessonService;
 public class LessonController {
 	@Autowired
 	LessonService lessonService;
+	
+	@GetMapping("/{courseId}/teacher")
+    public CourseLessonListResponse getLessonsByCourse(
+            @PathVariable Long courseId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status
+    ) {
+        return lessonService.getLessonsByCourse(courseId, keyword, status);
+    }
+	
+	@GetMapping("/{courseId}/teacher/lessons/{lessonId}")
+    public TeacherLessonDetailResponse getTeacherLessonDetail(
+            @PathVariable Long courseId,
+            @PathVariable Long lessonId
+    ) {
+        return lessonService.getTeacherLessonDetail(courseId, lessonId);
+    }
+	
+	@GetMapping("/{courseId}/admin/lessons/{lessonId}")
+    public TeacherLessonDetailResponse getTeacherLessonDetailByAdmin(
+            @PathVariable Long courseId,
+            @PathVariable Long lessonId
+    ) {
+        return lessonService.getTeacherLessonDetailByAdmin(courseId, lessonId);
+    }
 	
 	@GetMapping("/course/{courseId}")
     public ResponseEntity<List<LessonResponse>> dsLessonCuaKhoaHoc(@PathVariable Long courseId) {
@@ -38,13 +66,20 @@ public class LessonController {
     }
 	
 	
-	@PostMapping("them-lesson")
+	@PostMapping("/them-lesson")
     public ResponseEntity<LessonResponse> themLesson(@RequestBody LessonRequest request) {
         return ResponseEntity.ok(lessonService.themLesson(request));
     }
 	
-	@PutMapping("update-lesson")
+	@PutMapping("/update-lesson")
     public ResponseEntity<LessonResponse> updateLesson(@RequestBody LessonUpdateRequest request) {
         return ResponseEntity.ok(lessonService.updateLesson(request));
+    }
+	
+	@GetMapping("/all-lesson/{courseId}")
+	public List<StudentLessonResponse> layDanhSachBaiHocChoHocVien(
+            @PathVariable Long courseId
+    ) {
+        return lessonService.layDanhSachBaiHocChoHocVien(courseId);
     }
 }

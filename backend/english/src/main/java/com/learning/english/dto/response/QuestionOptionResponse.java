@@ -14,5 +14,4 @@ public class QuestionOptionResponse {
     private String optionText;
 
     private Boolean isCorrect;
-
 }

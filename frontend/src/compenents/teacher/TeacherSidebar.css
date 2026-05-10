@@ -1,0 +1,72 @@
+.teacher-sidebar {
+  width: 300px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow-y: auto;
+  z-index: 999;
+  transform: translateX(-105%);
+  transition: transform 0.25s ease;
+}
+
+/* Khi mở sidebar */
+.teacher-sidebar.show {
+  transform: translateX(0);
+}
+
+.logo-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.sidebar-title {
+  margin: 18px 0 8px;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #4b5563;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.sidebar-link:hover {
+  background: #f1f5ff;
+  color: #0d6efd;
+}
+
+.sidebar-link.active {
+  background: #0d6efd;
+  color: white;
+  font-weight: 600;
+}
+
+.logout-link {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #dc3545;
+  text-align: left;
+}
+
+.logout-link:hover {
+  background: #fff1f2;
+  color: #dc3545;
+}

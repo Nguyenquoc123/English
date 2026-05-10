@@ -34,6 +34,60 @@ public class VocabularyService {
 	LessonRepository lessonRepository;
 	
 	@Transactional
+	public VocabularyResponse themMotTuVungCoFile(
+	        Long lessonId,
+	        VocabularyRequest request,
+	        MultipartFile audioFile,
+	        MultipartFile imageFile
+	) throws IOException {
+
+	    if (lessonId == null) {
+	        throw new RuntimeException("lessonId không được để trống");
+	    }
+
+	    request.setLessonId(lessonId);
+
+	    if (request.getWord() == null || request.getWord().isBlank()) {
+	        throw new RuntimeException("Từ vựng không được để trống");
+	    }
+
+	    if (request.getMeaning() == null || request.getMeaning().isBlank()) {
+	        throw new RuntimeException("Nghĩa của từ không được để trống");
+	    }
+
+	    if (audioFile != null && !audioFile.isEmpty()) {
+	        String audioUrl = fileService.saveFile(audioFile, "audio");
+	        request.setAudioUrl(audioUrl);
+	    }
+
+	    if (imageFile != null && !imageFile.isEmpty()) {
+	        String imageUrl = fileService.saveFile(imageFile, "images");
+	        request.setImageUrl(imageUrl);
+	    }
+
+	    if (request.getDisplayOrder() == null) {
+	        Integer nextDisplayOrder = getNextDisplayOrder(lessonId);
+	        request.setDisplayOrder(nextDisplayOrder);
+	    }
+
+	    Vocabulary vocabulary = buildVocabulary(request);
+
+	    Vocabulary savedVocabulary = vocabularyRepository.save(vocabulary);
+
+	    return vocabularyMapper.toVocabularyResponse(savedVocabulary);
+	}
+	
+	private Integer getNextDisplayOrder(Long lessonId) {
+	    Integer maxDisplayOrder = vocabularyRepository.findMaxDisplayOrderByLessonId(lessonId);
+
+	    if (maxDisplayOrder == null) {
+	        return 1;
+	    }
+
+	    return maxDisplayOrder + 1;
+	}
+	
+	@Transactional
     public List<VocabularyResponse> themNhieuTuVungCoFile(
             VocabularyManyRequest request,
             List<MultipartFile> audioFiles,
@@ -121,7 +175,7 @@ public class VocabularyService {
                 .exampleSentence(request.getExampleSentence())
                 .audioUrl(request.getAudioUrl())
                 .imageUrl(request.getImageUrl())
-                .displayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 1)
+                .displayOrder(request.getDisplayOrder())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

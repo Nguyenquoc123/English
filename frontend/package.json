@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "axios": "^1.16.0",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "jodit-react": "^5.3.21",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2"
