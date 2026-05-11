@@ -17,6 +17,7 @@ import com.learning.english.dto.request.LessonRequest;
 import com.learning.english.dto.request.LessonUpdateRequest;
 import com.learning.english.dto.response.CourseLessonListResponse;
 import com.learning.english.dto.response.LessonResponse;
+import com.learning.english.dto.response.StudentLessonDetailResponse;
 import com.learning.english.dto.response.StudentLessonResponse;
 import com.learning.english.dto.response.TeacherLessonDetailResponse;
 import com.learning.english.service.LessonService;
@@ -81,5 +82,13 @@ public class LessonController {
             @PathVariable Long courseId
     ) {
         return lessonService.layDanhSachBaiHocChoHocVien(courseId);
+    }
+	
+	
+	@GetMapping("/{lessonId}/student-detail")
+    public StudentLessonDetailResponse layChiTietLessonChoHocVien(
+            @PathVariable Long lessonId
+    ) {
+        return lessonService.layChiTietLessonChoHocVien(lessonId);
     }
 }

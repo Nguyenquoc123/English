@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class CauHinh implements WebMvcConfigurer{
 	private final String IMAGE_UPLOAD_PATH = "file:///D:/uploads/images/";
     private final String VIDEO_UPLOAD_PATH = "file:///D:/uploads/videos/";
+    private final String AUDIO_UPLOAD_PATH = "file:///D:/uploads/audios/";
 	
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -22,6 +23,9 @@ public class CauHinh implements WebMvcConfigurer{
      // Ánh xạ request URL '/videos/**' tới thư mục vật lý VIDEO_UPLOAD_PATH
         registry.addResourceHandler("/videos/**")
         .addResourceLocations(VIDEO_UPLOAD_PATH);
+        
+        registry.addResourceHandler("/audios/**")
+        .addResourceLocations(AUDIO_UPLOAD_PATH);
        
     }
     

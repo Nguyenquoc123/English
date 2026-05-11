@@ -40,6 +40,17 @@ import AdminLessonPracticeQuestionList from "./pages/admin/AdminLessonPracticeQu
 import AdminLessonPracticeQuestionOverview from "./pages/admin/AdminLessonPracticeQuestionOverview.jsx";
 import StudentCourseDetail from "./pages/student/StudentCourseDetail.jsx";
 import StudentCoursePurchase from "./pages/student/StudentCoursePurchase.jsx";
+import StudentProfile from "./pages/student/StudentProfile.jsx";
+import StudentProfileUpdate from "./pages/student/StudentProfileUpdate.jsx";
+import StudentChangePassword from "./pages/student/StudentChangePassword.jsx";
+import StudentTeacherRegister from "./pages/student/StudentTeacherRegister.jsx";
+import StudentTeacherRegisterResult from "./pages/student/StudentTeacherRegisterResult.jsx";
+import StudentLessonDetail from "./pages/student/lesson/StudentLessonDetail.jsx";
+import StudentPracticePage from "./pages/student/practice/StudentPracticePage.jsx";
+import StudentPracticeResultPage from "./pages/student/practice/StudentPracticeResultPage.jsx";
+import StudentExamListPage from "./pages/student/exam/StudentExamListPage.jsx";
+import ExamListPage from "./pages/exam/ExamListPage.jsx";
+import TeacherExamCreate from "./pages/exam/ExamCreate.jsx";
 
 function App() {
   return (
@@ -67,6 +78,34 @@ function App() {
             <StudentCourseDetail />
           </>
         } />
+        <Route
+          path="/khoa-hoc/:courseId/lessons/:lessonId"
+          element={
+            <>
+              <Navbar />
+              <StudentLessonDetail />
+            </>
+          }
+        />
+        <Route
+          path="/khoa-hoc/:courseId/lessons/:lessonId/practice/:practiceType"
+          element={
+            <>
+              <Navbar />
+              <StudentPracticePage />
+            </>
+          }
+        />
+
+        <Route
+          path="/khoa-hoc/:courseId/lessons/:lessonId/practice-result/:attemptId"
+          element={
+            <>
+              <Navbar />
+              <StudentPracticeResultPage />
+            </>
+          }
+        />
 
         <Route path="/courses/:courseId/purchase" element={
           <>
@@ -74,6 +113,45 @@ function App() {
             <StudentCoursePurchase />
           </>
         } />
+
+        <Route path="/exams" element={
+          <>
+            <Navbar />
+            <StudentExamListPage />
+          </>
+        } />
+
+        <Route path="/student/profile" element={<>
+          <Navbar />
+          <StudentProfile />
+        </>} />
+
+        <Route path="/student/profile/update" element={
+          <>
+            <Navbar />
+            <StudentProfileUpdate />
+          </>
+        } />
+
+        <Route path="/student/change-password" element={<>
+          <Navbar />
+          <StudentChangePassword />
+        </>} />
+
+        <Route path="/student/teacher-register" element={<>
+          <Navbar />
+          <StudentTeacherRegister />
+        </>} />
+
+        <Route
+          path="/student/teacher-register/result"
+          element={<>
+            <Navbar />
+            <StudentTeacherRegisterResult />
+          </>}
+        />
+
+        
 
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
 
@@ -141,6 +219,11 @@ function App() {
             path="courses/:courseId/lessons/:lessonId/practice/:practiceType"
             element={<TeacherLessonPracticeQuestionList />}
           />
+
+          <Route path="exams" element={<ExamListPage />} />
+          <Route path="courses/:courseId/exams" element={<ExamListPage />} />
+          <Route path="exams/create" element={<TeacherExamCreate />} />
+
           <Route path="profile" element={<h1>Hồ sơ giáo viên</h1>} />
           <Route path="bank" element={<h1>Tài khoản ngân hàng</h1>} />
 

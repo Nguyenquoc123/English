@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 import com.learning.english.dto.response.LessonListItemResponse;
 import com.learning.english.dto.response.LessonResponse;
+import com.learning.english.dto.response.StudentLessonDetailResponse;
 import com.learning.english.dto.response.StudentLessonResponse;
 import com.learning.english.entity.Lesson;
 
@@ -21,6 +22,10 @@ public interface LessonMapper {
 	@Mapping(target = "courseId", source = "course.courseId")
     @Mapping(target = "isLocked", ignore = true)
     StudentLessonResponse toStudentLessonResponse(Lesson lesson);
+	
+	@Mapping(target = "courseId", source = "course.courseId")
+    @Mapping(target = "courseTitle", source = "course.title")
+    StudentLessonDetailResponse toStudentLessonDetailResponse(Lesson lesson);
 
 	default LessonListItemResponse toLessonListItemResponse(Object[] row) {
 		if (row == null) {

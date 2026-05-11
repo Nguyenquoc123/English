@@ -10,5 +10,5 @@ import com.learning.english.entity.User;
 @Repository
 public interface TeacherProfileRepository extends JpaRepository<TeacherProfile, Long>{
 	Optional<TeacherProfile> findByUser(User user);
-    boolean existsByUser(User user);
+    Boolean existsByUser(User user);
 }

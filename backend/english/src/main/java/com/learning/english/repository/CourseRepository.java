@@ -14,6 +14,8 @@ import com.learning.english.entity.Course;
 public interface CourseRepository extends JpaRepository<Course, Long> {
 	List<Course> findAllByStatusNot(String status);
 
+	boolean existsByCourseIdAndTeacherUserId(Long courseId, Long userId);
+
 	@Query("""
 			    SELECT c
 			    FROM Course c
@@ -171,6 +173,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 			      AND c.status = 'Published'
 			""")
 	Long countPublishedCourseByTeacher(@Param("teacherId") Long teacherId);
-	
+
 	Optional<Course> findByCourseIdAndStatus(Long courseId, String status);
 }

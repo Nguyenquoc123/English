@@ -39,6 +39,7 @@ public class SePayWebhookService {
 
         Long transactionId = extractCourseTransactionId(request);
 
+        System.out.println("Mã giao dịch: " + transactionId);
         if (transactionId == null) {
             return;
         }
@@ -117,7 +118,7 @@ public class SePayWebhookService {
                     .user(student)
                     .course(course)
                     .hasCourseAccess(true)
-                    .hasExamAccess(false)
+                    .hasExamAccess(true)
                     .courseTransaction(transaction)
                     .examAccessTransaction(null)
                     .createdAt(now)
@@ -196,7 +197,7 @@ public class SePayWebhookService {
             return null;
         }
 
-        Pattern pattern = Pattern.compile("COURSE(\\d+)");
+        Pattern pattern = Pattern.compile("SEVQR(\\d+)");
         Matcher matcher = pattern.matcher(text.toUpperCase());
 
         if (!matcher.find()) {
@@ -204,6 +205,7 @@ public class SePayWebhookService {
         }
 
         try {
+        	System.out.println("Cái gì đó: " + matcher.group(1));
             return Long.parseLong(matcher.group(1));
         } catch (Exception e) {
             return null;

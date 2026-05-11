@@ -13,6 +13,10 @@ import java.util.List;
 public class TeacherProfileResponse {
     private Long teacherProfileId;
     private Long userId;
+    private String fullName;          
+    private String username;          
+    private String email;             
+    private String avatarUrl;  
     private String approvalStatus;
     private String rejectReason;
     private String bio;

@@ -137,11 +137,11 @@ function TeacherVocabularyCreate() {
       );
 
       if (audioFile) {
-        formData.append("audioFiles", audioFile);
+        formData.append("audioFile", audioFile);
       }
 
       if (imageFile) {
-        formData.append("imageFiles", imageFile);
+        formData.append("imageFile", imageFile);
       }
 
       /*

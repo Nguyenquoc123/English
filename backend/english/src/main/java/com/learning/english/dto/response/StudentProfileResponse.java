@@ -23,6 +23,8 @@ public class StudentProfileResponse {
     String email;             
     String avatarUrl;         
     String status;            
+    String role;
     LocalDateTime createdAt;  
     LocalDateTime updatedAt;  
+
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./StudentCourseDetail.css";
 import { getFileUrl } from "../../utils/fileurl";
+import StudentExamListSection from "./exam/components/StudentExamListSection";
 
 function StudentCourseDetail() {
     const navigate = useNavigate();
@@ -226,7 +227,7 @@ function StudentCourseDetail() {
             return;
         }
 
-        navigate(`/courses/${courseId}/lessons/${lesson.lessonId}`);
+        navigate(`/khoa-hoc/${courseId}/lessons/${lesson.lessonId}`);
     };
 
     if (loadingCourse) {
@@ -353,6 +354,14 @@ function StudentCourseDetail() {
                                     Xem bài học
                                 </button>
 
+                                <button
+                                    className="btn btn-outline-primary px-4"
+                                    onClick={() => setActiveTab("exams")}
+                                >
+                                    <i className="bi bi-clipboard-check me-1"></i>
+                                    Xem kỳ thi
+                                </button>
+
                                 <button className="btn btn-light" onClick={() => navigate(-1)}>
                                     <i className="bi bi-arrow-left me-1"></i>
                                     Quay lại
@@ -404,6 +413,18 @@ function StudentCourseDetail() {
                                 onClick={() => setActiveTab("lessons")}
                             >
                                 Bài học
+                            </button>
+                        </li>
+
+                        <li className="nav-item">
+                            <button
+                                type="button"
+                                className={
+                                    activeTab === "exams" ? "nav-link active" : "nav-link"
+                                }
+                                onClick={() => setActiveTab("exams")}
+                            >
+                                Kỳ thi
                             </button>
                         </li>
 
@@ -575,6 +596,33 @@ function StudentCourseDetail() {
                                     )}
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {activeTab === "exams" && (
+                        <div className="student-course-card">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 className="mb-1">Danh sách kỳ thi</h5>
+                                    <small className="text-muted">
+                                        {course.isEnrolled
+                                            ? "Bạn có thể xem và tham gia các kỳ thi của khóa học nếu đủ điều kiện."
+                                            : "Bạn cần mua khóa học để tham gia các kỳ thi."}
+                                    </small>
+                                </div>
+
+                                {!course.isEnrolled && (
+                                    <button
+                                        className="btn btn-sm btn-primary"
+                                        onClick={handlePurchase}
+                                        disabled={purchasing}
+                                    >
+                                        Mua để tham gia thi
+                                    </button>
+                                )}
+                            </div>
+
+                            <StudentExamListSection courseId={courseId} compact />
                         </div>
                     )}
 

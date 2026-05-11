@@ -7,12 +7,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.learning.english.dto.request.ChangePasswordRequest;
 import com.learning.english.dto.request.StudentUpdateRequest;
 import com.learning.english.dto.response.StudentProfileResponse;
 import com.learning.english.service.UserService;
@@ -29,10 +31,16 @@ public class UserController {
 	}
 	
 	@PutMapping(value = "/hosocanhan", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<StudentProfileResponse> updateHoSoCaNhan(
-	        @RequestParam("fullName") String fullName,
-	        @RequestParam("email") String email,
-	        @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile) throws IOException {
-	    return ResponseEntity.ok(userService.updateHoSoCaNhan(fullName, email, avatarFile));
+	public ResponseEntity<StudentProfileResponse> capNhatHoSoCaNhan(
+	        @RequestPart("data") StudentUpdateRequest request,
+	        @RequestPart(value = "avatarFile", required = false) MultipartFile avatarFile
+	) throws IOException {
+	    return ResponseEntity.ok(userService.updateHoSoCaNhan(request, avatarFile));
+	}
+	
+	@PutMapping("/doi-mat-khau")
+	public String doiMatKhau(@RequestBody ChangePasswordRequest request) {
+	    userService.doiMatKhau(request);
+	    return "Đổi mật khẩu thành công";
 	}
 }
