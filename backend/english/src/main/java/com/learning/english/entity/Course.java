@@ -33,6 +33,9 @@ public class Course {
 
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
+    
+    @Column(name = "shortDescription", columnDefinition = "NVARCHAR(500)")
+    private String shortDescription;
 
     @Column(name = "thumbnailurl", length = 500)
     private String thumbnailUrl;

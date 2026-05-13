@@ -1,75 +1,72 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "../login/DangNhap.css";
 
+/**
+ * DangNhap — Trang đăng nhập chung cho tất cả người dùng:
+ *   - Admin    → redirect /admin
+ *   - Teacher  → redirect /teacher
+ *   - Student  → redirect /danh-sach-khoa-hoc
+ *
+ * Dùng axios trực tiếp (không phải axiosClient) vì chưa có token lúc đăng nhập.
+ */
 function Login() {
-  // Lưu dữ liệu người dùng nhập
   const [taiKhoan, setTaiKhoan] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
-  // Lưu trạng thái loading và thông báo lỗi
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Hàm xử lý khi bấm nút Đăng nhập
   const handleLogin = async (e) => {
-    e.preventDefault(); // Chặn reload trang
-
+    e.preventDefault();
     setError("");
 
     if (!taiKhoan.trim()) {
       setError("Vui lòng nhập tên đăng nhập");
       return;
     }
-
     if (!password.trim()) {
       setError("Vui lòng nhập mật khẩu");
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      const response = await fetch("http://localhost:8080/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          taiKhoan: taiKhoan,
-          password: password,
-        }),
+    try {
+      const response = await axios.post("http://localhost:8080/login", {
+        taiKhoan: taiKhoan.trim(),
+        password: password.trim(),
       });
 
-      const data = await response.json();
+      const { token, role } = response.data;
 
-      if (!response.ok) {
-        setError(data.message || "Đăng nhập thất bại");
-        return;
+      // Lưu token để axiosClient tự gắn vào mọi request sau
+      if (token) {
+        localStorage.setItem("token", token);
       }
 
-      console.log("Kết quả đăng nhập:", data);
-
-      // Giả sử API trả về token
-      // Ví dụ: { token: "...", role: "Admin", status: true }
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      // Redirect theo role — replace để không back về trang login
+      if (role?.toLowerCase() === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (role?.toLowerCase() === "teacher") {
+        navigate("/teacher", { replace: true });
+      } else {
+        navigate("/danh-sach-khoa-hoc", { replace: true });
       }
-
-      alert("Đăng nhập thành công!");
-
-      // Chuyển trang theo role nếu cần
-      // Ví dụ:
-      // if (data.role === "Admin") {
-      //   window.location.href = "/admin";
-      // } else if (data.role === "Teacher") {
-      //   window.location.href = "/teacher";
-      // } else {
-      //   window.location.href = "/student";
-      // }
 
     } catch (err) {
-      console.error(err);
-      setError("Không thể kết nối tới server");
+      const message =
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Đăng nhập thất bại. Kiểm tra lại thông tin.";
+
+      setError(
+        typeof message === "string"
+          ? message
+          : "Đăng nhập thất bại. Kiểm tra lại thông tin."
+      );
     } finally {
       setLoading(false);
     }
@@ -81,20 +78,13 @@ function Login() {
       <div className="login-left">
         <div className="intro-content">
           <h1>Học tiếng Anh thông minh</h1>
-
           <p className="description">
             Nền tảng học tập, ôn luyện và thi tiếng Anh trực tuyến dành
             <br />
             cho học viên, giáo viên và quản trị viên.
           </p>
-
-          
-
           <div className="image-box">
-            <img
-              src="/login-illustration.png"
-              alt="Learning English"
-            />
+            <img src="/login-illustration.png" alt="Learning English" />
           </div>
         </div>
       </div>
@@ -103,9 +93,7 @@ function Login() {
       <div className="login-right">
         <div className="login-card">
           <h2 className="logo">▣ English LMS</h2>
-
           <h3>Đăng nhập</h3>
-
           <p className="login-note">
             Vui lòng nhập thông tin tài khoản để tiếp tục
           </p>
@@ -120,6 +108,8 @@ function Login() {
                   placeholder="Nhập tên đăng nhập"
                   value={taiKhoan}
                   onChange={(e) => setTaiKhoan(e.target.value)}
+                  disabled={loading}
+                  autoFocus
                 />
               </div>
             </div>
@@ -133,6 +123,7 @@ function Login() {
                   placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -142,11 +133,10 @@ function Login() {
                 <input type="checkbox" />
                 Ghi nhớ đăng nhập
               </label>
-
               <a href="/quen-mat-khau">Quên mật khẩu?</a>
             </div>
 
-            {error && <p className="error-message">{error}</p>}
+            {error && <p className="error-message">⚠️ {error}</p>}
 
             <button type="submit" disabled={loading}>
               {loading ? "Đang đăng nhập..." : "Đăng nhập →"}

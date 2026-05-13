@@ -1,6 +1,15 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 600MB
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
   datasource:
-    url: jdbc:sqlserver://localhost\SQLEXPRESS;databaseName=EnglishLearn;encrypt=true;trustServerCertificate=true
+    url: "jdbc:sqlserver://localhost\\SQLEXPRESS;databaseName=EnglishLearn;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true"
     username: sa
     password: 123
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -27,3 +36,12 @@ spring:
 
 jwt:
   signerKey: "4/nd4aouu5+SOFdC87WsxyAtIj9dxEWfvJL/Tl3e4WTN29aLOlnTbSHUZ3boSZKu"
+
+sepay:
+  bank:
+    account: "103877010278"
+    name: "VietinBank"
+    account-name: "NGUYEN CONG QUOC"
+
+  webhook:
+    secret: "your_sepay_webhook_secret"

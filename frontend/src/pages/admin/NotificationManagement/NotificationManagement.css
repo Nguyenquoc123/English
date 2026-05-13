@@ -1,0 +1,77 @@
+.admin-notification-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  color: #111827;
+}
+
+.admin-page-heading h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f3c9c;
+  margin: 0 0 6px;
+}
+
+.admin-page-heading p {
+  color: #6b7280;
+  margin: 0 0 22px;
+  line-height: 1.6;
+}
+
+.admin-table-card {
+  background: #ffffff;
+  border: 1px solid #eef0f6;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-notification-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.form-control,
+.form-select {
+  border-color: #dfe4f0;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+}
+
+.notification-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.notification-history-item {
+  background: #f8fafc;
+  border: 1px solid #eef0f6;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.notification-title {
+  color: #111827;
+  font-size: 14px;
+}
+
+.notification-message {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .admin-notification-layout {
+    grid-template-columns: 1fr;
+  }
+}

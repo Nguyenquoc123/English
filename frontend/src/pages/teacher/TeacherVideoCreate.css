@@ -1,0 +1,246 @@
+.video-create-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  color: #111827;
+}
+
+.video-create-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.video-create-heading h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f3c9c;
+  margin: 8px 0 6px;
+}
+
+.video-create-heading p {
+  color: #6b7280;
+  margin: 0;
+  max-width: 780px;
+  line-height: 1.6;
+}
+
+.video-back-link {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 600;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.video-card,
+.video-side-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.video-card .card-header,
+.video-side-card .card-header {
+  padding: 22px 24px 0;
+}
+
+.video-card .card-body,
+.video-side-card .card-body {
+  padding: 22px 24px 24px;
+}
+
+.form-control,
+.input-group-text {
+  border-color: #dfe4f0;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+}
+
+.video-upload-box {
+  width: 100%;
+  min-height: 240px;
+  border: 2px dashed #b8c4df;
+  border-radius: 18px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-upload-box:hover {
+  border-color: #2563eb;
+  background: #f5f8ff;
+  cursor: pointer;
+}
+
+.upload-placeholder {
+  text-align: center;
+  color: #6b7280;
+  padding: 24px;
+}
+
+.upload-placeholder i {
+  display: block;
+  font-size: 44px;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.upload-placeholder strong {
+  display: block;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.upload-placeholder span {
+  display: block;
+  font-size: 13px;
+}
+
+.upload-placeholder em {
+  display: inline-block;
+  margin-top: 12px;
+  background: #eef4ff;
+  color: #2563eb;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.selected-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #eef0f6;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.selected-file strong {
+  display: block;
+  font-size: 14px;
+  max-width: 230px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selected-file span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.video-action-bar {
+  background: #ffffff;
+  border: 1px solid #eef0f6;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  padding: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.thumbnail-preview {
+  height: 145px;
+  background: #f1f5f9;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.thumbnail-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-preview div {
+  text-align: center;
+}
+
+.thumbnail-preview i {
+  display: block;
+  font-size: 30px;
+  margin-bottom: 6px;
+}
+
+.thumbnail-upload-btn {
+  width: 100%;
+  border: 2px dashed #2563eb;
+  color: #0f3c9c;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.thumbnail-upload-btn:hover {
+  background: #eef4ff;
+}
+
+.video-preview-card {
+  background: #f8fafc;
+  border: 1px solid #eef0f6;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.preview-video-thumb {
+  height: 150px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #111827, #374151);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.preview-video-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-video-thumb i {
+  font-size: 42px;
+}
+
+.video-preview-card h6 {
+  font-weight: 800;
+  margin: 14px 0 8px;
+}
+
+.video-preview-card p {
+  margin: 4px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+@media (max-width: 992px) {
+  .video-create-heading {
+    flex-direction: column;
+  }
+}

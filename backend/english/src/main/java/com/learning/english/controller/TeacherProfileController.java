@@ -33,6 +33,16 @@ public class TeacherProfileController {
         return ResponseEntity.ok(teacherProfileService.dangKyLamGiaoVien(bio, experience, certificateFiles));
     }
     
+    @GetMapping("/profile-register")
+    public ResponseEntity<TeacherProfileResponse> getProfileTeacher() {
+        return ResponseEntity.ok(teacherProfileService.getProfileDangKy());
+    }
+
+    @GetMapping("/profile-registered")
+    public ResponseEntity<Boolean> checkProfileTeacher() {
+        return ResponseEntity.ok(teacherProfileService.daDangKyLamGiaoVien());
+    }
+
     @PutMapping("/{teacherProfileId}/approve")
     public ResponseEntity<TeacherProfileResponse> duyetDangKyLamGiaoVien(
             @PathVariable Long teacherProfileId,

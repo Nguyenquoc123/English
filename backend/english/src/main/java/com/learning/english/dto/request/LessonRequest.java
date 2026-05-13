@@ -18,11 +18,7 @@ public class LessonRequest {
 
     private String description;
     
-    private String lessonType;
 
-//    @NotNull(message = "Thứ tự bài học không được để trống")
-//    @Min(value = 1, message = "Thứ tự bài học phải lớn hơn hoặc bằng 1")
-    private Integer lessonOrder;
 
 //    @NotBlank(message = "Trạng thái không được để trống")
     private String status;
