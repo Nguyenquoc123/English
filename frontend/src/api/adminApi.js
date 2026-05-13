@@ -551,3 +551,31 @@ export const getGrammarDetailForAdmin = (grammarId) =>
  */
 export const changeAdminPassword = (oldPassword, newPassword, confirmPassword) =>
   axiosClient.put("/admin/change-password", { oldPassword, newPassword, confirmPassword });
+
+// ============================================================
+// NHÓM 14: HỒ SƠ ADMIN (ADMIN PROFILE)
+// ============================================================
+
+/**
+ * getAdminProfile — Lấy thông tin hồ sơ của admin đang đăng nhập.
+ * Backend đọc username từ JWT SecurityContext để tìm user.
+ * Method: GET | Endpoint: /hosocanhan
+ */
+export const getAdminProfile = () => axiosClient.get("/hosocanhan");
+
+/**
+ * updateAdminProfile — Cập nhật thông tin hồ sơ admin (tên + avatar).
+ * Method: PUT | Endpoint: /hosocanhan (multipart/form-data)
+ * @param {string} fullName  - Tên đầy đủ mới
+ * @param {string} email     - Email mới
+ * @param {File|null} avatarFile - File ảnh đại diện mới (null = giữ nguyên)
+ */
+export const updateAdminProfile = (fullName, email, avatarFile) => {
+  const formData = new FormData();
+  formData.append("fullName", fullName);
+  formData.append("email", email);
+  if (avatarFile) formData.append("avatarFile", avatarFile);
+  return axiosClient.put("/hosocanhan", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};

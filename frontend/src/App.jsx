@@ -65,6 +65,8 @@ import NotificationManagement from "./pages/admin/NotificationManagement/Notific
 import TransactionManagement from "./pages/admin/TransactionManagement/TransactionManagement";
 import ReviewManagement from "./pages/admin/ReviewManagement/ReviewManagement";
 import ChangePassword from "./pages/admin/ChangePassword/ChangePassword";
+import AdminProfile from "./pages/admin/AdminProfile/AdminProfile";
+import Statistics from "./pages/admin/Statistics/Statistics";
 
 function ProtectedAdminRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -239,6 +241,8 @@ function App() {
           <Route path="transactions" element={<TransactionManagement />} />
           <Route path="reviews" element={<ReviewManagement />} />
           <Route path="change-password" element={<ChangePassword />} />
+          <Route path="profile" element={<AdminProfile />} />
+          <Route path="statistics" element={<Statistics />} />
         </Route>
 
         <Route path="*" element={<h1>404 - Không tìm thấy trang</h1>} />

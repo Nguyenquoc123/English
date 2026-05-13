@@ -164,7 +164,30 @@ function OurAdminSidebar({ isOpen, onClose }) {
           Thông báo
         </NavLink>
 
+        <p className="admin-sidebar-title">Thống kê</p>
+        <NavLink
+          to="/admin/statistics"
+          className={({ isActive }) =>
+            "admin-sidebar-link" + (isActive ? " active" : "")
+          }
+          onClick={onClose}
+        >
+          <i className="bi bi-bar-chart-line"></i>
+          Thống kê &amp; Báo cáo
+        </NavLink>
+
         <p className="admin-sidebar-title">Hệ thống</p>
+        <NavLink
+          to="/admin/profile"
+          className={({ isActive }) =>
+            "admin-sidebar-link" + (isActive ? " active" : "")
+          }
+          onClick={onClose}
+        >
+          <i className="bi bi-person-circle"></i>
+          Hồ sơ của tôi
+        </NavLink>
+
         <NavLink
           to="/admin/change-password"
           className={({ isActive }) =>
