@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
-import {getFileUrl} from "../../utils/fileurl.js"
+import { getFileUrl } from "../../utils/fileurl.js"
 
 function DSKhoaHoc() {
   const navigate = useNavigate();
@@ -127,14 +127,14 @@ function DSKhoaHoc() {
   const loadLevels = async () => {
     try {
       // Nếu bạn đã có API levels thì mở đoạn này ra dùng
-      
+
       const response = await fetch("http://localhost:8080/level/all-level");
       const data = await response.json();
 
       if (response.ok) {
         setLevels(data);
       }
-      
+
 
       // setLevels(sampleLevels);
     } catch (err) {
@@ -148,59 +148,44 @@ function DSKhoaHoc() {
       setLoading(true);
       setError("");
 
-      // Nếu bạn đã có API khóa học thì dùng đoạn này
-      
       const params = new URLSearchParams();
 
       if (keyword.trim()) {
-        params.append("keyword", keyword);
+        params.append("keyword", keyword.trim());
       }
 
       if (levelId) {
         params.append("levelId", levelId);
       }
 
-      const response = await fetch(
-        `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public`
-      );
+      const query = params.toString();
 
-      const data = await response.json();
+      const url = query
+        ? `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public?${query}`
+        : `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public`;
+
+      const response = await fetch(url, {
+        method: "GET",
+      });
+
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
 
       if (!response.ok) {
-        setError(data.message || "Không thể tải danh sách khóa học");
+        setError(data?.message || "Không thể tải danh sách khóa học");
         return;
       }
 
-      console.log(data)
-      setCourses(data);
-      
-
-    //   // Dữ liệu mẫu để test trước
-    //   let result = sampleCourses;
-
-    //   if (keyword.trim()) {
-    //     result = result.filter((course) => {
-    //       const text = `${course.title} ${course.description}`.toLowerCase();
-    //       return text.includes(keyword.toLowerCase());
-    //     });
-    //   }
-
-    //   if (levelId) {
-    //     const selectedLevel = sampleLevels.find(
-    //       (level) => String(level.levelId) === String(levelId)
-    //     );
-
-    //     if (selectedLevel) {
-    //       result = result.filter(
-    //         (course) => course.levelName === selectedLevel.levelName
-    //       );
-    //     }
-    //   }
-
-      // setCourses(result);
+      console.log(data);
+      setCourses(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
-      setError("Lỗi r.");
+      setError("Lỗi kết nối server.");
     } finally {
       setLoading(false);
     }
@@ -225,7 +210,7 @@ function DSKhoaHoc() {
 
   return (
     <div className="course-page">
-      
+
 
       <main className="course-container">
         <section className="filter-box">

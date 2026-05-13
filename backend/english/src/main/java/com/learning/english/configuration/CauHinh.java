@@ -11,7 +11,6 @@ public class CauHinh implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Media tĩnh: ảnh, video, audio của bài học
         registry.addResourceHandler("/images/**")
                 .addResourceLocations(UPLOAD_ROOT + "images/");
         registry.addResourceHandler("/videos/**")
@@ -19,7 +18,6 @@ public class CauHinh implements WebMvcConfigurer {
         registry.addResourceHandler("/audios/**")
                 .addResourceLocations(UPLOAD_ROOT + "audios/");
 
-        // File upload: thumbnail khóa học, chứng chỉ giáo viên
         registry.addResourceHandler("/thumbnails/**")
                 .addResourceLocations(UPLOAD_ROOT + "thumbnails/")
                 .setCachePeriod(3600);
@@ -27,7 +25,6 @@ public class CauHinh implements WebMvcConfigurer {
                 .addResourceLocations(UPLOAD_ROOT + "certificates/")
                 .setCachePeriod(3600);
 
-        // Fallback chung cho toàn bộ thư mục uploads
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(UPLOAD_ROOT)
                 .setCachePeriod(3600);

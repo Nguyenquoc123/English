@@ -1,6 +1,5 @@
 package com.learning.english.dto.response;
 
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
