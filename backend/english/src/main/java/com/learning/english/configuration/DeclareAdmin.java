@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import com.learning.english.repository.UserRepository;
 
 
 @Component
+@Order(2)
 public class DeclareAdmin implements CommandLineRunner{
 	@Autowired
 	UserRepository userRepository;
@@ -30,7 +32,9 @@ public class DeclareAdmin implements CommandLineRunner{
 	@Override
 	public void run(String... args){
 		
-		Role role = roleRepository.findByRoleName("Admin").orElseThrow(() -> new RuntimeException("Không tìm thấy role"));
+		// "admin" viết thường — phải khớp với tên role đã seed trong DeclareRole
+		// JWT scope claim = roleName → Spring Security tạo authority "SCOPE_admin"
+		Role role = roleRepository.findByRoleName("admin").orElseThrow(() -> new RuntimeException("Không tìm thấy role 'admin' — hãy chắc chắn DeclareRole đã chạy trước"));
 		Optional<User> admin_ = userRepository.findByUsername("admin");
 		if(admin_.isEmpty()) {
 			try {

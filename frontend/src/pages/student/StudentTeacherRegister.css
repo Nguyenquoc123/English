@@ -1,0 +1,442 @@
+.teacher-register-page {
+  min-height: 100vh;
+  background: #f6f4ff;
+  padding: 28px 24px;
+  color: #111827;
+}
+
+.teacher-register-container {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.teacher-register-heading {
+  margin-bottom: 28px;
+}
+
+.teacher-register-back-link {
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  padding: 0;
+  margin-bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.teacher-register-back-link:hover {
+  color: #0d6efd;
+}
+
+.teacher-register-heading h2 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #0f3c9c;
+}
+
+.teacher-register-heading p {
+  color: #6b7280;
+  max-width: 680px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.teacher-register-profile-card,
+.teacher-register-guide-card,
+.teacher-register-form-card {
+  background: #ffffff;
+  border: 1px solid #eef0f6;
+  border-radius: 22px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+}
+
+.teacher-register-profile-card {
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.profile-title,
+.guide-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+  font-weight: 800;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.profile-title i,
+.guide-title i {
+  color: #0d6efd;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  margin: 0 auto 16px;
+}
+
+.profile-avatar-img,
+.profile-avatar-placeholder {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 5px solid #ffffff;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.16);
+}
+
+.profile-avatar-img {
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  background: linear-gradient(135deg, #0d6efd, #6f42c1);
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-status-dot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  right: 10px;
+  bottom: 10px;
+  background: #22c55e;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+}
+
+.teacher-register-profile-card h4 {
+  font-weight: 800;
+  font-size: 21px;
+  margin-bottom: 4px;
+}
+
+.teacher-register-profile-card p {
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.role-badge {
+  display: inline-flex;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #0d6efd;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.profile-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f1f0ff;
+  border-radius: 16px;
+  padding: 14px;
+  text-align: left;
+  color: #4b5563;
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.profile-note i {
+  color: #0d6efd;
+  margin-top: 2px;
+}
+
+.teacher-register-guide-card {
+  padding: 22px 20px;
+}
+
+.teacher-register-guide-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.teacher-register-guide-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.teacher-register-guide-card li:last-child {
+  border-bottom: none;
+}
+
+.teacher-register-guide-card li i {
+  color: #0d6efd;
+  margin-top: 2px;
+}
+
+.teacher-register-form-card {
+  padding: 28px 32px;
+}
+
+.form-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #eef0f6;
+  margin-bottom: 24px;
+}
+
+.form-card-header h4 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.form-card-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.status-pending-badge {
+  background: #fff7ed;
+  color: #c2410c;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.form-section {
+  margin-bottom: 28px;
+}
+
+.teacher-register-form-card .form-label {
+  color: #374151;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.bio-textarea {
+  border-radius: 14px;
+  border: 1px solid #dfe4f0;
+  resize: vertical;
+  min-height: 130px;
+  line-height: 1.6;
+}
+
+.bio-textarea:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.12);
+}
+
+.text-counter {
+  text-align: right;
+  color: #9ca3af;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.jodit-wrapper .jodit-container {
+  border-radius: 14px;
+  overflow: hidden;
+  border-color: #dfe4f0 !important;
+}
+
+.jodit-wrapper .jodit-workplace {
+  min-height: 220px !important;
+}
+
+.certificate-upload-box {
+  border: 2px dashed #dce4f2;
+  background: #fbfdff;
+  border-radius: 18px;
+  min-height: 190px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.certificate-upload-box:hover {
+  border-color: #0d6efd;
+  background: #f8fbff;
+}
+
+.upload-cloud-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #eef4ff;
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+
+.certificate-upload-box strong {
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.certificate-upload-box span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.certificate-upload-meta {
+  color: #9ca3af;
+  font-size: 13px;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.certificate-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.certificate-preview-item {
+  border: 1px solid #eef0f6;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.certificate-image-box {
+  position: relative;
+  height: 130px;
+  background: #f8fafc;
+}
+
+.certificate-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-certificate-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-certificate-btn:hover {
+  background: #dc3545;
+}
+
+.certificate-file-info {
+  padding: 10px;
+}
+
+.certificate-file-info strong {
+  display: block;
+  font-size: 13px;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.certificate-file-info span {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.teacher-register-actions {
+  border-top: 1px solid #eef0f6;
+  padding-top: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.action-btn,
+.submit-btn {
+  min-width: 160px;
+  height: 46px;
+  border-radius: 13px;
+  font-weight: 700;
+}
+
+.submit-btn {
+  min-width: 190px;
+}
+
+.teacher-register-loading {
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+	color: #6b7280;
+}
+
+@media (max-width: 992px) {
+  .form-card-header {
+    flex-direction: column;
+  }
+
+  .certificate-preview-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .teacher-register-page {
+    padding: 22px 14px;
+  }
+
+  .teacher-register-form-card {
+    padding: 22px;
+  }
+
+  .teacher-register-heading h2 {
+    font-size: 24px;
+  }
+
+  .certificate-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-register-actions {
+    flex-direction: column-reverse;
+  }
+
+  .action-btn,
+  .submit-btn {
+    width: 100%;
+  }
+}

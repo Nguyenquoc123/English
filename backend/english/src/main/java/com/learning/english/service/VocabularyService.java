@@ -56,7 +56,7 @@ public class VocabularyService {
 	    }
 
 	    if (audioFile != null && !audioFile.isEmpty()) {
-	        String audioUrl = fileService.saveFile(audioFile, "audio");
+	        String audioUrl = fileService.saveFile(audioFile, "audios");
 	        request.setAudioUrl(audioUrl);
 	    }
 
@@ -111,7 +111,7 @@ public class VocabularyService {
                 MultipartFile audioFile = audioFiles.get(item.getAudioFileIndex());
 
                 if (audioFile != null && !audioFile.isEmpty()) {
-                    String audioUrl = fileService.saveFile(audioFile, "audio");
+                    String audioUrl = fileService.saveFile(audioFile, "audios");
                     item.setAudioUrl(audioUrl);
                 }
             }

@@ -13,6 +13,7 @@ import com.learning.english.dto.request.LessonUpdateRequest;
 import com.learning.english.dto.response.CourseLessonListResponse;
 import com.learning.english.dto.response.LessonListItemResponse;
 import com.learning.english.dto.response.LessonResponse;
+import com.learning.english.dto.response.StudentLessonDetailResponse;
 import com.learning.english.dto.response.StudentLessonResponse;
 import com.learning.english.dto.response.TeacherLessonDetailResponse;
 import com.learning.english.entity.Course;
@@ -242,5 +243,44 @@ public class LessonService {
 
 		return enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(),
 				course.getCourseId());
+	}
+
+	public StudentLessonDetailResponse layChiTietLessonChoHocVien(Long lessonId) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+
+	    Lesson lesson = lessonRepository.findStudentLessonDetailByLessonId(lessonId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
+
+	    Long courseId = lesson.getCourse().getCourseId();
+
+	    boolean hasAccess = checkHasCourseAccess(user.getUserId(), courseId, lesson);
+
+	    if (!hasAccess) {
+	        throw new RuntimeException("Bạn cần mua khóa học để xem bài học này");
+	    }
+
+	    return lessonMapper.toStudentLessonDetailResponse(lesson);
+	}
+
+	private boolean checkHasCourseAccess(Long userId, Long courseId, Lesson lesson) {
+	    String courseType = lesson.getCourse().getCourseType();
+
+	    if ("FREE".equalsIgnoreCase(courseType)) {
+	        return true;
+	    }
+
+	    return enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+	            userId,
+	            courseId
+	    );
 	}
 }

@@ -15,6 +15,16 @@ import com.learning.english.entity.Question;
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
 	List<Lesson> findByCourse_CourseId(Long courseId);
 
+	@Query("""
+			    SELECT l
+			    FROM Lesson l
+			    JOIN FETCH l.course c
+			    WHERE l.lessonId = :lessonId
+			      AND l.status = 'Published'
+			      AND c.status = 'Published'
+			""")
+	Optional<Lesson> findStudentLessonDetailByLessonId(@Param("lessonId") Long lessonId);
+
 	List<Lesson> findByCourse_CourseIdAndStatus(Long courseId, String status);
 
 	@Query("""
@@ -143,5 +153,18 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 			""")
 	Long countLessonsByCourseId(@Param("courseId") Long courseId);
 
-	List<Lesson> findAllByCourseCourseIdAndStatusOrderByLessonOrderAsc(Long courseId, String status);
+    List<Lesson> findAllByCourseCourseIdAndStatusOrderByLessonOrderAsc(Long courseId, String status);
+
+    @Query("""
+			    SELECT l
+			    FROM Lesson l
+			    JOIN FETCH l.course c
+			    WHERE l.lessonId = :lessonId
+			      AND l.status = 'Published'
+			      AND c.status = 'Published'
+			""")
+	Optional<Lesson> findPublishedLessonWithCourseByLessonId(@Param("lessonId") Long lessonId);
+
+    // Admin: lấy lesson theo type, mới nhất trước
+    List<Lesson> findByLessonTypeOrderByCreatedAtDesc(String lessonType);
 }

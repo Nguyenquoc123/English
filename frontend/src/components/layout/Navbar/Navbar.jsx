@@ -68,7 +68,7 @@ export default function Navbar() {
         <div className="navbar-auth">
           {token ? (
             <>
-              <Link to="/profile" className="navbar-btn-text">Hồ sơ</Link>
+              <Link to="/student/profile" className="navbar-btn-text">Hồ sơ</Link>
               <button className="navbar-btn-primary" onClick={handleLogout}>
                 Đăng xuất
               </button>

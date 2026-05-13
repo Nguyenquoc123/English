@@ -135,6 +135,40 @@ public class TeacherProfileService {
 	    return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
 	}
 	
+	public TeacherProfileResponse getProfileDangKy() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+
+		TeacherProfile teacherProfile = teacherProfileRepository.findByUser(user)
+				.orElseThrow(() -> new RuntimeException());
+		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
+	}
+
+	public Boolean daDangKyLamGiaoVien() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+		Boolean kq = teacherProfileRepository.existsByUser(user);
+
+		return kq;
+	}
+
 	public TeacherProfileResponse duyetDangKyLamGiaoVien(Long teacherProfileId, String approvalStatus, String rejectReason) {
 	    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

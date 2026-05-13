@@ -18,11 +18,12 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentProfileResponse {
-    String fullName;          
-    String username;          
-    String email;             
-    String avatarUrl;         
-    String status;            
-    LocalDateTime createdAt;  
-    LocalDateTime updatedAt;  
+    String fullName;
+    String username;
+    String email;
+    String avatarUrl;
+    String status;
+    String role;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }
