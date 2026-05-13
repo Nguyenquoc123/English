@@ -1,0 +1,121 @@
+.admin-profile-page {
+  /* container inherits from AdminLayout */
+}
+
+.admin-profile-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .admin-profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Avatar card */
+.admin-profile-avatar-card {
+  text-align: center;
+}
+
+.admin-profile-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.admin-profile-avatar-img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e2e8f0;
+}
+
+.admin-profile-avatar-placeholder {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 auto;
+}
+
+.admin-profile-avatar-edit-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0d6efd;
+  color: #fff;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-profile-avatar-edit-btn:hover {
+  background: #0b5ed7;
+}
+
+/* Meta info below avatar */
+.admin-profile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.admin-profile-meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+/* Detail card info grid */
+.admin-profile-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.admin-profile-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 1rem;
+}
+
+.admin-profile-info-row:last-child {
+  border-bottom: none;
+}
+
+.admin-profile-info-label {
+  color: #64748b;
+  font-size: 0.9rem;
+  min-width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.admin-profile-info-value {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.9rem;
+  text-align: right;
+}

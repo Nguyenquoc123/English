@@ -66,7 +66,6 @@ public class LessonController {
         return ResponseEntity.ok(lessonService.dsLessonCuaKhoaHoc_Status(courseId, status));
     }
 	
-	
 	@PostMapping("/them-lesson")
     public ResponseEntity<LessonResponse> themLesson(@RequestBody LessonRequest request) {
         return ResponseEntity.ok(lessonService.themLesson(request));
@@ -83,8 +82,7 @@ public class LessonController {
     ) {
         return lessonService.layDanhSachBaiHocChoHocVien(courseId);
     }
-	
-	
+
 	@GetMapping("/{lessonId}/student-detail")
     public StudentLessonDetailResponse layChiTietLessonChoHocVien(
             @PathVariable Long lessonId

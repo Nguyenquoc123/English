@@ -29,7 +29,7 @@ import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.service.CoursePaymentService;
 import com.learning.english.service.CourseService;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/khoa-hoc")

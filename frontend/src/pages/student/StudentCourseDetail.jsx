@@ -144,7 +144,7 @@ function StudentCourseDetail() {
 
     const handlePurchase = async () => {
         if (!getToken()) {
-            navigate("/login");
+            navigate("/dang-nhap");
             return;
         }
 

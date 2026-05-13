@@ -27,6 +27,10 @@ public interface LessonMapper {
     @Mapping(target = "courseTitle", source = "course.title")
     StudentLessonDetailResponse toStudentLessonDetailResponse(Lesson lesson);
 
+	@Mapping(target = "courseId", source = "course.courseId")
+    @Mapping(target = "courseTitle", source = "course.title")
+    StudentLessonDetailResponse toStudentLessonDetailResponse(Lesson lesson);
+
 	default LessonListItemResponse toLessonListItemResponse(Object[] row) {
 		if (row == null) {
 			return null;

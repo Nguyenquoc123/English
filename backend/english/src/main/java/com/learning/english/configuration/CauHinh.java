@@ -1,33 +1,32 @@
 package com.learning.english.configuration;
 
-
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 @Configuration
-public class CauHinh implements WebMvcConfigurer{
-	private final String IMAGE_UPLOAD_PATH = "file:///D:/uploads/images/";
-    private final String VIDEO_UPLOAD_PATH = "file:///D:/uploads/videos/";
-    private final String AUDIO_UPLOAD_PATH = "file:///D:/uploads/audios/";
-	
+public class CauHinh implements WebMvcConfigurer {
+
+    private static final String UPLOAD_ROOT = "file:D:/uploads/";
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Ánh xạ request URL '/images/**' tới thư mục vật lý IMAGE_UPLOAD_PATH
         registry.addResourceHandler("/images/**")
-                .addResourceLocations(IMAGE_UPLOAD_PATH);
-     // Ánh xạ request URL '/videos/**' tới thư mục vật lý VIDEO_UPLOAD_PATH
+                .addResourceLocations(UPLOAD_ROOT + "images/");
         registry.addResourceHandler("/videos/**")
-        .addResourceLocations(VIDEO_UPLOAD_PATH);
-        
+                .addResourceLocations(UPLOAD_ROOT + "videos/");
         registry.addResourceHandler("/audios/**")
-        .addResourceLocations(AUDIO_UPLOAD_PATH);
-       
+                .addResourceLocations(UPLOAD_ROOT + "audios/");
+
+        registry.addResourceHandler("/thumbnails/**")
+                .addResourceLocations(UPLOAD_ROOT + "thumbnails/")
+                .setCachePeriod(3600);
+        registry.addResourceHandler("/certificates/**")
+                .addResourceLocations(UPLOAD_ROOT + "certificates/")
+                .setCachePeriod(3600);
+
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(UPLOAD_ROOT)
+                .setCachePeriod(3600);
     }
-    
-   
 }
