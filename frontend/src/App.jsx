@@ -51,6 +51,9 @@ import StudentPracticeResultPage from "./pages/student/practice/StudentPracticeR
 import StudentExamListPage from "./pages/student/exam/StudentExamListPage.jsx";
 import ExamListPage from "./pages/exam/ExamListPage.jsx";
 import TeacherExamCreate from "./pages/exam/ExamCreate.jsx";
+import TeacherExamDetail from "./pages/exam/TeacherExamDetail.jsx";
+import TeacherExamQuestionCreate from "./pages/exam/TeacherExamQuestionCreate.jsx";
+import StudentExamTakingPage from "./pages/student/exam/StudentExamTakingPage.jsx";
 
 function App() {
   return (
@@ -151,7 +154,17 @@ function App() {
           </>}
         />
 
-        
+        <Route
+          path="exams/:examId/"
+          element={
+            <>
+            <Navbar />
+            <StudentExamTakingPage />
+          </>
+          }
+        />
+
+
 
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
 
@@ -223,6 +236,12 @@ function App() {
           <Route path="exams" element={<ExamListPage />} />
           <Route path="courses/:courseId/exams" element={<ExamListPage />} />
           <Route path="exams/create" element={<TeacherExamCreate />} />
+          <Route path="exams/:examId" element={<TeacherExamDetail />} />
+          <Route
+            path="exams/:examId/questions/create"
+            element={<TeacherExamQuestionCreate />}
+          />
+          
 
           <Route path="profile" element={<h1>Hồ sơ giáo viên</h1>} />
           <Route path="bank" element={<h1>Tài khoản ngân hàng</h1>} />

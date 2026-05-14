@@ -694,7 +694,7 @@ function TeacherQuestionCreate() {
 
                       <div className="option-list">
                         {options.map((option, index) => (
-                          <div className="option-item" key={index}>
+                          <div className="option-item-add" key={index}>
                             <div className="form-check">
                               <input
                                 className="form-check-input"
@@ -980,11 +980,7 @@ function TeacherQuestionCreate() {
               </div>
             </div>
 
-            <div className="alert alert-info mt-3">
-              <strong>Lưu ý:</strong> Khi thêm câu hỏi vào lesson, backend nên
-              đảm bảo có bản ghi trong <code>lesson_practice_configs</code> cho
-              dạng ôn tập tương ứng.
-            </div>
+            
           </div>
         </div>
       </form>

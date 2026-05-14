@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ import com.learning.english.dto.request.CourseDuyetRequest;
 import com.learning.english.dto.request.CourseRejectRequest;
 import com.learning.english.dto.request.CourseRequest;
 import com.learning.english.dto.request.TeacherDuyetRequest;
+import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CoursePaymentResponse;
 import com.learning.english.dto.response.CourseResponse;
@@ -41,29 +43,38 @@ public class CourseController {
 	CoursePaymentService coursePaymentService;
 	
 	@GetMapping("/danh-sach-khoa-hoc-public")
-	public List<CourseResponse> dsKhoaHocPublic(
+	public Page<CourseResponse> dsKhoaHocPublic(
 	        @RequestParam(required = false) String keyword,
-	        @RequestParam(required = false) Long levelId
+	        @RequestParam(required = false) Long levelId,
+	        @RequestParam(required = false) Integer page
 	) {
-	    return courseService.dsAllKhoaHocPublic(keyword, levelId);
+	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, 1);
 	}
 	
 	@GetMapping("/danh-sach-khoa-hoc-teacher")
-	public List<CourseResponse> dsKhoaHocCuaGiaoVien(
+	public Page<CourseResponse> dsKhoaHocCuaGiaoVien(
 			@RequestParam(required = false) String status,
 	        @RequestParam(required = false) String keyword,
-	        @RequestParam(required = false) Long levelId
+	        @RequestParam(required = false) Long levelId,
+	        @RequestParam(required = false) Integer page
 	) {
-	    return courseService.dsAllKhoaHocCuaTeacher(status, keyword, levelId);
+	    return courseService.dsAllKhoaHocCuaTeacherPhanTrang(status, keyword, levelId, page, 1);
+	}
+	
+	@GetMapping("/danh-sach-khoa-hoc-teacher-combobox")
+	public List<CourseComboboxResponse> dsKhoaHocCuaGiaoVienCombobox(
+	) {
+	    return courseService.dsAllKhoaHocCuaTeacher();
 	}
 	
 	@GetMapping("/danh-sach-khoa-hoc")
-	public List<CourseResponse> dsKhoaHoc(
+	public Page<CourseResponse> dsKhoaHoc(
 			@RequestParam(required = false) String status,
 	        @RequestParam(required = false) String keyword,
-	        @RequestParam(required = false) Long levelId
+	        @RequestParam(required = false) Long levelId,
+	        @RequestParam(required = false) Integer page
 	) {
-	    return courseService.dsAllKhoaHoc(status, keyword, levelId);
+	    return courseService.dsAllKhoaHoc(status, keyword, levelId, page, 1);
 	}
 	
 	@GetMapping("/chi-tiet-khoa-hoc-teacher/{courseId}")

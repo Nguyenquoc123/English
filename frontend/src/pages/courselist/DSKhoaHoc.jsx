@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
 import { getFileUrl } from "../../utils/fileurl.js"
+import Page from "../../compenents/phantrang/page.jsx";
 
 function DSKhoaHoc() {
   const navigate = useNavigate();
@@ -14,6 +15,10 @@ function DSKhoaHoc() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(6);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Dữ liệu mẫu để test giao diện khi chưa có backend
   const sampleCourses = [
@@ -121,7 +126,7 @@ function DSKhoaHoc() {
   useEffect(() => {
     // Load cấp độ và danh sách khóa học khi mở trang
     loadLevels();
-    loadCourses();
+    loadCourses(0);
   }, []);
 
   const loadLevels = async () => {
@@ -143,7 +148,7 @@ function DSKhoaHoc() {
     }
   };
 
-  const loadCourses = async () => {
+  const loadCourses = async (pageValue = page) => {
     try {
       setLoading(true);
       setError("");
@@ -158,16 +163,16 @@ function DSKhoaHoc() {
         params.append("levelId", levelId);
       }
 
-      const query = params.toString();
+      params.append("page", pageValue);
+      params.append("size", size);
 
-      const url = query
-        ? `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public?${query}`
-        : `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public`;
+      const url = `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public?${params.toString()}`;
 
       const response = await fetch(url, {
         method: "GET",
       });
 
+      console.log(response)
       let data = null;
 
       try {
@@ -182,7 +187,10 @@ function DSKhoaHoc() {
       }
 
       console.log(data);
-      setCourses(Array.isArray(data) ? data : []);
+
+      setCourses(data.content || []);
+      setPage(data.number || 0);
+      setTotalPages(data.totalPages || 0);
     } catch (err) {
       console.error(err);
       setError("Lỗi kết nối server.");
@@ -191,9 +199,16 @@ function DSKhoaHoc() {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    loadCourses(newPage);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    loadCourses();
+
+    setPage(0);
+    loadCourses(0);
   };
 
   const formatPrice = (price) => {
@@ -313,8 +328,16 @@ function DSKhoaHoc() {
               </div>
             </div>
           ))}
+
         </section>
+
+
       </main>
+      {courses && <Page
+        page={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />}
     </div>
   );
 }

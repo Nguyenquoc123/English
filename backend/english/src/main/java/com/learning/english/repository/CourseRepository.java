@@ -3,6 +3,9 @@ package com.learning.english.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,31 +19,33 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
 	boolean existsByCourseIdAndTeacherUserId(Long courseId, Long userId);
 
+	@EntityGraph(attributePaths = { "teacher", "level" })
 	@Query("""
 			    SELECT c
 			    FROM Course c
-			    LEFT JOIN FETCH c.teacher t
-			    LEFT JOIN FETCH c.level l
 			    WHERE c.status <> 'Deleted'
+			      AND (:username IS NULL OR c.teacher.username = :username)
+			""")
+	List<Course> dsKhoaHocCuaTeacher(@Param("username") String username);
 
-			      AND (:username IS NULL OR t.username = :username)
-
+	@EntityGraph(attributePaths = { "teacher", "level" })
+	@Query("""
+			    SELECT c
+			    FROM Course c
+			    WHERE c.status <> 'Deleted'
+			      AND (:username IS NULL OR c.teacher.username = :username)
 			      AND (:status IS NULL OR c.status = :status)
-
+			      AND (:levelId IS NULL OR c.level.levelId = :levelId)
 			      AND (
 			            :keyword IS NULL
 			            OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
 			            OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-			            OR LOWER(t.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-			            OR LOWER(t.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			            OR LOWER(c.teacher.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			            OR LOWER(c.teacher.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
 			      )
-
-			      AND (:levelId IS NULL OR l.levelId = :levelId)
-
-			    ORDER BY c.createdAt DESC
 			""")
-	List<Course> searchCourses(@Param("username") String username, @Param("status") String status,
-			@Param("keyword") String keyword, @Param("levelId") Long levelId);
+	Page<Course> searchCourses(@Param("username") String username, @Param("status") String status,
+			@Param("keyword") String keyword, @Param("levelId") Long levelId, Pageable pageable);
 
 	List<Course> findByTeacher_UserIdAndStatusNot(Long teacherId, String status);
 

@@ -71,7 +71,7 @@ function TeacherExamCreate() {
         return;
       }
 
-      const response = await fetch(`${API_BASE}/khoa-hoc/danh-sach-khoa-hoc-teacher`, {
+      const response = await fetch(`${API_BASE}/khoa-hoc/danh-sach-khoa-hoc-teacher-combobox`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
