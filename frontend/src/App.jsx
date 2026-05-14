@@ -129,6 +129,12 @@ function App() {
         {/* Student exam */}
         <Route path="/exams" element={<><Navbar /><StudentExamListPage /></>} />
 
+        <Route path="/student/profile" element={
+          <>
+            <Navbar />
+            <StudentProfile />
+          </>
+        } />
         <Route path="/student/profile/update" element={
           <>
             <Navbar />
@@ -158,9 +164,9 @@ function App() {
           path="exams/:examId/"
           element={
             <>
-            <Navbar />
-            <StudentExamTakingPage />
-          </>
+              <Navbar />
+              <StudentExamTakingPage />
+            </>
           }
         />
 
@@ -229,7 +235,7 @@ function App() {
             path="exams/:examId/questions/create"
             element={<TeacherExamQuestionCreate />}
           />
-          
+
 
           <Route path="profile" element={<h1>Hồ sơ giáo viên</h1>} />
           <Route path="bank" element={<h1>Tài khoản ngân hàng</h1>} />

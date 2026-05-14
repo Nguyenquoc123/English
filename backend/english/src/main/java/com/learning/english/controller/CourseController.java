@@ -42,6 +42,8 @@ public class CourseController {
 	@Autowired
 	CoursePaymentService coursePaymentService;
 	
+	
+	
 	@GetMapping("/danh-sach-khoa-hoc-public")
 	public Page<CourseResponse> dsKhoaHocPublic(
 	        @RequestParam(required = false) String keyword,
@@ -135,5 +137,16 @@ public class CourseController {
             @PathVariable Long courseId
     ) {
         return coursePaymentService.taoThanhToanKhoaHoc(courseId);
+    }
+    
+    @GetMapping("/check-mua")
+    public ResponseEntity<Boolean> checkMua(
+            @RequestParam String transactionCode
+    ) {
+
+        boolean hasAccess = courseService
+                .checkHasCourseAccess(transactionCode);
+
+        return ResponseEntity.ok(hasAccess);
     }
 }

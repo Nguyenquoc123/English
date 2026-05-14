@@ -29,6 +29,7 @@ import com.learning.english.repository.CourseReviewRepository;
 import com.learning.english.repository.EnrollmentRepository;
 import com.learning.english.repository.LessonRepository;
 import com.learning.english.repository.LevelRepository;
+import com.learning.english.repository.TransactionRepository;
 import com.learning.english.repository.UserRepository;
 
 @Service
@@ -57,6 +58,9 @@ public class CourseService {
 
 	@Autowired
 	EnrollmentRepository enrollmentRepository;
+	
+	@Autowired
+	TransactionRepository transactionRepository;
 
 	public Page<CourseResponse> dsAllKhoaHocCuaTeacherPhanTrang(String status, String keyword, Long levelId, int page,
 			int size) {
@@ -321,4 +325,38 @@ public class CourseService {
 
 		return Math.round(rating * 10.0) / 10.0;
 	}
+	
+	
+	 public Long extractCourseTransactionId(String request) {
+
+	        String value = request;
+
+	        if (value == null || value.isBlank()) {
+	            return null;
+	        }
+
+	        String number = value.replaceAll("\\D+", "");
+
+	        if (number.isBlank()) {
+	            return null;
+	        }
+
+	        return Long.parseLong(number);
+	    }
+	    
+	    public boolean checkHasCourseAccess(String content) {
+
+		    Long transactionId = extractCourseTransactionId(content);
+
+		    if (transactionId == null) {
+		        return false;
+		    }
+
+		    return transactionRepository
+		            .existsByTransactionIdAndTargetTypeAndStatus(
+		                    transactionId,
+		                    "COURSE",
+		                    "SUCCESS"
+		            );
+		}
 }

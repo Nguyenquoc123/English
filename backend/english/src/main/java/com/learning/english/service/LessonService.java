@@ -223,7 +223,7 @@ public class LessonService {
 				}).toList();
 	}
 
-	private boolean checkHasCourseAccess(Course course) {
+	public boolean checkHasCourseAccess(Course course) {
 		if ("FREE".equals(course.getCourseType())) {
 			return true;
 		}
