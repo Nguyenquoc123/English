@@ -1,52 +1,45 @@
 import { useNavigate, useParams } from "react-router-dom";
-import "../teacher/TeacherLessonList.css";
-import useCourseLessons from "../../hooks/useCourseLessons";
-import LessonListHeader from "../../compenents/lesson-list/LessonListHeader";
-import LessonStatsCards from "../../compenents/lesson-list/LessonStatsCards";
-import LessonFilterBox from "../../compenents/lesson-list/LessonFilterBox";
-import LessonTable from "../../compenents/lesson-list/LessonTable";
-import AdminLessonReviewActions from "../../compenents/lesson-list/AdminLessonReviewActions";
+import useCourseLessons from "../../../hooks/useCourseLessons";
+import LessonListHeader from "../../../compenents/lesson-list/LessonListHeader";
+import LessonStatsCards from "../../../compenents/lesson-list/LessonStatsCards";
+import LessonFilterBox from "../../../compenents/lesson-list/LessonFilterBox";
+import LessonTable from "../../../compenents/lesson-list/LessonTable";
+import AdminLessonReviewActions from "../../../compenents/lesson-list/AdminLessonReviewActions";
+import "./LessonReviewList.css";
 
-
-
-function AdminCourseLessonReviewList() {
+function LessonReviewList() {
   const navigate = useNavigate();
   const { courseId } = useParams();
 
-  const API_BASE = "http://localhost:8080";
-
+  // Tải danh sách bài học của khóa học qua custom hook
   const {
-    keyword,
-    setKeyword,
-    status,
-    setStatus,
-    course,
-    lessons,
-    allLessons,
-    loading,
-    error,
-    handleSearch,
-    handleResetFilter,
+    keyword, setKeyword,
+    status, setStatus,
+    course, lessons, allLessons,
+    loading, error,
+    handleSearch, handleResetFilter,
   } = useCourseLessons({
     courseId,
-    endpointBuilder: (courseId, queryString) =>
+    endpointBuilder: (id, queryString) =>
       queryString
-        ? `${API_BASE}/lesson/${courseId}/teacher?${queryString}`
-        : `${API_BASE}/lesson/${courseId}/teacher`
+        ? `http://localhost:8080/lesson/${id}/teacher?${queryString}`
+        : `http://localhost:8080/lesson/${id}/teacher`,
   });
 
   const getStatusBadge = (statusValue) => {
-    if (statusValue === "Published") return "badge rounded-pill text-bg-success";
-    if (statusValue === "Draft") return "badge rounded-pill text-bg-secondary";
-    if (statusValue === "Hidden") return "badge rounded-pill text-bg-danger";
-    return "badge rounded-pill text-bg-light";
+    const map = {
+      Published: "badge rounded-pill text-bg-success",
+      Draft: "badge rounded-pill text-bg-secondary",
+      Hidden: "badge rounded-pill text-bg-danger",
+    };
+    return map[statusValue] || "badge rounded-pill text-bg-light";
   };
 
   return (
-    <div className="teacher-lesson-page">
+    <div className="lesson-review-list-page">
       <LessonListHeader
         title="Review danh sách bài học"
-        description="Admin kiểm tra danh sách lesson thuộc khóa học trước khi duyệt khóa học."
+        description="Admin kiểm tra danh sách lesson thuộc khóa học trước khi duyệt."
         course={course}
         onBack={() => navigate(`/admin/courses/${courseId}/review`)}
       />
@@ -62,6 +55,7 @@ function AdminCourseLessonReviewList() {
         onReset={handleResetFilter}
       />
 
+      {/* Bảng danh sách bài học với các nút điều hướng review */}
       <LessonTable
         lessons={lessons}
         allLessons={allLessons}
@@ -90,4 +84,4 @@ function AdminCourseLessonReviewList() {
   );
 }
 
-export default AdminCourseLessonReviewList;
+export default LessonReviewList;

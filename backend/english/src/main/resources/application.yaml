@@ -3,9 +3,13 @@ spring:
     multipart:
       max-file-size: 500MB
       max-request-size: 600MB
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
   datasource:
-    url: "jdbc:sqlserver://localhost;databaseName=EnglishLearn;encrypt=true;trustServerCertificate=true"
+    url: "jdbc:sqlserver://localhost\\SQLEXPRESS;databaseName=EnglishLearn;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true"
     username: sa
     password: 123
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

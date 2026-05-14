@@ -209,7 +209,7 @@ public class TeacherProfileService {
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
 		Boolean kq = teacherProfileRepository.existsByUser(user);
-		
+
 		return kq;
 	}
 }

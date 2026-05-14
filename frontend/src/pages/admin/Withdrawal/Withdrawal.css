@@ -1,4 +1,4 @@
-.admin-course-list-page {
+.admin-withdrawal-page {
   max-width: 1400px;
   margin: 0 auto;
   color: #111827;
@@ -36,40 +36,44 @@
 }
 
 .form-control,
-.form-select,
 .input-group-text {
   border-color: #dfe4f0;
 }
 
-.form-control:focus,
-.form-select:focus {
+.form-control:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
 }
 
-.admin-course-table th {
+.admin-withdrawal-table th {
   white-space: nowrap;
   color: #374151;
   font-size: 14px;
 }
 
-.admin-course-table td {
+.admin-withdrawal-table td {
   font-size: 14px;
   vertical-align: middle;
 }
 
-.course-title-cell strong {
-  display: block;
+.withdrawal-teacher-name {
+  font-weight: 600;
   color: #111827;
-  max-width: 260px;
-  line-height: 1.4;
 }
 
-.course-title-cell span {
-  display: block;
-  color: #9ca3af;
+.withdrawal-teacher-email {
   font-size: 12px;
-  margin-top: 4px;
+  margin-top: 2px;
+}
+
+.withdrawal-reject-form {
+  min-width: 180px;
+}
+
+.withdrawal-reject-reason {
+  max-width: 160px;
+  font-size: 12px;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {

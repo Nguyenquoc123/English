@@ -18,34 +18,39 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/teacher-profile")
-
 public class TeacherProfileController {
 
-	@Autowired
-	TeacherProfileService teacherProfileService;
+    @Autowired
+    TeacherProfileService teacherProfileService;
 
-	@PostMapping(value = "/register")
-	public ResponseEntity<TeacherProfileResponse> dangKyLamGiaoVien(@RequestPart("data") TeacherRegisterRequest request,
-			@RequestPart(value = "certificateFiles", required = false) List<MultipartFile> certificateFiles)
-			throws IOException {
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<TeacherProfileResponse> dangKyLamGiaoVien(
+            @RequestParam("bio") String bio,
+            @RequestParam("experience") String experience,
+            @RequestParam(value = "certificateFiles", required = false) List<MultipartFile> certificateFiles
+    ) throws IOException {
+        return ResponseEntity.ok(teacherProfileService.dangKyLamGiaoVien(bio, experience, certificateFiles));
+    }
 
-		return ResponseEntity.ok(teacherProfileService.dangKyLamGiaoVien(request, certificateFiles));
-	}
-	
-	@GetMapping("/profile-register")
-	public ResponseEntity<TeacherProfileResponse> getProfileTeacher() {
-		return ResponseEntity.ok(teacherProfileService.getProfileDangKy());
-	}
-	
-	@GetMapping("/profile-registered")
-	public ResponseEntity<Boolean> checkProfileTeacher() {
-		return ResponseEntity.ok(teacherProfileService.daDangKyLamGiaoVien());
-	}
+    @GetMapping("/profile-register")
+    public ResponseEntity<TeacherProfileResponse> getProfileTeacher() {
+        return ResponseEntity.ok(teacherProfileService.getProfileDangKy());
+    }
 
-	@PutMapping("/{teacherProfileId}/approve")
-	public ResponseEntity<TeacherProfileResponse> duyetDangKyLamGiaoVien(@PathVariable Long teacherProfileId,
-			@RequestBody TeacherDuyetRequest request) {
-		return ResponseEntity.ok(teacherProfileService.duyetDangKyLamGiaoVien(teacherProfileId,
-				request.getApprovalStatus(), request.getRejectReason()));
-	}
+    @GetMapping("/profile-registered")
+    public ResponseEntity<Boolean> checkProfileTeacher() {
+        return ResponseEntity.ok(teacherProfileService.daDangKyLamGiaoVien());
+    }
+
+    @PutMapping("/{teacherProfileId}/approve")
+    public ResponseEntity<TeacherProfileResponse> duyetDangKyLamGiaoVien(
+            @PathVariable Long teacherProfileId,
+            @RequestBody TeacherDuyetRequest request
+    ) {
+        return ResponseEntity.ok(teacherProfileService.duyetDangKyLamGiaoVien(
+                teacherProfileId,
+                request.getApprovalStatus(),
+                request.getRejectReason()
+        ));
+    }
 }

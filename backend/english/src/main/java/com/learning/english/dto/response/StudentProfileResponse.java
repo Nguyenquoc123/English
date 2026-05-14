@@ -1,6 +1,5 @@
 package com.learning.english.dto.response;
 
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,13 +17,12 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentProfileResponse {
-    String fullName;          
-    String username;          
-    String email;             
-    String avatarUrl;         
-    String status;            
+    String fullName;
+    String username;
+    String email;
+    String avatarUrl;
+    String status;
     String role;
-    LocalDateTime createdAt;  
-    LocalDateTime updatedAt;  
-
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }
