@@ -1,0 +1,49 @@
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f3c9c 0%, #1d4ed8 50%, #3b82f6 100%);
+}
+
+.admin-login-card {
+  background: white;
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.admin-login-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 16px;
+}
+
+.admin-login-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f3c9c;
+  margin: 0 0 4px;
+}
+
+.form-control {
+  border-color: #dfe4f0;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+}
+
+.form-control:disabled {
+  background: #f8fafc;
+}
