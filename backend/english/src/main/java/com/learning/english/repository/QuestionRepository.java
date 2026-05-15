@@ -59,4 +59,25 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 			""")
 	List<Question> findPublishedPracticeQuestionsByLessonAndType(@Param("lessonId") Long lessonId,
 			@Param("practiceType") String practiceType);
+
+	@Query("""
+			    SELECT q
+			    FROM Question q
+			    WHERE q.questionId IN :questionIds
+			      AND q.createdBy.userId = :teacherId
+			      AND q.questionType = :questionType
+			      AND q.status <> 'Deleted'
+			""")
+	List<Question> findTeacherQuestionsByIdsAndType(@Param("questionIds") List<Long> questionIds,
+			@Param("teacherId") Long teacherId, @Param("questionType") String questionType);
+
+	@Query("""
+			    SELECT q
+			    FROM ExamQuestion eq
+			    JOIN eq.question q
+			    WHERE eq.exam.examId = :examId
+			      AND q.status = 'Published'
+			    ORDER BY eq.questionOrder ASC
+			""")
+	List<Question> findPublishedQuestionsByExamId(@Param("examId") Long examId);
 }

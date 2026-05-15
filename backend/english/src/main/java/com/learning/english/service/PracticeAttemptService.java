@@ -1,5 +1,6 @@
 package com.learning.english.service;
 
+import com.learning.english.dto.request.ExamSubmitRequest;
 import com.learning.english.dto.request.PracticeAnswerRequest;
 import com.learning.english.dto.request.PracticeSubmitRequest;
 import com.learning.english.dto.response.PracticeSubmitResponse;
@@ -46,54 +47,53 @@ public class PracticeAttemptService {
 	@Autowired
 	private PracticeAttemptMapper practiceAttemptMapper;
 
+	@Autowired
+	ExamRepository examRepository;
+
 	private static final Set<String> VALID_PRACTICE_TYPES = Set.of("MULTIPLE_CHOICE", "LISTENING_CHOICE",
 			"LISTENING_FILL_BLANK", "ARRANGE_SENTENCE", "WRITING_SHORT", "FLASHCARD");
 
 	@Transactional
-	public PracticeSubmitResponse nopBaiOnTap(PracticeSubmitRequest request) {
-		User user = getCurrentUser();
-
-		validateSubmitRequest(request);
-
-		String practiceType = normalizePracticeType(request.getPracticeType());
-
-		Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(request.getLessonId())
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
-
-		Long courseId = lesson.getCourse().getCourseId();
-
-		if (!coQuyenHocLesson(user.getUserId(), courseId, lesson)) {
-			throw new RuntimeException("Bạn cần mua khóa học để nộp bài ôn tập này");
-		}
-
-		if (!"FLASHCARD".equalsIgnoreCase(practiceType)) {
-			boolean enabled = lessonPracticeConfigRepository
-					.existsByLessonLessonIdAndPracticeTypeAndIsEnabledTrue(lesson.getLessonId(), practiceType);
-
-			if (!enabled) {
-				throw new RuntimeException("Dạng ôn tập này chưa được bật cho lesson");
-			}
-		}
-
-		List<Question> questions = questionRepository
-				.findPublishedPracticeQuestionsByLessonAndType(lesson.getLessonId(), practiceType);
-
-		if (questions == null || questions.isEmpty()) {
-			throw new RuntimeException("Bài ôn tập này chưa có câu hỏi");
-		}
+	public PracticeSubmitResponse submitAttemptCore(User user, Lesson lesson, Exam exam, String practiceType,
+			String attemptType, List<Question> questions, List<PracticeAnswerRequest> answers) {
 
 		Map<Long, Question> questionMap = questions.stream()
 				.collect(Collectors.toMap(Question::getQuestionId, Function.identity()));
 
-		Map<Long, PracticeAnswerRequest> answerMap = request.getAnswers().stream()
-				.filter(answer -> answer.getQuestionId() != null).collect(Collectors.toMap(
-						PracticeAnswerRequest::getQuestionId, Function.identity(), (oldValue, newValue) -> newValue));
+		Map<Long, PracticeAnswerRequest> answerMap = answers.stream().filter(answer -> answer.getQuestionId() != null)
+				.collect(Collectors.toMap(PracticeAnswerRequest::getQuestionId, Function.identity(),
+						(oldValue, newValue) -> newValue));
 
 		LocalDateTime now = LocalDateTime.now();
 
-		Attempt attempt = Attempt.builder().user(user).lesson(lesson).exam(null).attemptType("PRACTICE")
-				.practiceType(practiceType).startedAt(now).submittedAt(now).score(BigDecimal.ZERO).totalCorrect(0)
-				.totalQuestions(questions.size()).durationSeconds(null).resultStatus("Completed").createdAt(now)
+		Attempt attempt = Attempt.builder()
+
+				.user(user)
+
+				.lesson(lesson)
+
+				.exam(exam)
+
+				.attemptType(attemptType)
+
+				.practiceType(practiceType)
+
+				.startedAt(now)
+
+				.submittedAt(now)
+
+				.score(BigDecimal.ZERO)
+
+				.totalCorrect(0)
+
+				.totalQuestions(questions.size())
+
+				.durationSeconds(null)
+
+				.resultStatus("Completed")
+
+				.createdAt(now)
+
 				.build();
 
 		Attempt savedAttempt = attemptRepository.save(attempt);
@@ -101,22 +101,39 @@ public class PracticeAttemptService {
 		List<AttemptDetail> details = new ArrayList<>();
 
 		BigDecimal totalScore = BigDecimal.ZERO;
+
 		int totalCorrect = 0;
 
 		for (Question question : questions) {
+
 			PracticeAnswerRequest answer = answerMap.get(question.getQuestionId());
 
 			CheckAnswerResult checkResult = checkAnswer(question, answer);
 
 			if (Boolean.TRUE.equals(checkResult.isCorrect())) {
+
 				totalCorrect++;
+
 				totalScore = totalScore.add(checkResult.earnedPoint());
 			}
 
-			AttemptDetail detail = AttemptDetail.builder().attempt(savedAttempt).question(question)
+			AttemptDetail detail = AttemptDetail.builder()
+
+					.attempt(savedAttempt)
+
+					.question(question)
+
 					.selectedOption(checkResult.selectedOption())
-					.answerText(answer != null ? answer.getAnswerText() : null).isCorrect(checkResult.isCorrect())
-					.earnedPoint(checkResult.earnedPoint()).createdAt(now).build();
+
+					.answerText(answer != null ? answer.getAnswerText() : null)
+
+					.isCorrect(checkResult.isCorrect())
+
+					.earnedPoint(checkResult.earnedPoint())
+
+					.createdAt(now)
+
+					.build();
 
 			details.add(detail);
 		}
@@ -124,9 +141,13 @@ public class PracticeAttemptService {
 		List<AttemptDetail> savedDetails = attemptDetailRepository.saveAll(details);
 
 		savedAttempt.setScore(totalScore);
+
 		savedAttempt.setTotalCorrect(totalCorrect);
+
 		savedAttempt.setTotalQuestions(questions.size());
+
 		savedAttempt.setResultStatus("Completed");
+
 		savedAttempt.setSubmittedAt(now);
 
 		Attempt finalAttempt = attemptRepository.save(savedAttempt);
@@ -136,6 +157,139 @@ public class PracticeAttemptService {
 		response.setDetails(practiceAttemptMapper.toPracticeSubmitDetailResponses(savedDetails));
 
 		return response;
+	}
+
+//	@Transactional
+//	public PracticeSubmitResponse nopBaiOnTap(PracticeSubmitRequest request) {
+//		User user = getCurrentUser();
+//
+//		validateSubmitRequest(request);
+//
+//		String practiceType = normalizePracticeType(request.getPracticeType());
+//
+//		Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(request.getLessonId())
+//				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
+//
+//		Long courseId = lesson.getCourse().getCourseId();
+//
+//		if (!coQuyenHocLesson(user.getUserId(), courseId, lesson)) {
+//			throw new RuntimeException("Bạn cần mua khóa học để nộp bài ôn tập này");
+//		}
+//
+//		if (!"FLASHCARD".equalsIgnoreCase(practiceType)) {
+//			boolean enabled = lessonPracticeConfigRepository
+//					.existsByLessonLessonIdAndPracticeTypeAndIsEnabledTrue(lesson.getLessonId(), practiceType);
+//
+//			if (!enabled) {
+//				throw new RuntimeException("Dạng ôn tập này chưa được bật cho lesson");
+//			}
+//		}
+//
+//		List<Question> questions = questionRepository
+//				.findPublishedPracticeQuestionsByLessonAndType(lesson.getLessonId(), practiceType);
+//
+//		if (questions == null || questions.isEmpty()) {
+//			throw new RuntimeException("Bài ôn tập này chưa có câu hỏi");
+//		}
+//
+//		Map<Long, Question> questionMap = questions.stream()
+//				.collect(Collectors.toMap(Question::getQuestionId, Function.identity()));
+//
+//		Map<Long, PracticeAnswerRequest> answerMap = request.getAnswers().stream()
+//				.filter(answer -> answer.getQuestionId() != null).collect(Collectors.toMap(
+//						PracticeAnswerRequest::getQuestionId, Function.identity(), (oldValue, newValue) -> newValue));
+//
+//		LocalDateTime now = LocalDateTime.now();
+//
+//		Attempt attempt = Attempt.builder().user(user).lesson(lesson).exam(null).attemptType("PRACTICE")
+//				.practiceType(practiceType).startedAt(now).submittedAt(now).score(BigDecimal.ZERO).totalCorrect(0)
+//				.totalQuestions(questions.size()).durationSeconds(null).resultStatus("Completed").createdAt(now)
+//				.build();
+//
+//		Attempt savedAttempt = attemptRepository.save(attempt);
+//
+//		List<AttemptDetail> details = new ArrayList<>();
+//
+//		BigDecimal totalScore = BigDecimal.ZERO;
+//		int totalCorrect = 0;
+//
+//		for (Question question : questions) {
+//			PracticeAnswerRequest answer = answerMap.get(question.getQuestionId());
+//
+//			CheckAnswerResult checkResult = checkAnswer(question, answer);
+//
+//			if (Boolean.TRUE.equals(checkResult.isCorrect())) {
+//				totalCorrect++;
+//				totalScore = totalScore.add(checkResult.earnedPoint());
+//			}
+//
+//			AttemptDetail detail = AttemptDetail.builder().attempt(savedAttempt).question(question)
+//					.selectedOption(checkResult.selectedOption())
+//					.answerText(answer != null ? answer.getAnswerText() : null).isCorrect(checkResult.isCorrect())
+//					.earnedPoint(checkResult.earnedPoint()).createdAt(now).build();
+//
+//			details.add(detail);
+//		}
+//
+//		List<AttemptDetail> savedDetails = attemptDetailRepository.saveAll(details);
+//
+//		savedAttempt.setScore(totalScore);
+//		savedAttempt.setTotalCorrect(totalCorrect);
+//		savedAttempt.setTotalQuestions(questions.size());
+//		savedAttempt.setResultStatus("Completed");
+//		savedAttempt.setSubmittedAt(now);
+//
+//		Attempt finalAttempt = attemptRepository.save(savedAttempt);
+//
+//		PracticeSubmitResponse response = practiceAttemptMapper.toPracticeSubmitResponse(finalAttempt);
+//
+//		response.setDetails(practiceAttemptMapper.toPracticeSubmitDetailResponses(savedDetails));
+//
+//		return response;
+//	}
+
+	@Transactional
+	public PracticeSubmitResponse nopBaiOnTap(PracticeSubmitRequest request) {
+
+		User user = getCurrentUser();
+
+		validateSubmitRequest(request);
+
+		String practiceType = normalizePracticeType(request.getPracticeType());
+
+		Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(request.getLessonId())
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài học"));
+
+		List<Question> questions = questionRepository
+				.findPublishedPracticeQuestionsByLessonAndType(lesson.getLessonId(), practiceType);
+
+		return submitAttemptCore(user, lesson, null, practiceType, "PRACTICE", questions, request.getAnswers());
+	}
+
+	@Transactional
+	public PracticeSubmitResponse nopBaiThi(ExamSubmitRequest request) {
+
+		User user = getCurrentUser();
+
+		Exam exam = examRepository.findPublishedExamForStudent(request.getExamId())
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài thi"));
+
+		/*
+		 * Check số lần làm
+		 */
+		Long totalAttempts = attemptRepository.countByExamExamIdAndUserUserId(exam.getExamId(), user.getUserId());
+
+		if (exam.getMaxAttempts() != null && totalAttempts >= exam.getMaxAttempts()) {
+
+			throw new RuntimeException("Bạn đã vượt quá số lần làm bài");
+		}
+
+		/*
+		 * Lấy câu hỏi bài thi
+		 */
+		List<Question> questions = questionRepository.findPublishedQuestionsByExamId(exam.getExamId());
+
+		return submitAttemptCore(user, null, exam, null, "EXAM", questions, request.getAnswers());
 	}
 
 	private CheckAnswerResult checkAnswer(Question question, PracticeAnswerRequest answer) {

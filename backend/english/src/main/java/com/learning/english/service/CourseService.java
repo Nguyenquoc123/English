@@ -5,6 +5,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -12,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.english.dto.request.CourseRejectRequest;
 import com.learning.english.dto.request.CourseRequest;
+import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
@@ -24,6 +29,7 @@ import com.learning.english.repository.CourseReviewRepository;
 import com.learning.english.repository.EnrollmentRepository;
 import com.learning.english.repository.LessonRepository;
 import com.learning.english.repository.LevelRepository;
+import com.learning.english.repository.TransactionRepository;
 import com.learning.english.repository.UserRepository;
 
 @Service
@@ -52,8 +58,12 @@ public class CourseService {
 
 	@Autowired
 	EnrollmentRepository enrollmentRepository;
+	
+	@Autowired
+	TransactionRepository transactionRepository;
 
-	public List<CourseResponse> dsAllKhoaHocCuaTeacher(String status, String keyword, Long levelId) {
+	public Page<CourseResponse> dsAllKhoaHocCuaTeacherPhanTrang(String status, String keyword, Long levelId, int page,
+			int size) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (authentication == null || !authentication.isAuthenticated()) {
@@ -61,18 +71,48 @@ public class CourseService {
 		}
 
 		String username = authentication.getName();
-		return courseRepository.searchCourses(username, status, keyword, levelId).stream()
-				.map(courseMapper::toCourseResponse).toList();
+		keyword = normalize(keyword);
+
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		return courseRepository.searchCourses(username, status, keyword, levelId, pageable)
+				.map(courseMapper::toCourseResponse);
+	}
+	
+	public List<CourseComboboxResponse> dsAllKhoaHocCuaTeacher() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+		
+		return courseRepository.dsKhoaHocCuaTeacher(username).stream().map(courseMapper::toComboboxResponse).toList();
+		
 	}
 
-	public List<CourseResponse> dsAllKhoaHocPublic(String keyword, Long levelId) {
-		return courseRepository.searchCourses(null, "Published", keyword, levelId).stream()
-				.map(courseMapper::toCourseResponse).toList();
+	public Page<CourseResponse> dsAllKhoaHocPublic(String keyword, Long levelId, int page, int size) {
+		keyword = normalize(keyword);
+
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+		return courseRepository.searchCourses(null, "Published", keyword, levelId, pageable)
+				.map(courseMapper::toCourseResponse);
 	}
 
-	public List<CourseResponse> dsAllKhoaHoc(String status, String keyword, Long levelId) {
-		return courseRepository.searchCourses(null, status, keyword, levelId).stream()
-				.map(courseMapper::toCourseResponse).toList();
+	private String normalize(String value) {
+		if (value == null || value.trim().isEmpty()) {
+			return null;
+		}
+		return value.trim();
+	}
+
+	public Page<CourseResponse> dsAllKhoaHoc(String status, String keyword, Long levelId, int page, int size) {
+		keyword = normalize(keyword);
+
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		return courseRepository.searchCourses(null, status, keyword, levelId, pageable)
+				.map(courseMapper::toCourseResponse);
 	}
 
 	public CourseDetailResponse getCourseDetail(Long courseId) {
@@ -246,8 +286,8 @@ public class CourseService {
 		boolean isEnrolled = false;
 
 		if (user != null) {
-			isEnrolled = enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(),
-					courseId);
+			isEnrolled = enrollmentRepository
+					.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
 		}
 
 		Long lessonCount = lessonRepository.countLessonsByCourseId(courseId);
@@ -285,4 +325,38 @@ public class CourseService {
 
 		return Math.round(rating * 10.0) / 10.0;
 	}
+	
+	
+	 public Long extractCourseTransactionId(String request) {
+
+	        String value = request;
+
+	        if (value == null || value.isBlank()) {
+	            return null;
+	        }
+
+	        String number = value.replaceAll("\\D+", "");
+
+	        if (number.isBlank()) {
+	            return null;
+	        }
+
+	        return Long.parseLong(number);
+	    }
+	    
+	    public boolean checkHasCourseAccess(String content) {
+
+		    Long transactionId = extractCourseTransactionId(content);
+
+		    if (transactionId == null) {
+		        return false;
+		    }
+
+		    return transactionRepository
+		            .existsByTransactionIdAndTargetTypeAndStatus(
+		                    transactionId,
+		                    "COURSE",
+		                    "SUCCESS"
+		            );
+		}
 }

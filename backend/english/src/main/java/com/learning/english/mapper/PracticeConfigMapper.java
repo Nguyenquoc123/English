@@ -3,6 +3,7 @@ package com.learning.english.mapper;
 import com.learning.english.dto.response.PracticeConfigResponse;
 import com.learning.english.dto.response.PracticeQuestionOptionResponse;
 import com.learning.english.dto.response.PracticeQuestionResponse;
+import com.learning.english.entity.ExamQuestion;
 import com.learning.english.entity.LessonQuestion;
 import com.learning.english.entity.Question;
 import com.learning.english.entity.QuestionOption;
@@ -86,10 +87,20 @@ public interface PracticeConfigMapper {
 	@Mapping(target = "options", source = "question.options")
 	@Mapping(target = "words", ignore = true)
 	PracticeQuestionResponse toPracticeQuestionResponse(LessonQuestion lessonQuestion);
+	
+	@Mapping(target = "questionId", source = "question.questionId")
+	@Mapping(target = "questionType", source = "question.questionType")
+	@Mapping(target = "content", source = "question.content")
+	@Mapping(target = "mediaUrl", source = "question.mediaUrl")
+	@Mapping(target = "defaultPoint", source = "question.defaultPoint")
+	@Mapping(target = "options", source = "question.options")
+	@Mapping(target = "words", ignore = true)
+	PracticeQuestionResponse toExamQuestionResponse(ExamQuestion examQuestion);
 
 	PracticeQuestionOptionResponse toPracticeQuestionOptionResponse(QuestionOption option);
 
 	List<PracticeQuestionResponse> toPracticeQuestionResponses(List<LessonQuestion> lessonQuestions);
+	List<PracticeQuestionResponse> toExamQuestionResponses(List<ExamQuestion> examQuestions);
 
 	/*
 	 * Sau khi map xong, nếu là ARRANGE_SENTENCE thì tạo danh sách từ từ

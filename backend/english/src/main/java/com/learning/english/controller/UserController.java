@@ -38,12 +38,7 @@ public class UserController {
 	    return ResponseEntity.ok(userService.updateHoSoCaNhan(request, avatarFile));
 	}
 	
-	@PutMapping("/doi-mat-khau")
-	public String doiMatKhau(@RequestBody ChangePasswordRequest request) {
-	    userService.doiMatKhau(request);
-	    return "Đổi mật khẩu thành công";
-	}
-
+	
 	@PutMapping("/doi-mat-khau")
 	public String doiMatKhau(@RequestBody ChangePasswordRequest request) {
 	    userService.doiMatKhau(request);
