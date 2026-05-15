@@ -9,6 +9,10 @@ import org.mapstruct.Mapping;
 public interface TeacherProfileMapper {
 
     @Mapping(source = "user.userId", target = "userId")
+    @Mapping(source = "user.username", target = "username")
+    @Mapping(source = "user.fullName", target = "fullName")
+    @Mapping(source = "user.email", target = "email")
+    @Mapping(source = "user.avatarUrl", target = "avatarUrl")
     @Mapping(source = "certificates", target = "certificates")
     TeacherProfileResponse toTeacherProfileResponse(TeacherProfile teacherProfile);
 }

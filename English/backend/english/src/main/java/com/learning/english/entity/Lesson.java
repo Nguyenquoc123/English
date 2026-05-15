@@ -32,8 +32,8 @@ public class Lesson {
     @Column(name = "lessonorder", nullable = false)
     private Integer lessonOrder;
 
-    @Column(name = "lessontype", nullable = false, length = 50)
-    private String lessonType;
+    @Column(name = "lessontype", length = 50)
+    private String lessonType = null;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;

@@ -28,6 +28,7 @@ public class CourseResponse {
 
     private String title;
     private String description;
+    private String shortDescription;
     private String thumbnailUrl;
     private BigDecimal price;
     private String courseType;

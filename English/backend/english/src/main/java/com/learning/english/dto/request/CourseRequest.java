@@ -16,8 +16,8 @@ public class CourseRequest {
     private String title;
 
     private String description;
-
-    private String thumbnailUrl;
+    
+    private String shortDescription;
 
     private BigDecimal price;
 

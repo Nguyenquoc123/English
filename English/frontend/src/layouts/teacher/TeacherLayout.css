@@ -1,0 +1,22 @@
+body {
+  background: #f8f7ff;
+}
+
+.teacher-layout {
+  min-height: 100vh;
+}
+
+.teacher-main {
+  min-height: 100vh;
+}
+
+/* lớp nền đen mờ khi sidebar mở */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 998;
+}

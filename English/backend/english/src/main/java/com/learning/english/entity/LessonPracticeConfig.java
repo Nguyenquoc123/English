@@ -6,12 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-    name = "lesson_practice_configs",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "UQ_lesson_practice_configs", columnNames = {"lessonid", "practicetype"})
-    }
-)
+@Table(name = "lesson_practice_configs")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,27 +14,24 @@ import java.time.LocalDateTime;
 @Builder
 public class LessonPracticeConfig {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "practiceconfigid")
-    private Long practiceConfigId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "configid")
+	private Long configId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lessonid", nullable = false)
-    private Lesson lesson;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "lessonid", nullable = false)
+	private Lesson lesson;
 
-    @Column(name = "practicetype", nullable = false, length = 50)
-    private String practiceType;
+	@Column(name = "practicetype", nullable = false, length = 50)
+	private String practiceType;
 
-    @Column(name = "questionlimit", nullable = false)
-    private Integer questionLimit;
+	@Column(name = "isenabled", nullable = false)
+	private Boolean isEnabled;
 
-    @Column(name = "isactive", nullable = false)
-    private Boolean isActive;
+	@Column(name = "createdat", nullable = false)
+	private LocalDateTime createdAt;
 
-    @Column(name = "createdat", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updatedat", nullable = false)
-    private LocalDateTime updatedAt;
+	@Column(name = "updatedat", nullable = false)
+	private LocalDateTime updatedAt;
 }

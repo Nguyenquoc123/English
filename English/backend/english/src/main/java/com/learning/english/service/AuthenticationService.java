@@ -59,7 +59,8 @@ public class AuthenticationService {
         if (userRepository.existsByUsername(userRequest.getUsername()))
             throw new RuntimeException("Username đã tồn tại!");
 
-        Optional<Role> role = roleRepository.findByRoleName("Student");
+        // "student" viết thường — khớp với tên role đã seed trong DeclareRole
+        Optional<Role> role = roleRepository.findByRoleName("student");
         if (role.isEmpty())
             throw new RuntimeException("Role không tồn tại");
 

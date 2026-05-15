@@ -14,6 +14,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class CourseDuyetRequest {
-	private String approvalStatus; // APPROVED hoặc REJECTED
+	private String approvalStatus; // Published hoặc REJECTED
     private String rejectReason;
 }

@@ -1,29 +1,32 @@
 package com.learning.english.mapper;
 
-
-import com.learning.english.dto.request.QuestionRequest;
+import com.learning.english.dto.response.QuestionBankItemResponse;
+import com.learning.english.dto.response.QuestionOptionResponse;
 import com.learning.english.dto.response.QuestionResponse;
 import com.learning.english.entity.Question;
+import com.learning.english.entity.QuestionOption;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 @Mapper(
         componentModel = "spring",
-        uses = {QuestionOptionMapper.class}
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface QuestionMapper {
 
-    @Mapping(target = "questionId", ignore = true)
-    @Mapping(target = "lesson", ignore = true)
-    @Mapping(target = "course", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "options", ignore = true)
-    Question toQuestion(QuestionRequest request);
-
-    @Mapping(source = "lesson.lessonId", target = "lessonId")
-    @Mapping(source = "course.courseId", target = "courseId")
-    @Mapping(source = "createdBy.userId", target = "createdBy")
+    @Mapping(target = "createdById", source = "createdBy.userId")
+    @Mapping(
+            target = "optionCount",
+            expression = "java(question.getOptions() == null ? 0L : (long) question.getOptions().size())"
+    )
     QuestionResponse toQuestionResponse(Question question);
+
+    QuestionOptionResponse toQuestionOptionResponse(QuestionOption option);
+
+    @Mapping(
+            target = "optionCount",
+            expression = "java(question.getOptions() == null ? 0L : (long) question.getOptions().size())"
+    )
+    QuestionBankItemResponse toQuestionBankItemResponse(Question question);
 }
