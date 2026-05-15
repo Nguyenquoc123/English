@@ -229,7 +229,7 @@ function DSKhoaHoc() {
 
       <main className="course-container">
         <section className="filter-box">
-          <h3>☰ Bộ lọc khóa học</h3>
+          
 
           <form className="filter-form" onSubmit={handleSearch}>
             <div className="filter-group">
@@ -264,10 +264,10 @@ function DSKhoaHoc() {
           </form>
         </section>
 
-        <section className="course-title-section">
+        {/* <section className="course-title-section">
           <h1>Danh sách khóa học</h1>
           <p>Các khóa học đang được mở trên hệ thống</p>
-        </section>
+        </section> */}
 
         {loading && <p className="status-text">Đang tải khóa học...</p>}
 

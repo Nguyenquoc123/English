@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/register", "/login", "/xacminh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-public", "/images/**", "/videos/**", "/level/*", "/audios/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/webhooks/sepay").permitAll()
-                .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/**", "/uploads/**", "/files/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/**", "/uploads/**", "/files/**", "/khoa-hoc/chi-tiet-khoa-hoc-student/*").permitAll()
 
                 // Student
                 .requestMatchers(HttpMethod.GET, "/hosocanhan").hasAuthority("SCOPE_student")
@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/chi-tiet-khoa-hoc/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/duyet", "/khoa-hoc/*/tu-choi").hasAuthority("SCOPE_admin")
                 .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/gui-duyet").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/khoa-hoc/chi-tiet-khoa-hoc-student/*", "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
 
                 // Lessons
