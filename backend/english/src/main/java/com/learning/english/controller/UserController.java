@@ -31,11 +31,17 @@ public class UserController {
 	}
 	
 	@PutMapping(value = "/hosocanhan", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<StudentProfileResponse> updateHoSoCaNhan(
-	        @RequestParam("fullName") String fullName,
-	        @RequestParam("email") String email,
-	        @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile) throws IOException {
-	    return ResponseEntity.ok(userService.updateHoSoCaNhan(fullName, email, avatarFile));
+	public ResponseEntity<StudentProfileResponse> capNhatHoSoCaNhan(
+	        @RequestPart("data") StudentUpdateRequest request,
+	        @RequestPart(value = "avatarFile", required = false) MultipartFile avatarFile
+	) throws IOException {
+	    return ResponseEntity.ok(userService.updateHoSoCaNhan(request, avatarFile));
+	}
+	
+	@PutMapping("/doi-mat-khau")
+	public String doiMatKhau(@RequestBody ChangePasswordRequest request) {
+	    userService.doiMatKhau(request);
+	    return "Đổi mật khẩu thành công";
 	}
 
 	@PutMapping("/doi-mat-khau")

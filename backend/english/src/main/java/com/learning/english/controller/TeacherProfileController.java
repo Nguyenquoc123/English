@@ -1,6 +1,7 @@
 package com.learning.english.controller;
 
 import com.learning.english.dto.request.TeacherDuyetRequest;
+import com.learning.english.dto.request.TeacherRegisterRequest;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.service.TeacherProfileService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/teacher-profile")
-
 public class TeacherProfileController {
 
     @Autowired
@@ -29,10 +29,9 @@ public class TeacherProfileController {
             @RequestParam("experience") String experience,
             @RequestParam(value = "certificateFiles", required = false) List<MultipartFile> certificateFiles
     ) throws IOException {
-
         return ResponseEntity.ok(teacherProfileService.dangKyLamGiaoVien(bio, experience, certificateFiles));
     }
-    
+
     @GetMapping("/profile-register")
     public ResponseEntity<TeacherProfileResponse> getProfileTeacher() {
         return ResponseEntity.ok(teacherProfileService.getProfileDangKy());

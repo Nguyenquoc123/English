@@ -22,6 +22,10 @@ public interface LessonMapper {
 	@Mapping(target = "courseId", source = "course.courseId")
     @Mapping(target = "isLocked", ignore = true)
     StudentLessonResponse toStudentLessonResponse(Lesson lesson);
+	
+	@Mapping(target = "courseId", source = "course.courseId")
+    @Mapping(target = "courseTitle", source = "course.title")
+    StudentLessonDetailResponse toStudentLessonDetailResponse(Lesson lesson);
 
 	@Mapping(target = "courseId", source = "course.courseId")
     @Mapping(target = "courseTitle", source = "course.title")

@@ -68,8 +68,8 @@ function StudentCoursePurchase() {
             const result = data.result || data.data || data;
 
             if (result.isEnrolled) {
-                alert("Bạn đã sở hữu khóa học này");
-                navigate(`/courses/${courseId}`);
+                // alert("Bạn đã sở hữu khóa học này");
+                navigate(`/khoa-hoc/${courseId}`);
                 return;
             }
 

@@ -257,30 +257,30 @@ public class LessonService {
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
-	    Lesson lesson = lessonRepository.findStudentLessonDetailByLessonId(lessonId)
-	            .orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
+		Lesson lesson = lessonRepository.findStudentLessonDetailByLessonId(lessonId)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
 
-	    Long courseId = lesson.getCourse().getCourseId();
+		Long courseId = lesson.getCourse().getCourseId();
 
-	    boolean hasAccess = checkHasCourseAccess(user.getUserId(), courseId, lesson);
+		boolean hasAccess = checkHasCourseAccess(user.getUserId(), courseId, lesson);
 
-	    if (!hasAccess) {
-	        throw new RuntimeException("Bạn cần mua khóa học để xem bài học này");
-	    }
+		if (!hasAccess) {
+			throw new RuntimeException("Bạn cần mua khóa học để xem bài học này");
+		}
 
-	    return lessonMapper.toStudentLessonDetailResponse(lesson);
+		return lessonMapper.toStudentLessonDetailResponse(lesson);
 	}
 
 	private boolean checkHasCourseAccess(Long userId, Long courseId, Lesson lesson) {
-	    String courseType = lesson.getCourse().getCourseType();
+		String courseType = lesson.getCourse().getCourseType();
 
-	    if ("FREE".equalsIgnoreCase(courseType)) {
-	        return true;
-	    }
+		if ("FREE".equalsIgnoreCase(courseType)) {
+			return true;
+		}
 
-	    return enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
-	            userId,
-	            courseId
-	    );
+		return enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+				userId,
+				courseId
+		);
 	}
 }
