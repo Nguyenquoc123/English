@@ -121,6 +121,10 @@ function DangKy() {
 
       <div className="register-right">
         <div className="register-card">
+          <Link to="/" className="register-back">
+            <i className="bi bi-arrow-left" /> Trang chủ
+          </Link>
+
           <h2 className="register-logo">▣ English LMS</h2>
 
           <h3>Đăng ký tài khoản</h3>

@@ -15,7 +15,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findAllByStatusNot(String status);
 
-    boolean existsByCourseIdAndTeacherUserId(Long courseId, Long userId);
+    boolean existsByCourseIdAndTeacherUserId(Long courseId, Long teacherUserId);
 
     @Query("""
             SELECT c
@@ -68,29 +68,23 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             LEFT JOIN users u ON c.teacherid = u.userid
             LEFT JOIN (
                 SELECT courseid, COUNT(*) AS lessonCount
-                FROM lessons WHERE status <> 'Deleted'
-                GROUP BY courseid
+                FROM lessons WHERE status <> 'Deleted' GROUP BY courseid
             ) lessonStats ON c.courseid = lessonStats.courseid
             LEFT JOIN (
                 SELECT courseid, COUNT(*) AS studentCount
-                FROM enrollments WHERE hascourseaccess = 1
-                GROUP BY courseid
+                FROM enrollments WHERE hascourseaccess = 1 GROUP BY courseid
             ) enrollmentStats ON c.courseid = enrollmentStats.courseid
             LEFT JOIN (
                 SELECT courseid, COUNT(*) AS examCount
-                FROM exams WHERE status <> 'Deleted'
-                GROUP BY courseid
+                FROM exams WHERE status <> 'Deleted' GROUP BY courseid
             ) examStats ON c.courseid = examStats.courseid
             LEFT JOIN (
                 SELECT courseid, AVG(CAST(rating AS FLOAT)) AS rating
-                FROM course_reviews
-                GROUP BY courseid
+                FROM course_reviews GROUP BY courseid
             ) reviewStats ON c.courseid = reviewStats.courseid
             LEFT JOIN (
                 SELECT targetId, SUM(amount) AS revenue
-                FROM transactions
-                WHERE status = 'Paid' AND targetId IS NOT NULL
-                GROUP BY targetId
+                FROM transactions WHERE status = 'Paid' AND targetId IS NOT NULL GROUP BY targetId
             ) revenueStats ON c.courseid = revenueStats.targetId
             WHERE c.courseid = :courseId AND c.status <> 'Deleted'
             """, nativeQuery = true)
