@@ -140,6 +140,45 @@ function StudentCoursePurchase() {
         return Number(price).toLocaleString("vi-VN") + " VNĐ";
     };
 
+    const checkCourseAccess = async (transactionCode) => {
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                `http://localhost:8080/khoa-hoc/check-mua?transactionCode=${transactionCode}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Lỗi khi gọi API");
+            }
+
+            return await response.json();
+
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    };
+
+    const handleClick = async () => {
+        console.log(paymentInfo.paymentCode)
+        const hasAccess = await checkCourseAccess(paymentInfo.paymentCode);
+
+        if (hasAccess) {
+            navigate(`/khoa-hoc/${courseId}`);
+        } else {
+            alert("Giao dịch chưa thành công. Vui lòng nhấn lại sau ít phút");
+        }
+    };
+
     const getAccessTypeText = () => {
         if (!course) return "";
         if (course.accessType === "FREE" || course.courseType === "FREE") {
@@ -302,22 +341,7 @@ function StudentCoursePurchase() {
                                 <i className="bi bi-check-circle-fill"></i>
                             </button>
 
-                            <button
-                                type="button"
-                                className={
-                                    paymentMethod === "MOMO"
-                                        ? "payment-method active"
-                                        : "payment-method"
-                                }
-                                onClick={() => setPaymentMethod("MOMO")}
-                            >
-                                <div>
-                                    <i className="bi bi-wallet2"></i>
-                                    <span>Ví điện tử / Momo</span>
-                                </div>
 
-                                <i className="bi bi-check-circle-fill"></i>
-                            </button>
                         </div>
 
                         <div className="payment-summary">
@@ -451,20 +475,28 @@ function StudentCoursePurchase() {
                         <div className="payment-modal-footer">
                             <button
                                 type="button"
+                                className="btn btn-success"
+                                onClick={() => handleClick()}
+                            >
+                                Đã chuyển
+                            </button>
+
+                            <button
+                                type="button"
                                 className="btn btn-light"
                                 onClick={() => setShowPaymentModal(false)}
                             >
                                 Đóng
                             </button>
 
-                            <button
+                            {/* <button
                                 type="button"
                                 className="btn btn-outline-primary"
                                 onClick={() => window.open(paymentInfo.qrUrl, "_blank")}
                             >
                                 <i className="bi bi-box-arrow-up-right me-1"></i>
                                 Mở QR
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>

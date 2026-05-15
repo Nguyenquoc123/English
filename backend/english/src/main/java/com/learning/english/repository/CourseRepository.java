@@ -3,6 +3,9 @@ package com.learning.english.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +18,34 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findAllByStatusNot(String status);
 
-    boolean existsByCourseIdAndTeacherUserId(Long courseId, Long teacherUserId);
+	@EntityGraph(attributePaths = { "teacher", "level" })
+	@Query("""
+			    SELECT c
+			    FROM Course c
+			    WHERE c.status <> 'Deleted'
+			      AND (:username IS NULL OR c.teacher.username = :username)
+			""")
+	List<Course> dsKhoaHocCuaTeacher(@Param("username") String username);
+
+	@EntityGraph(attributePaths = { "teacher", "level" })
+	@Query("""
+			    SELECT c
+			    FROM Course c
+			    WHERE c.status <> 'Deleted'
+			      AND (:username IS NULL OR c.teacher.username = :username)
+			      AND (:status IS NULL OR c.status = :status)
+			      AND (:levelId IS NULL OR c.level.levelId = :levelId)
+			      AND (
+			            :keyword IS NULL
+			            OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			            OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			            OR LOWER(c.teacher.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			            OR LOWER(c.teacher.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			      )
+			""")
+	Page<Course> searchCourses(@Param("username") String username, @Param("status") String status,
+			@Param("keyword") String keyword, @Param("levelId") Long levelId, Pageable pageable);
+    boolean existsByCourseIdAndTeacherUserId(Long courseId, Long userId);
 
     @Query("""
             SELECT c

@@ -71,7 +71,9 @@ function StudentCourseDetail() {
             }
 
             if (!response.ok) {
-                setError(data?.message || "Không thể tải chi tiết khóa học");
+                // setError(data?.message || "Không thể tải chi tiết khóa học");
+                // if(response.status === 401)
+                //     navigate("/dang-nhap")
                 return;
             }
             console.log(data)
@@ -346,26 +348,26 @@ function StudentCourseDetail() {
                                     </button>
                                 )}
 
-                                <button
+                                {/* <button
                                     className="btn btn-outline-primary px-4"
                                     onClick={() => setActiveTab("lessons")}
                                 >
                                     <i className="bi bi-list-task me-1"></i>
                                     Xem bài học
-                                </button>
+                                </button> */}
 
-                                <button
+                                {/* <button
                                     className="btn btn-outline-primary px-4"
                                     onClick={() => setActiveTab("exams")}
                                 >
                                     <i className="bi bi-clipboard-check me-1"></i>
                                     Xem kỳ thi
-                                </button>
+                                </button> */}
 
-                                <button className="btn btn-light" onClick={() => navigate(-1)}>
+                                {/* <button className="btn btn-light" onClick={() => navigate(-1)}>
                                     <i className="bi bi-arrow-left me-1"></i>
                                     Quay lại
-                                </button>
+                                </button> */}
                             </div>
 
                             <div className="course-quick-stats mt-4">

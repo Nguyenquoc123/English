@@ -163,4 +163,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      */
     @org.springframework.data.jpa.repository.Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.status = 'SUCCESS'")
     java.math.BigDecimal sumSuccessAmount();
+    
+    
+    boolean existsByTransactionIdAndTargetTypeAndStatus(
+            Long transactionId,
+            String targetType,
+            String status
+    );
 }

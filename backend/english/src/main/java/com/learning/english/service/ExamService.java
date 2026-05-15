@@ -12,6 +12,7 @@ import com.learning.english.dto.request.ExamCreateRequest;
 import com.learning.english.dto.response.ExamListResponse;
 import com.learning.english.dto.response.ExamResponse;
 import com.learning.english.dto.response.StudentExamListResponse;
+import com.learning.english.dto.response.TeacherExamDetailResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.Exam;
 import com.learning.english.entity.User;
@@ -164,5 +165,22 @@ public class ExamService {
 		}
 
 		return value.trim();
+	}
+	
+	
+	
+	
+	public TeacherExamDetailResponse layChiTietKyThiCuaTeacher(Long examId) {
+		User teacher = getCurrentUser();
+		
+	    List<Object[]> rows = examRepository.findExamDetailByTeacher(examId, teacher.getUserId());
+
+	    if (rows == null || rows.isEmpty()) {
+	        throw new RuntimeException("Không tìm thấy kỳ thi hoặc bạn không có quyền xem kỳ thi này");
+	    }
+
+	    Object[] row = rows.get(0);
+
+	    return examMapper.toTeacherExamDetailResponse(row);
 	}
 }

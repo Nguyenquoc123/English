@@ -52,6 +52,9 @@ import StudentPracticeResultPage from "./pages/student/practice/StudentPracticeR
 import StudentExamListPage from "./pages/student/exam/StudentExamListPage.jsx";
 import ExamListPage from "./pages/exam/ExamListPage.jsx";
 import TeacherExamCreate from "./pages/exam/ExamCreate.jsx";
+import TeacherExamDetail from "./pages/exam/TeacherExamDetail.jsx";
+import TeacherExamQuestionCreate from "./pages/exam/TeacherExamQuestionCreate.jsx";
+import StudentExamTakingPage from "./pages/student/exam/StudentExamTakingPage.jsx";
 
 import OurAdminLayout from "./pages/admin/AdminLayout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard/Dashboard";
@@ -126,17 +129,53 @@ function App() {
         {/* Student exam */}
         <Route path="/exams" element={<><Navbar /><StudentExamListPage /></>} />
 
-        {/* Student profile & settings */}
-        <Route path="/student/profile" element={<><Navbar /><StudentProfile /></>} />
-        <Route path="/student/profile/update" element={<><Navbar /><StudentProfileUpdate /></>} />
-        <Route path="/student/change-password" element={<><Navbar /><StudentChangePassword /></>} />
-        <Route path="/student/teacher-register" element={<><Navbar /><StudentTeacherRegister /></>} />
-        <Route path="/student/teacher-register/result" element={<><Navbar /><StudentTeacherRegisterResult /></>} />
+        <Route path="/student/profile" element={
+          <>
+            <Navbar />
+            <StudentProfile />
+          </>
+        } />
+        <Route path="/student/profile/update" element={
+          <>
+            <Navbar />
+            <StudentProfileUpdate />
+          </>
+        } />
+
+        <Route path="/student/change-password" element={<>
+          <Navbar />
+          <StudentChangePassword />
+        </>} />
+
+        <Route path="/student/teacher-register" element={<>
+          <Navbar />
+          <StudentTeacherRegister />
+        </>} />
+
+        <Route
+          path="/student/teacher-register/result"
+          element={<>
+            <Navbar />
+            <StudentTeacherRegisterResult />
+          </>}
+        />
+
+        <Route
+          path="exams/:examId/"
+          element={
+            <>
+              <Navbar />
+              <StudentExamTakingPage />
+            </>
+          }
+        />
+
+
 
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
 
         <Route path="/teacher" element={<TeacherLayout />}>
-          <Route index element={<Navigate to="/teacher/courses" replace />} />
+          <Route index element={<Navigate to="/teacher/revenue" replace />} />
           <Route path="courses" element={<TeacherCourseList />} />
           <Route path="courses/create" element={<TeacherCourseCreate />} />
           <Route path="courses/:courseId" element={<TeacherCourseDetail />} />
@@ -191,6 +230,12 @@ function App() {
           <Route path="exams" element={<ExamListPage />} />
           <Route path="courses/:courseId/exams" element={<ExamListPage />} />
           <Route path="exams/create" element={<TeacherExamCreate />} />
+          <Route path="exams/:examId" element={<TeacherExamDetail />} />
+          <Route
+            path="exams/:examId/questions/create"
+            element={<TeacherExamQuestionCreate />}
+          />
+
 
           <Route path="profile" element={<h1>Hồ sơ giáo viên</h1>} />
           <Route path="bank" element={<h1>Tài khoản ngân hàng</h1>} />

@@ -11,28 +11,35 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileService {
-	 private final String ROOT_DIR = "D:/uploads/";
 
-	 public String saveFile(MultipartFile file, String subFolder) throws IOException {
-	        if (file == null || file.isEmpty()) return null;
+    // uploads nằm cùng cấp với src, pom.xml
+    private final String ROOT_DIR = System.getProperty("user.dir") + "/uploads/";
 
-	        String originalFilename = file.getOriginalFilename(); // lấy tên file
-	        String extension = "";
+    public String saveFile(MultipartFile file, String subFolder) throws IOException {
 
-	        if (originalFilename != null && originalFilename.contains(".")) {
-	            extension = originalFilename.substring(originalFilename.lastIndexOf(".")); // lấy đuôi file
-	        }
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
 
-	        String fileName = UUID.randomUUID() + extension; // tạo tên mới
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
 
-	        Path uploadPath = Paths.get(ROOT_DIR + subFolder); // tạo thư mục
-	        if (!Files.exists(uploadPath)) { // tạo thư mục nếu chưa có
-	            Files.createDirectories(uploadPath);
-	        }
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
 
-	        Path filePath = uploadPath.resolve(fileName); // ghép thành đường dẫn
-	        Files.copy(file.getInputStream(), filePath); // lưu
+        String fileName = UUID.randomUUID() + extension;
 
-	        return subFolder + "/" + fileName;
-	    }
+        Path uploadPath = Paths.get(ROOT_DIR, subFolder);
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        Path filePath = uploadPath.resolve(fileName);
+
+        Files.copy(file.getInputStream(), filePath);
+
+        return subFolder + "/" + fileName;
+    }
 }
