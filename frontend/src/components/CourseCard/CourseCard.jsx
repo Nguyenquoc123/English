@@ -16,7 +16,7 @@ export default function CourseCard({ course }) {
   };
 
   return (
-    <Link to={`/courses/${course.courseId}`} className="course-card">
+    <Link to={`/khoa-hoc/${course.courseId}`} className="course-card">
       <div className="course-card-thumb">
         <img
           src={getFileUrl(course.thumbnailUrl) || "/placeholder-course.jpg"}

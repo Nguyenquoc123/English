@@ -76,6 +76,22 @@ body {
   padding: 40px;
 }
 
+.register-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  margin-bottom: 16px;
+  transition: color 0.15s;
+}
+
+.register-back:hover {
+  color: #6366f1;
+}
+
 .register-card {
   width: 390px;
   background: white;
