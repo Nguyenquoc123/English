@@ -1,0 +1,400 @@
+.admin-teacher-approval-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  color: #111827;
+}
+
+.admin-teacher-approval-page .admin-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.admin-teacher-approval-page .admin-page-heading h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f3c9c;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.admin-teacher-approval-page .admin-page-heading p {
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+  font-size: 14px;
+  max-width: 560px;
+}
+
+.admin-teacher-approval-page .admin-filter-card,
+.admin-teacher-approval-page .admin-table-card {
+  background: #ffffff;
+  border: 1px solid #eef0f6;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.teacher-approval-count {
+  font-size: 13px;
+}
+
+/* Bảng danh sách */
+.teacher-approval-table-card {
+  padding: 18px;
+}
+
+.teacher-approval-table {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.teacher-approval-table th {
+  white-space: nowrap;
+  color: #374151;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom-width: 1px;
+}
+
+.teacher-approval-table td {
+  vertical-align: middle;
+  color: #374151;
+}
+
+.teacher-approval-row {
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.teacher-approval-row:hover {
+  background-color: #f8fafc;
+}
+
+.teacher-approval-cell-name {
+  font-weight: 600;
+  color: #111827;
+  max-width: 180px;
+}
+
+.teacher-approval-cell-email {
+  max-width: 220px;
+  word-break: break-all;
+}
+
+.teacher-approval-cell-phone {
+  white-space: nowrap;
+}
+
+.teacher-cell-primary {
+  font-weight: 600;
+  color: #111827;
+}
+
+.teacher-cell-phone {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.teacher-phone-link {
+  color: #1d4ed8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.teacher-phone-link:hover {
+  text-decoration: underline;
+}
+
+.teacher-approval-row-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.teacher-approval-row-actions .btn {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.teacher-approval-status {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.teacher-status-pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.teacher-status-approved {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.teacher-status-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.teacher-status-default {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+/* Modal chi tiết */
+.teacher-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.teacher-detail-modal {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.teacher-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid #eef0f6;
+  flex-shrink: 0;
+}
+
+.teacher-detail-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.teacher-detail-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.teacher-detail-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 2px solid #e0e7ff;
+  flex-shrink: 0;
+}
+
+.teacher-detail-avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+  color: #1d4ed8;
+  font-weight: 800;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teacher-detail-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.teacher-detail-sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.teacher-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.teacher-detail-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  font-size: 14px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+.teacher-detail-info-row:last-of-type {
+  border-bottom: none;
+}
+
+.teacher-detail-label {
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.teacher-detail-reject {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #991b1b;
+  margin-top: 4px;
+}
+
+.teacher-detail-section {
+  margin-bottom: 16px;
+}
+
+.teacher-detail-section h6 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.teacher-detail-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  white-space: pre-wrap;
+}
+
+.teacher-detail-html {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.teacher-detail-html img {
+  max-width: 100%;
+  height: auto;
+}
+
+.teacher-detail-empty {
+  font-size: 14px;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+}
+
+.teacher-cert-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.teacher-cert-link {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.teacher-cert-link:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+
+.teacher-cert-thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  display: block;
+  background: #f1f5f9;
+}
+
+.teacher-detail-footer {
+  padding: 14px 22px 18px;
+  border-top: 1px solid #eef0f6;
+  background: #fafbfc;
+  flex-shrink: 0;
+}
+
+.teacher-detail-reject-form textarea {
+  border-radius: 10px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.admin-teacher-approval-page .form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+}
+
+@media (max-width: 768px) {
+  .admin-teacher-approval-page .admin-page-heading {
+    flex-direction: column;
+  }
+
+  .teacher-approval-table th:nth-child(2),
+  .teacher-approval-table td:nth-child(2) {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .teacher-detail-modal {
+    max-height: 95vh;
+    border-radius: 14px;
+  }
+
+  .teacher-detail-info-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+}

@@ -1,0 +1,35 @@
+package com.learning.english.dto.response;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ExamListResponse {
+
+    private Long examId;
+
+    private Long courseId;
+
+    private String courseTitle;
+
+    private String title;
+
+    private String description;
+
+    private Integer durationMinutes;
+
+    private Long questionCount;
+
+    private String status;
+
+    private LocalDateTime startTime;
+
+    private LocalDateTime endTime;
+
+    private LocalDateTime createdAt;
+}

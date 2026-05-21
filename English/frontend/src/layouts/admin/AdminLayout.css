@@ -1,0 +1,26 @@
+.admin-layout {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.admin-main {
+  min-height: 100vh;
+}
+
+.admin-mini-bar {
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-content {
+  padding: 24px;
+}
+
+.admin-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 998;
+}
