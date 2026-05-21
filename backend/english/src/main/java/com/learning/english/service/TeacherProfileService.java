@@ -108,7 +108,7 @@ public class TeacherProfileService {
 		}
 
 		TeacherProfile teacherProfile = TeacherProfile.builder().user(user).approvalStatus("PENDING")
-				.bio(request.getBio()).experience(request.getExperience()).phone(phone).createdAt(LocalDateTime.now())
+				.bio(request.getBio()).experience(request.getExperience()).phone(phone)
 				.certificates(new ArrayList<>()).createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
 
 		for (MultipartFile file : certificateFiles) {

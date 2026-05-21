@@ -163,7 +163,7 @@ function App() {
         />
 
         <Route
-          path="exams/:examId/"
+          path="/exams/:examId"
           element={
             <AppShell>
               <StudentExamTakingPage />
