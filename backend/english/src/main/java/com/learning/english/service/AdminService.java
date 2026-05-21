@@ -273,12 +273,14 @@ public class AdminService {
         return toWithdrawalResponse(withdrawal);
     }
 
-    public List<LessonResponse> getFreeLessons() {
-        return lessonRepository.findByLessonTypeOrderByCreatedAtDesc("Free")
-                .stream()
-                .map(lessonMapper::toLessonResponse)
-                .collect(Collectors.toList());
-    }
+    // ==================== LESSON FREE MANAGEMENT ====================
+
+//    public List<LessonResponse> getFreeLessons() {
+//        return lessonRepository.findByLessonTypeOrderByCreatedAtDesc("Free")
+//                .stream()
+//                .map(lessonMapper::toLessonResponse)
+//                .collect(Collectors.toList());
+//    }
 
     @Transactional
     public LessonResponse createFreeLesson(String title, String description, String status) {
@@ -289,8 +291,6 @@ public class AdminService {
                 .course(null)
                 .title(title)
                 .description(description)
-                .lessonType("Free")
-                .lessonOrder(1)
                 .status(status != null ? status : "Published")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -305,8 +305,8 @@ public class AdminService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài học"));
 
-        if (!"Free".equals(lesson.getLessonType()))
-            throw new RuntimeException("Bài học này không phải lesson free");
+//        if (!"Free".equals(lesson.getLessonType()))
+//            throw new RuntimeException("Bài học này không phải lesson free");
 
         if (title != null && !title.isBlank()) lesson.setTitle(title);
         if (description != null) lesson.setDescription(description);
@@ -322,8 +322,8 @@ public class AdminService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài học"));
 
-        if (!"Free".equals(lesson.getLessonType()))
-            throw new RuntimeException("Chỉ được xóa bài học miễn phí");
+//        if (!"Free".equals(lesson.getLessonType()))
+//            throw new RuntimeException("Chỉ được xóa bài học miễn phí");
 
         lesson.setStatus("deleted");
         lesson.setUpdatedAt(LocalDateTime.now());
@@ -353,13 +353,10 @@ public class AdminService {
                 .title(exam.getTitle())
                 .description(exam.getDescription())
                 .durationMinutes(exam.getDurationMinutes())
-                .maxAttempts(exam.getMaxAttempts())
                 .status(exam.getStatus())
                 .courseId(exam.getCourse() != null ? exam.getCourse().getCourseId() : null)
                 .courseTitle(exam.getCourse() != null ? exam.getCourse().getTitle() : null)
                 .createdByUsername(exam.getCreatedBy() != null ? exam.getCreatedBy().getUsername() : null)
-                .startTime(exam.getStartTime())
-                .endTime(exam.getEndTime())
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())
                 .build();
@@ -407,29 +404,54 @@ public class AdminService {
                 .build();
     }
 
-    public List<TransactionAdminResponse> getAllTransactions() {
-        return transactionRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(this::toTransactionAdminResponse)
-                .collect(Collectors.toList());
-    }
+    // ==================== TRANSACTION MANAGEMENT ====================
 
-    private TransactionAdminResponse toTransactionAdminResponse(Transaction t) {
-        User user = t.getUser();
-        return TransactionAdminResponse.builder()
-                .transactionId(t.getTransactionId())
-                .userId(user != null ? user.getUserId() : null)
-                .username(user != null ? user.getUsername() : null)
-                .email(user != null ? user.getEmail() : null)
-                .targetType(t.getTargetType())
-                .targetId(t.getTargetId())
-                .targetName(resolveTargetName(t.getTargetType(), t.getTargetId()))
-                .amount(t.getAmount())
-                .status(t.getStatus())
-                .createdAt(t.getCreatedAt())
-                .updatedAt(t.getUpdatedAt())
-                .build();
-    }
+//    public List<TransactionAdminResponse> getAllTransactions() {
+//        return transactionRepository.findAllByOrderByCreatedAtDesc()
+//                .stream()
+//                .map(this::toTransactionAdminResponse)
+//                .collect(Collectors.toList());
+//    }
+//
+//    private TransactionAdminResponse toTransactionAdminResponse(Transaction t) {
+//        User user = t.getUser();
+//        return TransactionAdminResponse.builder()
+//                .transactionId(t.getTransactionId())
+//                .userId(user != null ? user.getUserId() : null)
+//                .username(user != null ? user.getUsername() : null)
+//                .email(user != null ? user.getEmail() : null)
+//                .targetType(t.getTargetType())
+//                .targetId(t.getTargetId())
+//                .targetName(resolveTargetName(t.getTargetType(), t.getTargetId()))
+//                .amount(t.getAmount())
+//                .status(t.getStatus())
+//                .createdAt(t.getCreatedAt())
+//                .updatedAt(t.getUpdatedAt())
+//                .build();
+//    }
+//    public List<TransactionAdminResponse> getAllTransactions() {
+//        return transactionRepository.findAllByOrderByCreatedAtDesc()
+//                .stream()
+//                .map(this::toTransactionAdminResponse)
+//                .collect(Collectors.toList());
+//    }
+//
+//    private TransactionAdminResponse toTransactionAdminResponse(Transaction t) {
+//        User user = t.getUser();
+//        return TransactionAdminResponse.builder()
+//                .transactionId(t.getTransactionId())
+//                .userId(user != null ? user.getUserId() : null)
+//                .username(user != null ? user.getUsername() : null)
+//                .email(user != null ? user.getEmail() : null)
+//                .targetType(t.getTargetType())
+//                .targetId(t.getTargetId())
+//                .targetName(resolveTargetName(t.getTargetType(), t.getTargetId()))
+//                .amount(t.getAmount())
+//                .status(t.getStatus())
+//                .createdAt(t.getCreatedAt())
+//                .updatedAt(t.getUpdatedAt())
+//                .build();
+//    }
 
     private String resolveTargetName(String targetType, Long targetId) {
         if (targetId == null) return null;

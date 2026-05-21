@@ -17,13 +17,7 @@ public class ExamCreateRequest {
 
     private String description;
 
-    private LocalDateTime startTime;
-
-    private LocalDateTime endTime;
-
     private Integer durationMinutes;
-
-    private Integer maxAttempts;
 
     private String status;
 }

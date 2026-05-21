@@ -45,3 +45,9 @@ sepay:
 
   webhook:
     secret: "your_sepay_webhook_secret"
+    
+gemini:
+  api:
+    key: AIzaSyDu55CtYjFilJGB4xL58BxaMquef_bdp-4
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    

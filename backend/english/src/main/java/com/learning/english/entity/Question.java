@@ -28,6 +28,10 @@ public class Question {
 
     @Column(name = "questiontype", nullable = false, length = 50)
     private String questionType;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "personalPracticeId")
+    private PersonalPractice personalPractice;
 
     @Column(name = "content", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String content;

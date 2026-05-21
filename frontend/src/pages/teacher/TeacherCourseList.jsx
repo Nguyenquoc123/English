@@ -211,16 +211,11 @@ function TeacherCourseList() {
     };
 
     return (
-        <div>
+        <div clas="container">
             <div className="d-flex justify-content-between align-items-start mb-4">
                 <div>
 
                     <h2 className="fw-bold mb-1">Danh sách khóa học của giáo viên</h2>
-
-                    <p className="text-muted mb-0">
-                        Quản lý các khóa học đã tạo, theo dõi trạng thái duyệt và cập nhật
-                        nội dung khóa học.
-                    </p>
                 </div>
 
                 <button
@@ -234,10 +229,7 @@ function TeacherCourseList() {
 
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="fw-bold mb-3">
-                        <i className="bi bi-funnel me-2"></i>
-                        Tìm kiếm và lọc khóa học
-                    </h5>
+
 
                     <form onSubmit={handleSearch}>
                         <div className="row g-3 align-items-end">

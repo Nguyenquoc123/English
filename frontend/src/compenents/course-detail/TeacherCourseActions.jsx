@@ -18,15 +18,7 @@ function TeacherCourseActions({
         Sắp xếp lesson
       </button>
 
-      <button
-        className="btn btn-outline-secondary"
-        onClick={() =>
-          navigate(`/teacher/courses/${course.courseId}/exams/create`)
-        }
-      >
-        <i className="bi bi-clipboard-plus me-1"></i>
-        Tạo bài thi
-      </button>
+      
 
       {(course.status === "Draft" || course.status === "Rejected") && (
         <button

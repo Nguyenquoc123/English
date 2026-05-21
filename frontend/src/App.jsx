@@ -71,6 +71,18 @@ import ChangePassword from "./pages/admin/ChangePassword/ChangePassword";
 import AdminProfile from "./pages/admin/AdminProfile/AdminProfile";
 import Statistics from "./pages/admin/Statistics/Statistics";
 
+import AiChatWidget from "./pages/chataiwidget/AiChatWidget.jsx";
+import CreatePersonalPractice from "./pages/student/practice/CreatePersonalPractice.jsx";
+import DanhSachBaiOnTap from "./pages/danhsachbaiontap/DanhSachBaiOnTap.jsx";
+import LamBaiOnTap from "./pages/danhsachbaiontap/lambaiontap/LamBaiOnTap.jsx";
+import LichSuLamBai from "./pages/lichsulambai/LichSuLamBai.jsx";
+
+import ChiTietBaiLam from "./pages/lichsulambai/ChiTietBaiLam.jsx";
+import DSKhoaHocDaMua from "./pages/dskhoahocdamua/DSKhoaHocDaMua.jsx";
+import CartPage from "./pages/cart/CartPage.jsx";
+import ThanhToanGioHang from "./pages/cart/ThanhToanGioHang.jsx";
+import Navbar from "./components/layout/Navbar/Navbar.jsx";
+
 function ProtectedAdminRoute({ children }) {
   const token = localStorage.getItem("token");
 
@@ -94,16 +106,19 @@ function App() {
         <Route
           path="/danh-sach-khoa-hoc"
           element={
-            <AppShell>
+            <>
+            <Navbar/>
               <DSKhoaHoc />
-            </AppShell>
+              <AiChatWidget />
+            </>
           }
         />
 
         <Route path="/khoa-hoc/:courseId" element={
-          <AppShell>
+          <>
             <StudentCourseDetail />
-          </AppShell>
+            <AiChatWidget />
+          </>
         } />
 
         <Route path="/courses/:courseId/purchase" element={
@@ -163,13 +178,58 @@ function App() {
         />
 
         <Route
-          path="/exams/:examId"
-          element={
-            <AppShell>
-              <StudentExamTakingPage />
-            </AppShell>
-          }
+          path="personal-practices"
+          element={<>
+            <Navbar />
+            <DanhSachBaiOnTap />
+          </>}
         />
+
+        <Route
+          path="personal-practices/:personalPracticeId"
+          element={<>
+            <Navbar />
+            <LamBaiOnTap />
+          </>}
+        />
+
+        <Route
+          path="personal-practices/create"
+          element={<>
+            <Navbar />
+            <CreatePersonalPractice />
+          </>}
+        />
+
+        <Route path="lich-su-lam-bai" element={<>
+          <Navbar />
+          <LichSuLamBai />
+        </>} />
+
+        <Route path="lich-su-lam-bai/:attemptId" element={<>
+          <Navbar />
+          <ChiTietBaiLam />
+        </>} />
+
+        <Route path="khoa-hoc-da-mua" element={
+          <>
+            <Navbar />
+            <DSKhoaHocDaMua />
+          </>
+        } />
+
+        <Route path="/gio-hang" element={
+          <>
+            <Navbar />
+            <CartPage />
+          </>
+        } />
+
+        <Route path="/thanh-toan" element={<>
+            <Navbar />
+            <ThanhToanGioHang />
+          </>} />
+
 
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
 
@@ -229,7 +289,7 @@ function App() {
           <Route path="exams" element={<ExamListPage />} />
           <Route path="courses/:courseId/exams" element={<ExamListPage />} />
           <Route path="exams/create" element={<TeacherExamCreate />} />
-          <Route path="exams/:examId" element={<TeacherExamDetail />} />
+          <Route path="courses/:courseId/exams/:examId" element={<TeacherExamDetail />} />
           <Route
             path="exams/:examId/questions/create"
             element={<TeacherExamQuestionCreate />}

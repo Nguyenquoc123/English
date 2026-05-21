@@ -28,4 +28,10 @@ public class VideoResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    
+    private String status;
+    
+    private Boolean isCompleted;
+
+    private Integer watchedSeconds;
 }

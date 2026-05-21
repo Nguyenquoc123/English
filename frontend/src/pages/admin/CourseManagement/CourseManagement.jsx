@@ -26,7 +26,7 @@ function CourseManagement() {
       if (status) params.append("status", status);
 
       const response = await fetch(
-        `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc?${params.toString()}`,
+        `http://localhost:8080/admin/courses/pending`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }

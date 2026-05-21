@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 public interface TeacherEarningRepository extends JpaRepository<TeacherEarning, Long> {
 
     boolean existsByTransactionTransactionId(Long transactionId);
+    
+    boolean existsByTransactionItemTransactionItemId(Long transactionItemId);
 }

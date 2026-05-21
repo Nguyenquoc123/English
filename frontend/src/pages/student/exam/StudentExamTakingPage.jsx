@@ -453,7 +453,7 @@ const StudentExamTakingPage = () => {
 
             
             navigate(
-                `/student-exams/result/${result.attemptId}`
+                `/lich-su-lam-bai/${result.attemptId}`
             );
 
         } catch (error) {

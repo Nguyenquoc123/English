@@ -1,0 +1,109 @@
+.review-page {
+  min-height: 100vh;
+  background: #f4f7ff;
+}
+
+.filter-box {
+  border: 1px solid #eef1f8;
+}
+
+.form-control,
+.form-select,
+.input-group-text {
+  height: 48px;
+  border-color: #dde4ef;
+  font-size: 14px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: none;
+  border-color: #1947b5;
+}
+
+.btn-primary {
+  background-color: #123caa;
+  border-color: #123caa;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background-color: #0c2f8a;
+  border-color: #0c2f8a;
+}
+
+.btn-search {
+  height: 48px;
+  background-color: #062f96;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-search:hover {
+  background-color: #052777;
+  color: white;
+}
+
+.review-card {
+  border: 1px solid #eef1f8;
+}
+
+.review-card-header {
+  height: 115px;
+  padding: 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.review-card-header.blue {
+  background: linear-gradient(135deg, #3149c8, #2639b8);
+}
+
+.review-card-header.red {
+  background: linear-gradient(135deg, #e02d32, #f14343);
+}
+
+.review-card-header.purple {
+  background: linear-gradient(135deg, #5948dc, #6d55ed);
+}
+
+.review-card-header h6 {
+  font-size: 16px;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.decor-icon {
+  position: absolute;
+  right: -5px;
+  bottom: -25px;
+  width: 95px;
+  height: 95px;
+  border: 8px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 54px;
+  font-weight: 800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.review-card-body {
+  padding: 28px 24px;
+}
+
+.btn-light {
+  background-color: #f4f6f9;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.btn-light:hover {
+  background-color: #e9edf4;
+}

@@ -24,17 +24,11 @@ public class TeacherExamDetailResponse {
 
     private Integer durationMinutes;
 
-    private Integer maxAttempts;
-
     private Long questionCount;
 
     private BigDecimal totalPoint;
 
     private String status;
-
-    private LocalDateTime startTime;
-
-    private LocalDateTime endTime;
 
     private LocalDateTime createdAt;
 

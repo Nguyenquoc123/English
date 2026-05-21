@@ -22,6 +22,7 @@ public class CourseResponse {
 
     private Long teacherId;
     private String teacherName;
+    private String avatarUrl;
 
     private Long levelId;
     private String levelName;
@@ -33,7 +34,6 @@ public class CourseResponse {
     private BigDecimal price;
     private String courseType;
     private String status;
-    private BigDecimal examPrice;
 
     private LocalDateTime submittedAt;
     private LocalDateTime reviewedAt;

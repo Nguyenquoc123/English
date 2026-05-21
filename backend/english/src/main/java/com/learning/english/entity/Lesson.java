@@ -29,11 +29,6 @@ public class Lesson {
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
-    @Column(name = "lessonorder", nullable = false)
-    private Integer lessonOrder;
-
-    @Column(name = "lessontype", length = 50)
-    private String lessonType = null;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;

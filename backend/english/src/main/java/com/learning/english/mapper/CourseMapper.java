@@ -17,6 +17,7 @@ public interface CourseMapper {
 
     @Mapping(source = "teacher.userId", target = "teacherId")
     @Mapping(source = "teacher.fullName", target = "teacherName")
+    @Mapping(source = "teacher.avatarUrl", target = "avatarUrl")
     @Mapping(source = "level.levelId", target = "levelId")
     @Mapping(source = "level.levelName", target = "levelName")
     @Mapping(source = "reviewedBy.userId", target = "reviewedBy")
@@ -33,30 +34,36 @@ public interface CourseMapper {
     StudentCourseDetailResponse toStudentCourseDetailResponse(Course course);
     
     
-    default CourseDetailResponse mapToCourseDetailResponse(Object[] row) {
+    default CourseDetailResponse toCourseDetailResponse(Object[] row) {
+        if (row == null) {
+            return null;
+        }
+
         return CourseDetailResponse.builder()
                 .courseId(toLong(row[0]))
-                .title(toStringValue(row[1]))
-                .description(toStringValue(row[2]))
-                .thumbnailUrl(toStringValue(row[3]))
-                .levelName(toStringValue(row[4]))
-                .accessType(toStringValue(row[5]))
+                .title(toString(row[1]))
+                .description(toString(row[2]))
+                .thumbnailUrl(toString(row[3]))
+                .levelName(toString(row[4]))
+                .accessType(toString(row[5]))
                 .price(toBigDecimal(row[6]))
-                .practicePrice(toBigDecimal(row[7]))
-                .status(toStringValue(row[8]))
-                .lessonCount(toLong(row[9]))
-                .studentCount(toLong(row[10]))
-                .examCount(toLong(row[11]))
-                .rating(toDouble(row[12]))
-                .revenue(toBigDecimal(row[13]))
-                .createdAt(toLocalDateTime(row[14]))
-                .updatedAt(toLocalDateTime(row[15]))
-                .submittedAt(toLocalDateTime(row[16]))
-                .approvedAt(toLocalDateTime(row[17]))
-                .rejectReason(toStringValue(row[18]))
-                .teacherName(toStringValue(row[19]))
-                .levelId(toLong(row[20]))
+                .status(toString(row[7]))
+                .lessonCount(toLong(row[8]))
+                .studentCount(toLong(row[9]))
+                .rating(toDouble(row[10]))
+                .revenue(toBigDecimal(row[11]))
+                .createdAt(toLocalDateTime(row[12]))
+                .updatedAt(toLocalDateTime(row[13]))
+                .submittedAt(toLocalDateTime(row[14]))
+                .approvedAt(toLocalDateTime(row[15]))
+                .rejectReason(toString(row[16]))
+                .teacherName(toString(row[17]))
+                .levelId(toLong(row[18]))
                 .build();
+    }
+    
+    private String toString(Object value) {
+        return value == null ? null : value.toString();
     }
 
     private String toStringValue(Object value) {

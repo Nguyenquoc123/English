@@ -1,7 +1,11 @@
 package com.learning.english.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -12,29 +16,39 @@ import com.learning.english.dto.request.LessonRequest;
 import com.learning.english.dto.request.LessonUpdateRequest;
 import com.learning.english.dto.response.CourseLessonListResponse;
 import com.learning.english.dto.response.LessonListItemResponse;
+import com.learning.english.dto.response.LessonListResponse;
 import com.learning.english.dto.response.LessonResponse;
 import com.learning.english.dto.response.StudentLessonDetailResponse;
 import com.learning.english.dto.response.StudentLessonResponse;
 import com.learning.english.dto.response.TeacherLessonDetailResponse;
+import com.learning.english.dto.response.VideoProgressResponse;
 import com.learning.english.entity.Course;
+import com.learning.english.entity.CourseItem;
 import com.learning.english.entity.Grammar;
 import com.learning.english.entity.Lesson;
 import com.learning.english.entity.Level;
 import com.learning.english.entity.Question;
 import com.learning.english.entity.User;
 import com.learning.english.entity.Video;
+import com.learning.english.entity.VideoProgress;
 import com.learning.english.entity.Vocabulary;
 import com.learning.english.mapper.LessonMapper;
 import com.learning.english.mapper.TeacherLessonDetailMapper;
+import com.learning.english.repository.AttemptRepository;
+import com.learning.english.repository.CourseItemRepository;
 import com.learning.english.repository.CourseRepository;
 import com.learning.english.repository.EnrollmentRepository;
 import com.learning.english.repository.GrammarRepository;
+
 import com.learning.english.repository.LessonRepository;
 import com.learning.english.repository.LevelRepository;
 import com.learning.english.repository.QuestionRepository;
 import com.learning.english.repository.UserRepository;
+import com.learning.english.repository.VideoProgressRepository;
 import com.learning.english.repository.VideoRepository;
 import com.learning.english.repository.VocabularyRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class LessonService {
@@ -71,6 +85,31 @@ public class LessonService {
 	@Autowired
 	EnrollmentRepository enrollmentRepository;
 
+	@Autowired
+	CourseItemRepository courseItemRepository;
+
+	@Autowired
+	VideoProgressRepository videoProgressRepository;
+
+	@Autowired
+	AttemptRepository attemptRepository;
+
+	// role teacher
+	public List<LessonListResponse> layDanhSachNoiDungKhoaHoc(Long courseId, String keyword, String status) {
+		if (courseId == null) {
+			throw new RuntimeException("Course id không được để trống");
+		}
+
+		boolean courseExists = courseRepository.existsById(courseId);
+
+		if (!courseExists) {
+			throw new RuntimeException("Không tìm thấy khóa học với id = " + courseId);
+		}
+
+		return courseItemRepository.findCourseContentsByCourseId(courseId, keyword, status).stream()
+				.map(lessonMapper::toLessonListResponse).filter(Objects::nonNull).toList();
+	}
+
 	public List<LessonResponse> dsLessonCuaKhoaHoc(Long courseId) {
 		return lessonRepository.findByCourse_CourseId(courseId).stream().map(lessonMapper::toLessonResponse).toList();
 	}
@@ -100,28 +139,34 @@ public class LessonService {
 				.build();
 	}
 
+	@Transactional
 	public LessonResponse themLesson(LessonRequest request) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (authentication == null || !authentication.isAuthenticated())
+		if (authentication == null || !authentication.isAuthenticated()) {
 			throw new RuntimeException("Người dùng chưa đăng nhập");
-		Course course = null;
-
-		if (request.getCourseId() != null) {
-			course = courseRepository.findById(request.getCourseId())
-					.orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
 		}
 
-		Integer maxLessonOrder = lessonRepository.findMaxLessonOrderByCourseId(request.getCourseId());
+		Course course = courseRepository.findById(request.getCourseId())
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
 
-		Integer nextLessonOrder = maxLessonOrder == null ? 1 : maxLessonOrder + 1;
+		Integer maxItemOrder = courseItemRepository.findMaxItemOrderByCourseId(request.getCourseId());
+		Integer nextItemOrder = maxItemOrder == null ? 1 : maxItemOrder + 1;
 
-		Lesson lesson = Lesson.builder().course(course).createdAt(LocalDateTime.now())
-				.description(request.getDescription()).status(request.getStatus()).title(request.getTitle())
-				.updatedAt(LocalDateTime.now()).lessonOrder(nextLessonOrder).build();
+		LocalDateTime now = LocalDateTime.now();
 
-		lesson = lessonRepository.save(lesson);
-		return lessonMapper.toLessonResponse(lesson);
+		Lesson lesson = Lesson.builder().course(course).title(request.getTitle().trim())
+				.description(request.getDescription().trim()).status(request.getStatus()).createdAt(now).updatedAt(now)
+				.build();
+
+		Lesson savedLesson = lessonRepository.save(lesson);
+
+		CourseItem courseItem = CourseItem.builder().course(course).itemType("LESSON").lesson(savedLesson).exam(null)
+				.itemOrder(nextItemOrder).build();
+
+		courseItemRepository.save(courseItem);
+
+		return lessonMapper.toLessonResponse(savedLesson);
 	}
 
 	public LessonResponse updateLesson(LessonUpdateRequest request) {
@@ -207,20 +252,156 @@ public class LessonService {
 				questions);
 	}
 
-	public List<StudentLessonResponse> layDanhSachBaiHocChoHocVien(Long courseId) {
-		Course course = courseRepository.findByCourseIdAndStatus(courseId, "Published")
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
+	public List<StudentLessonResponse> layNoiDungKhoaHocChoStudent(Long courseId) {
 
-		boolean hasCourseAccess = checkHasCourseAccess(course);
+		User user = getCurrentUser();
 
-		return lessonRepository.findAllByCourseCourseIdAndStatusOrderByLessonOrderAsc(courseId, "Published").stream()
-				.map(lesson -> {
-					StudentLessonResponse response = lessonMapper.toStudentLessonResponse(lesson);
+		if (!courseRepository.existsById(courseId)) {
+			throw new RuntimeException("Không tìm thấy khóa học");
+		}
 
-					response.setIsLocked(!hasCourseAccess);
+		boolean enrolled = enrollmentRepository
+				.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
 
-					return response;
-				}).toList();
+		List<CourseItem> courseItems = courseItemRepository.findPublishedCourseContentsByCourseId(courseId);
+
+		List<StudentLessonResponse> responses = new ArrayList<>();
+
+		boolean previousCompleted = true;
+		boolean foundCurrent = false;
+
+		for (CourseItem item : courseItems) {
+
+			boolean completed = kiemTraCourseItemDaHoanThanh(user.getUserId(), item);
+
+			boolean locked = false;
+			boolean current = false;
+
+			String lockReason = null;
+
+			if (!enrolled) {
+
+				locked = true;
+				lockReason = "Bạn cần mua khóa học";
+
+			} else {
+
+				locked = !previousCompleted;
+
+				if (locked) {
+
+					lockReason = "Bạn cần hoàn thành nội dung trước đó";
+
+				} else if (!completed && !foundCurrent) {
+
+					current = true;
+					foundCurrent = true;
+				}
+			}
+
+			if ("LESSON".equalsIgnoreCase(item.getItemType())) {
+
+				responses.add(lessonMapper.toLessonResponse(item, completed, locked, current, lockReason));
+			}
+
+			if ("EXAM".equalsIgnoreCase(item.getItemType())) {
+
+				responses.add(lessonMapper.toExamResponse(item, completed, locked, current, lockReason));
+			}
+
+			previousCompleted = completed;
+		}
+
+		return responses;
+	}
+
+	private boolean kiemTraCourseItemDaHoanThanh(Long userId, CourseItem item) {
+
+		if ("LESSON".equalsIgnoreCase(item.getItemType())) {
+
+			return kiemTraHoanThanhLesson(userId, item.getLesson().getLessonId());
+		}
+
+		if ("EXAM".equalsIgnoreCase(item.getItemType())) {
+
+			return attemptRepository.existsByUserUserIdAndExamExamId(userId, item.getExam().getExamId());
+		}
+
+		return false;
+	}
+
+	private boolean kiemTraHoanThanhLesson(Long userId, Long lessonId) {
+
+		long totalVideos = videoRepository.countVideos(lessonId);
+
+		if (totalVideos == 0) {
+			return false;
+		}
+
+		long completedVideos = videoProgressRepository.countCompletedVideos(userId, lessonId);
+
+		return completedVideos == totalVideos;
+	}
+
+	@Transactional
+	public VideoProgressResponse luuTienDoVideo(Long videoId, Integer watchedSeconds) {
+		User user = getCurrentUser();
+
+		Video video = videoRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Không tìm thấy video"));
+
+		Long courseId = video.getLesson().getCourse().getCourseId();
+
+		boolean enrolled = enrollmentRepository
+				.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
+
+		if (!enrolled) {
+			throw new RuntimeException("Bạn chưa mua khóa học");
+		}
+
+		VideoProgress progress = videoProgressRepository.findByUserUserIdAndVideoVideoId(user.getUserId(), videoId)
+				.orElse(VideoProgress.builder().user(user).video(video).watchedseconds(0).iscompleted(false)
+						.createdAt(LocalDateTime.now()).build());
+
+		
+
+		if (watchedSeconds != null && watchedSeconds > progress.getWatchedseconds()) {
+			progress.setWatchedseconds(watchedSeconds);
+		}
+
+		double percent = 0;
+
+		if (video.getDurationSeconds() != null && video.getDurationSeconds() > 0) {
+			percent = (double) progress.getWatchedseconds() / video.getDurationSeconds();
+		}
+
+		if (percent >= 0.7) {
+			progress.setIscompleted(true);
+		}
+
+		progress.setUpdatedAt(LocalDateTime.now());
+
+		progress = videoProgressRepository.save(progress);
+
+		boolean isVideoCompleted = Boolean.TRUE.equals(progress.getIscompleted());
+
+		boolean lessonCompleted = kiemTraHoanThanhLesson(user.getUserId(), video.getLesson().getLessonId());
+		boolean shouldReloadLessons = lessonCompleted;
+
+		return VideoProgressResponse.builder().videoCompleted(isVideoCompleted).lessonCompleted(lessonCompleted)
+				.shouldReloadLessons(shouldReloadLessons).build();
+	}
+
+	private User getCurrentUser() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		return userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 	}
 
 	public boolean checkHasCourseAccess(Course course) {
@@ -278,9 +459,6 @@ public class LessonService {
 			return true;
 		}
 
-		return enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
-				userId,
-				courseId
-		);
+		return enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(userId, courseId);
 	}
 }

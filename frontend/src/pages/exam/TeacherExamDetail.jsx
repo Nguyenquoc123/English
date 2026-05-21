@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherExamDetail.css";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
@@ -6,6 +6,7 @@ import { teacherExams } from "../../utils/breadcrumbPaths";
 
 function TeacherExamDetail() {
   const navigate = useNavigate();
+  const { courseId} = useParams(); 
   const { examId } = useParams();
 
   const API_BASE = "http://localhost:8080";
@@ -18,7 +19,7 @@ function TeacherExamDetail() {
   const [error, setError] = useState("");
 
   const getToken = () => {
-    return localStorage.getItem("token");
+    return localStorage.getItem("english_token") || localStorage.getItem("token");
   };
 
   useEffect(() => {
@@ -56,13 +57,13 @@ function TeacherExamDetail() {
       const result = data?.result || data?.data || data;
 
       if (!response.ok) {
-        setError(result?.message || "Không thể tải chi tiết kỳ thi");
+        setError(result?.message || data?.message || "Không thể tải chi tiết kỳ thi");
         return;
       }
 
       setExam(result);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       setError("Lỗi kết nối server khi tải chi tiết kỳ thi");
     } finally {
       setLoadingExam(false);
@@ -74,6 +75,11 @@ function TeacherExamDetail() {
       setLoadingQuestions(true);
 
       const token = getToken();
+
+      if (!token) {
+        navigate("/dang-nhap");
+        return;
+      }
 
       const response = await fetch(`${API_BASE}/exams/${examId}/questions/teacher`, {
         method: "GET",
@@ -90,7 +96,7 @@ function TeacherExamDetail() {
         data = null;
       }
 
-      const result = data?.result || data?.data || data || [];
+      const result = data?.result || data?.data || data;
 
       if (!response.ok) {
         setQuestions([]);
@@ -98,8 +104,8 @@ function TeacherExamDetail() {
       }
 
       setQuestions(Array.isArray(result) ? result : []);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       setQuestions([]);
     } finally {
       setLoadingQuestions(false);
@@ -110,6 +116,7 @@ function TeacherExamDetail() {
     if (!exam) return;
 
     const ok = window.confirm(`Bạn có chắc muốn xóa kỳ thi "${exam.title}" không?`);
+
     if (!ok) return;
 
     try {
@@ -137,8 +144,8 @@ function TeacherExamDetail() {
 
       alert("Xóa kỳ thi thành công");
       navigate("/teacher/exams");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Lỗi hệ thống khi xóa kỳ thi");
     }
   };
@@ -147,6 +154,7 @@ function TeacherExamDetail() {
     if (!exam) return;
 
     const ok = window.confirm(`Bạn có chắc muốn ẩn kỳ thi "${exam.title}" không?`);
+
     if (!ok) return;
 
     try {
@@ -174,21 +182,22 @@ function TeacherExamDetail() {
 
       alert("Ẩn kỳ thi thành công");
       loadExamDetail();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Lỗi hệ thống khi ẩn kỳ thi");
     }
   };
 
-  const handleRemoveQuestion = async (examQuestion) => {
-    const ok = window.confirm("Bạn có chắc muốn xóa câu hỏi này khỏi kỳ thi?");
+  const handleRemoveQuestion = async (question) => {
+    const ok = window.confirm("Bạn có chắc muốn xóa câu hỏi này khỏi kỳ thi không?");
+
     if (!ok) return;
 
     try {
       const token = getToken();
 
       const response = await fetch(
-        `${API_BASE}/exams/${examId}/questions/${examQuestion.examQuestionId}`,
+        `${API_BASE}/exams/${examId}/questions/${question.examQuestionId}`,
         {
           method: "DELETE",
           headers: {
@@ -213,8 +222,8 @@ function TeacherExamDetail() {
       alert("Xóa câu hỏi thành công");
       loadExamQuestions();
       loadExamDetail();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Lỗi hệ thống khi xóa câu hỏi");
     }
   };
@@ -248,48 +257,59 @@ function TeacherExamDetail() {
   };
 
   const getStatusBadge = (status) => {
-    const value = String(status || "").toLowerCase();
+    const value = String(status || "").toUpperCase();
 
-    if (value === "open") {
-      return <span className="teacher-exam-status status-open">Open</span>;
+    if (value === "OPEN" || value === "ACTIVE") {
+      return <span className="teacher-exam-status status-open">Đang mở</span>;
     }
 
-    if (value === "closed") {
-      return <span className="teacher-exam-status status-closed">Closed</span>;
+    if (value === "CLOSED") {
+      return <span className="teacher-exam-status status-closed">Đã đóng</span>;
     }
 
-    if (value === "draft") {
-      return <span className="teacher-exam-status status-draft">Draft</span>;
+    if (value === "DRAFT") {
+      return <span className="teacher-exam-status status-draft">Bản nháp</span>;
     }
 
-    if (value === "hidden") {
-      return <span className="teacher-exam-status status-hidden">Hidden</span>;
+    if (value === "HIDDEN") {
+      return <span className="teacher-exam-status status-hidden">Đã ẩn</span>;
     }
 
     return <span className="teacher-exam-status status-muted">{status || "--"}</span>;
   };
 
-  const getQuestionTypeBadge = (type) => {
+  const getQuestionTypeText = (type) => {
     const value = String(type || "").toUpperCase();
 
     const labelMap = {
-      MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
-      LISTENING_CHOICE: "LISTENING_CHOICE",
-      LISTENING_FILL_BLANK: "LISTENING_FILL_BLANK",
-      ARRANGE_SENTENCE: "ARRANGE_SENTENCE",
-      WRITING_SHORT: "WRITING_SHORT",
+      MULTIPLE_CHOICE: "Trắc nghiệm",
+      LISTENING_CHOICE: "Nghe chọn đáp án",
+      LISTENING_FILL_BLANK: "Nghe điền từ",
+      ARRANGE_SENTENCE: "Sắp xếp câu",
+      WRITING_SHORT: "Viết ngắn",
     };
 
+    return labelMap[value] || value || "--";
+  };
+
+  const getQuestionTypeBadge = (type) => {
+    const value = String(type || "").toLowerCase();
+
     return (
-      <span className={`question-type-badge type-${value.toLowerCase()}`}>
-        {labelMap[value] || value}
+      <span className={`question-type-badge type-${value}`}>
+        {getQuestionTypeText(type)}
       </span>
     );
   };
 
-  const totalPoint = questions.reduce((sum, item) => {
-    return sum + Number(item.point || 0);
-  }, 0);
+  const calculatedTotalPoint = useMemo(() => {
+    return questions.reduce((sum, item) => {
+      return sum + Number(item.point || 0);
+    }, 0);
+  }, [questions]);
+
+  const questionCount = exam?.questionCount ?? questions.length ?? 0;
+  const totalPoint = exam?.totalPoint ?? calculatedTotalPoint;
 
   if (loadingExam) {
     return (
@@ -329,106 +349,72 @@ function TeacherExamDetail() {
   return (
     <div className="teacher-exam-detail-page">
       <div className="teacher-exam-detail-container">
-        <CourseBreadcrumb
-          items={[teacherExams, { label: exam.title || "Chi tiết kỳ thi" }]}
-        />
-
         <div className="teacher-exam-page-top">
-          <div className="teacher-exam-top-actions">
-            <button
-              type="button"
-              className="btn btn-light"
-              onClick={() => navigate(`/teacher/exams/${examId}/results`)}
+          <nav className="teacher-breadcrumb">
+            <span
+              className="teacher-breadcrumb-item"
+              onClick={() => navigate("/teacher/courses")}
             >
-              <i className="bi bi-people me-2"></i>
-              Kết quả học viên
-            </button>
+              Khóa học
+            </span>
 
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate(`/teacher/exams/${examId}/update`)}
+            <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
+
+            <span
+              className="teacher-breadcrumb-item"
+              onClick={() => navigate(`/teacher/courses/${courseId}`)}
             >
-              <i className="bi bi-pencil-square me-2"></i>
-              Cập nhật kỳ thi
-            </button>
-          </div>
+              Chi tiết khóa học
+            </span>
+
+            <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
+
+            <span className="teacher-breadcrumb-item active">
+              Bài thi
+            </span>
+          </nav>
         </div>
 
-        <section className="exam-overview-card">
-          <div className="exam-overview-main">
-            <div className="exam-status-row">
-              {getStatusBadge(exam.status)}
-              <span className="exam-id-text">EX-{exam.examId}</span>
+        <section className="exam-overview-card exam-overview-card-new">
+          <div className="exam-overview-header">
+            <div className="exam-title-block">
+              <div className="exam-status-row">
+                {getStatusBadge(exam.status)}
+                <span className="exam-id-text">EX-{exam.examId}</span>
+              </div>
+
+              <h1>{exam.title || "Kỳ thi chưa có tiêu đề"}</h1>
+
+              <div
+                className="exam-description"
+                dangerouslySetInnerHTML={{
+                  __html: exam.description || "Chưa có mô tả kỳ thi.",
+                }}
+              ></div>
             </div>
 
-            <h1>{exam.title}</h1>
 
-            <div
-              className="exam-description"
-              dangerouslySetInnerHTML={{
-                __html: exam.description || "Chưa có mô tả kỳ thi.",
-              }}
-            ></div>
-
-            <div className="exam-quick-actions">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => navigate(`/teacher/exams/${examId}/questions/create`)}
-              >
-                <i className="bi bi-plus-lg me-2"></i>
-                Thêm câu hỏi
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline-primary"
-                onClick={() => navigate(`/teacher/exams/${examId}/results`)}
-              >
-                <i className="bi bi-bar-chart me-2"></i>
-                Xem kết quả
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-soft-danger"
-                onClick={handleHideExam}
-              >
-                <i className="bi bi-eye-slash me-2"></i>
-                Ẩn kỳ thi
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-soft-danger"
-                onClick={handleDeleteExam}
-              >
-                <i className="bi bi-trash me-2"></i>
-                Xóa kỳ thi
-              </button>
-            </div>
           </div>
 
-          <div className="exam-overview-side">
-            <div className="exam-side-box">
+          <div className="exam-info-grid">
+            <div className="exam-info-item">
               <span>Khóa học</span>
               <strong>{exam.courseTitle || "--"}</strong>
             </div>
 
-            <div className="exam-side-box">
-              <span>Bắt đầu</span>
-              <strong>{formatDateTime(exam.startTime)}</strong>
+            <div className="exam-info-item">
+              <span>Mã khóa học</span>
+              <strong>{exam.courseId ? `COURSE-${exam.courseId}` : "--"}</strong>
             </div>
 
-            <div className="exam-side-box">
-              <span>Kết thúc</span>
-              <strong>{formatDateTime(exam.endTime)}</strong>
-            </div>
-
-            <div className="exam-side-box">
+            <div className="exam-info-item">
               <span>Ngày tạo</span>
               <strong>{formatDateTime(exam.createdAt)}</strong>
+            </div>
+
+            <div className="exam-info-item">
+              <span>Cập nhật</span>
+              <strong>{formatDateTime(exam.updatedAt)}</strong>
             </div>
           </div>
         </section>
@@ -438,6 +424,7 @@ function TeacherExamDetail() {
             <div className="stat-icon blue">
               <i className="bi bi-clock"></i>
             </div>
+
             <div>
               <span>Thời gian làm</span>
               <strong>{exam.durationMinutes || 0} phút</strong>
@@ -448,19 +435,10 @@ function TeacherExamDetail() {
             <div className="stat-icon purple">
               <i className="bi bi-list-check"></i>
             </div>
+
             <div>
               <span>Số câu hỏi</span>
-              <strong>{questions.length || exam.questionCount || 0} câu</strong>
-            </div>
-          </div>
-
-          <div className="exam-stat-card">
-            <div className="stat-icon orange">
-              <i className="bi bi-arrow-repeat"></i>
-            </div>
-            <div>
-              <span>Số lần làm</span>
-              <strong>{exam.maxAttempts || 1} lần</strong>
+              <strong>{questionCount} câu</strong>
             </div>
           </div>
 
@@ -468,9 +446,21 @@ function TeacherExamDetail() {
             <div className="stat-icon yellow">
               <i className="bi bi-star"></i>
             </div>
+
             <div>
               <span>Tổng điểm</span>
-              <strong>{formatPoint(exam.totalPoint ?? totalPoint)} điểm</strong>
+              <strong>{formatPoint(totalPoint)} điểm</strong>
+            </div>
+          </div>
+
+          <div className="exam-stat-card">
+            <div className="stat-icon orange">
+              <i className="bi bi-shield-check"></i>
+            </div>
+
+            <div>
+              <span>Trạng thái</span>
+              <strong>{exam.status || "--"}</strong>
             </div>
           </div>
         </section>
@@ -490,6 +480,23 @@ function TeacherExamDetail() {
               <i className="bi bi-plus-lg me-2"></i>
               Thêm câu hỏi
             </button>
+
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={handleHideExam}
+            >
+              <i className="bi bi-eye-slash me-2"></i>
+              Ẩn kỳ thi
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => navigate(`/teacher/exams/${examId}/update`)}
+            >
+              <i className="bi bi-pencil-square me-2"></i>
+              Cập nhật kỳ thi
+            </button>
           </div>
 
           {loadingQuestions ? (
@@ -503,14 +510,7 @@ function TeacherExamDetail() {
               <h5>Chưa có câu hỏi</h5>
               <p>Hãy thêm câu hỏi để hoàn thiện đề thi.</p>
 
-              <button
-                type="button"
-                className="btn btn-primary mt-3"
-                onClick={() => navigate(`/teacher/exams/${examId}/questions/create`)}
-              >
-                <i className="bi bi-plus-lg me-2"></i>
-                Thêm câu hỏi đầu tiên
-              </button>
+
             </div>
           ) : (
             <>
@@ -530,7 +530,7 @@ function TeacherExamDetail() {
 
                   <tbody>
                     {questions.map((question, index) => (
-                      <tr key={question.examQuestionId || question.questionId}>
+                      <tr key={question.examQuestionId || question.questionId || index}>
                         <td>
                           <strong className="question-order">
                             {String(question.questionOrder || index + 1).padStart(2, "0")}
@@ -539,7 +539,9 @@ function TeacherExamDetail() {
 
                         <td>
                           <div className="question-content-cell">
-                            <strong>{question.content}</strong>
+                            <strong>
+                              {question.content || "Câu hỏi chưa có nội dung"}
+                            </strong>
 
                             {question.explanation && (
                               <span>{question.explanation}</span>
@@ -547,7 +549,9 @@ function TeacherExamDetail() {
                           </div>
                         </td>
 
-                        <td>{getQuestionTypeBadge(question.questionType)}</td>
+                        <td>
+                          {getQuestionTypeBadge(question.questionType)}
+                        </td>
 
                         <td>
                           <strong>{formatPoint(question.point)}</strong>
@@ -559,7 +563,12 @@ function TeacherExamDetail() {
                               type="button"
                               className="media-link-btn"
                               onClick={() =>
-                                window.open(`${API_BASE}/${question.mediaUrl}`, "_blank")
+                                window.open(
+                                  question.mediaUrl.startsWith("http")
+                                    ? question.mediaUrl
+                                    : `${API_BASE}/${question.mediaUrl}`,
+                                  "_blank"
+                                )
                               }
                             >
                               <i className="bi bi-file-earmark-play"></i>
@@ -572,7 +581,7 @@ function TeacherExamDetail() {
                         <td>
                           <span className="question-status-active">
                             <i className="bi bi-circle-fill"></i>
-                            {question.status || "Active"}
+                            {question.status || "ACTIVE"}
                           </span>
                         </td>
 
@@ -623,19 +632,9 @@ function TeacherExamDetail() {
                   Hiển thị {questions.length} câu hỏi trong kỳ thi
                 </span>
 
-                <div className="question-pagination-lite">
-                  <button type="button" disabled>
-                    <i className="bi bi-chevron-left"></i>
-                  </button>
-
-                  <button type="button" className="active">
-                    1
-                  </button>
-
-                  <button type="button" disabled>
-                    <i className="bi bi-chevron-right"></i>
-                  </button>
-                </div>
+                <span>
+                  Tổng điểm: <strong>{formatPoint(calculatedTotalPoint)}</strong>
+                </span>
               </div>
             </>
           )}

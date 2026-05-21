@@ -15,9 +15,17 @@ public class PracticeSubmitResponse {
 
     private Long attemptId;
 
+    private String attemptType;
+    
+    private Long courseId;
+    
     private Long lessonId;
 
     private String lessonTitle;
+    
+    private Long examId;
+    
+    private String examTitle;
 
     private String practiceType;
 

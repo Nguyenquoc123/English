@@ -30,15 +30,11 @@ public class CourseDetailResponse {
 
     private BigDecimal price;
 
-    private BigDecimal practicePrice;
-
     private String status;
 
     private Long lessonCount;
 
     private Long studentCount;
-
-    private Long examCount;
 
     private Double rating;
 

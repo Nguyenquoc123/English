@@ -89,6 +89,9 @@ export default function Navbar() {
                       <div className="nb-mobile-role">{roleLabel}</div>
                     </div>
                   </div>
+                  <Link to="/gio-hang" className="nb-mobile-link" onClick={closeAll}>
+                    <i className="bi bi-cart3" /> Giỏ hàng
+                  </Link>
                   <div className="nb-mobile-divider" />
                   <Link to="/student/profile" className="nb-mobile-link" onClick={closeAll}>
                     <i className="bi bi-person" /> Hồ sơ cá nhân
@@ -135,6 +138,11 @@ export default function Navbar() {
           )}
         </nav>
 
+        {/* ── Cart desktop ── */}
+        <Link to="/gio-hang" className="nb-cart" onClick={closeAll} aria-label="Giỏ hàng">
+          <i className="bi bi-cart3" />
+        </Link>
+        {/* ── Auth desktop ── */}
         <div className="nb-auth">
           {user ? (
             <div className="nb-avatar-wrap" ref={dropdownRef}>
@@ -163,6 +171,11 @@ export default function Navbar() {
                   <Link to="/student/profile" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-person" /> Hồ sơ cá nhân
                   </Link>
+
+                  <Link to="/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Khóa học đã mua
+                  </Link>
+
                   <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-key" /> Đổi mật khẩu
                   </Link>
@@ -172,6 +185,15 @@ export default function Navbar() {
                     </Link>
                   )}
 
+                  <Link to="/personal-practices" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Bài ôn tập cá nhân
+                  </Link>
+
+                  <Link to="/lich-su-lam-bai" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Lịch sử làm bài
+                  </Link>
+
+                  {/* Đăng ký GV (student only) */}
                   {!isTeacher && !isAdmin && (
                     <>
                       <div className="nb-dropdown-divider" />

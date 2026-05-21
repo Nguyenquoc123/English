@@ -102,7 +102,7 @@ function StudentPracticePage() {
         return;
       }
 
-      
+
 
       const response = await fetch(
         `${API_BASE}/practice-configs/${lessonId}/practice/${practiceType}/student`,
@@ -292,135 +292,107 @@ function StudentPracticePage() {
             studentHome,
             studentCourses,
             studentCourseDetail(courseId),
-            studentLesson(courseId, lessonId),
             { label: "Ôn tập" },
           ]}
         />
 
-        <div className="practice-header">
-          <div>
-            <div className="practice-type-pill">
-              <i className={practiceInfo.icon}></i>
-              {practiceInfo.title}
-            </div>
+        
+      </div>
 
-            <h2>{practiceData?.lessonTitle || "Bài ôn tập"}</h2>
-            <p>{practiceInfo.subtitle}</p>
-          </div>
 
-          <div className="practice-header-card">
-            <span>Tiến độ bài làm</span>
-            <strong>{answeredCount}/{questions.length}</strong>
-            <div className="practice-progress-track">
-              <div
-                className="practice-progress-bar"
-                style={{ width: `${progressPercent}%` }}
-              ></div>
-            </div>
-          </div>
+
+      {questions.length === 0 ? (
+        <div className="practice-empty-state">
+          <i className="bi bi-journal-x"></i>
+          <h5>Chưa có câu hỏi ôn tập</h5>
+          <p>Giáo viên chưa thêm câu hỏi cho dạng ôn tập này.</p>
         </div>
+      ) : (
+        <div className="practice-layout">
+          <div className="practice-main">
 
-        {questions.length === 0 ? (
-          <div className="practice-empty-state">
-            <i className="bi bi-journal-x"></i>
-            <h5>Chưa có câu hỏi ôn tập</h5>
-            <p>Giáo viên chưa thêm câu hỏi cho dạng ôn tập này.</p>
+
+            {questions.map((question, index) => (
+              <PracticeQuestionCard
+                key={question.questionId}
+                API_BASE={API_BASE}
+                question={question}
+                index={index}
+                value={answers[question.questionId]}
+                onChange={handleAnswerChange}
+              />
+            ))}
           </div>
-        ) : (
-          <div className="practice-layout">
-            <div className="practice-main">
-              <div className="practice-instruction">
-                <i className="bi bi-info-circle"></i>
-                {practiceInfo.subtitle}
+
+          <aside className="practice-sidebar">
+            <div className="practice-sidebar-card">
+              <div className="sidebar-progress-row">
+                <span>Đã trả lời</span>
+                <strong>{answeredCount}/{questions.length}</strong>
               </div>
 
-              {questions.map((question, index) => (
-                <PracticeQuestionCard
-                  key={question.questionId}
-                  API_BASE={API_BASE}
-                  question={question}
-                  index={index}
-                  value={answers[question.questionId]}
-                  onChange={handleAnswerChange}
-                />
-              ))}
-            </div>
+              <div className="sidebar-percent-row">
+                <span>Tiến độ</span>
+                <strong>{progressPercent}%</strong>
+              </div>
 
-            <aside className="practice-sidebar">
-              <div className="practice-sidebar-card">
-                <div className="sidebar-progress-row">
-                  <span>Đã trả lời</span>
-                  <strong>{answeredCount}/{questions.length}</strong>
-                </div>
-
-                <div className="sidebar-percent-row">
-                  <span>Tiến độ</span>
-                  <strong>{progressPercent}%</strong>
-                </div>
-
-                <div className="question-number-grid">
-                  {questions.map((question, index) => {
-                    const answerValue = answers[question.questionId];
-                    const answered = Array.isArray(answerValue)
-                      ? answerValue.length > 0
-                      : typeof answerValue === "string"
+              <div className="question-number-grid">
+                {questions.map((question, index) => {
+                  const answerValue = answers[question.questionId];
+                  const answered = Array.isArray(answerValue)
+                    ? answerValue.length > 0
+                    : typeof answerValue === "string"
                       ? answerValue.trim() !== ""
                       : answerValue !== undefined && answerValue !== null;
 
-                    return (
-                      <button
-                        type="button"
-                        key={question.questionId}
-                        className={[
-                          "question-number-btn",
-                          answered ? "answered" : "",
-                          currentIndex === index ? "current" : "",
-                        ].join(" ")}
-                        onClick={() => handleGoQuestion(index)}
-                      >
-                        {index + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-primary w-100 submit-practice-btn"
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Đang nộp...
-                    </>
-                  ) : (
-                    "Nộp bài"
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  className="btn btn-light w-100 mt-2 reset-practice-btn"
-                  onClick={handleReset}
-                  disabled={submitting}
-                >
-                  Làm lại
-                </button>
+                  return (
+                    <button
+                      type="button"
+                      key={question.questionId}
+                      className={[
+                        "question-number-btn",
+                        answered ? "answered" : "",
+                        currentIndex === index ? "current" : "",
+                      ].join(" ")}
+                      onClick={() => handleGoQuestion(index)}
+                    >
+                      {index + 1}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="practice-warning-card">
-                <i className="bi bi-exclamation-circle"></i>
-                <span>
-                  Hãy trả lời đầy đủ các câu hỏi trước khi nộp bài. Bạn có thể làm
-                  lại bài nếu muốn luyện tập thêm.
-                </span>
-              </div>
-            </aside>
-          </div>
-        )}
-      </div>
+              <button
+                type="button"
+                className="btn btn-primary w-100 submit-practice-btn"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Đang nộp...
+                  </>
+                ) : (
+                  "Nộp bài"
+                )}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-light w-100 mt-2 reset-practice-btn"
+                onClick={handleReset}
+                disabled={submitting}
+              >
+                Làm lại
+              </button>
+            </div>
+
+
+          </aside>
+        </div>
+      )}
+
     </div>
   );
 }

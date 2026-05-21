@@ -28,7 +28,6 @@ public interface TeacherLessonDetailMapper {
     @Mapping(target = "courseTitle", source = "lesson.course.title")
     @Mapping(target = "title", source = "lesson.title")
     @Mapping(target = "description", source = "lesson.description")
-    @Mapping(target = "lessonOrder", source = "lesson.lessonOrder")
     @Mapping(target = "status", source = "lesson.status")
     @Mapping(target = "createdAt", source = "lesson.createdAt")
     @Mapping(target = "updatedAt", source = "lesson.updatedAt")

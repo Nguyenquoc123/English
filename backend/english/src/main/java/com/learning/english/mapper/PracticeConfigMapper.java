@@ -88,6 +88,9 @@ public interface PracticeConfigMapper {
 	@Mapping(target = "words", ignore = true)
 	PracticeQuestionResponse toPracticeQuestionResponse(LessonQuestion lessonQuestion);
 	
+	
+	PracticeQuestionResponse toPracticeQuestionResponse(Question Question);
+	
 	@Mapping(target = "questionId", source = "question.questionId")
 	@Mapping(target = "questionType", source = "question.questionType")
 	@Mapping(target = "content", source = "question.content")

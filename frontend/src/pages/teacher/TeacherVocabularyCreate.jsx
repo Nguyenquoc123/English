@@ -199,20 +199,39 @@ function TeacherVocabularyCreate() {
 
   return (
     <div className="vocab-create-page">
-      <div className="vocab-create-heading">
-        <div>
-          <CourseBreadcrumb
-            items={teacherLessonTrail(courseId, lessonId, "Thêm từ vựng")}
-          />
+      <div className="lesson-detail-heading">
+        <nav className="teacher-breadcrumb">
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate("/teacher/courses")}
+          >
+            Khóa học
+          </span>
 
-          <h2>Thêm từ vựng mới</h2>
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
 
-          <p>
-            Thêm từ vựng vào bài học hiện tại. Giáo viên có thể nhập từ, phiên
-            âm, nghĩa, câu ví dụ và tải thêm audio phát âm hoặc hình ảnh minh
-            họa.
-          </p>
-        </div>
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate(`/teacher/courses/${courseId}`)}
+          >
+            Chi tiết khóa học
+          </span>
+
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
+
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
+          >
+            Bài học
+          </span>
+
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
+
+          <span className="teacher-breadcrumb-item active">
+            Thêm từ vựng
+          </span>
+        </nav>
       </div>
 
       {error && (

@@ -25,130 +25,128 @@ import jakarta.transaction.Transactional;
 @Service
 public class VideoService {
 
-    @Autowired
-    private VideoRepository videoRepository;
+	@Autowired
+	private VideoRepository videoRepository;
 
-    @Autowired
-    private LessonRepository lessonRepository;
+	@Autowired
+	private LessonRepository lessonRepository;
 
-    @Autowired
-    private VideoMapper videoMapper;
+	@Autowired
+	private VideoMapper videoMapper;
 
-    @Autowired
-    private FileService fileService;
+	@Autowired
+	private FileService fileService;
 
-    @Autowired
-    UserRepository userRepository;
-    
-    @Transactional
-    public VideoResponse themVideoChoLesson(
-            Long lessonId,
-            VideoRequest request,
-            MultipartFile videoFile,
-            MultipartFile thumbnailFile
-    ) throws IOException {
+	@Autowired
+	UserRepository userRepository;
 
-        if (lessonId == null) {
-            throw new RuntimeException("lessonId không được để trống");
-        }
+	@Transactional
+	public VideoResponse themVideoChoLesson(Long lessonId, VideoRequest request, MultipartFile videoFile,
+			MultipartFile thumbnailFile) throws IOException {
 
-        if (request.getTitle() == null || request.getTitle().isBlank()) {
-            throw new RuntimeException("Tiêu đề video không được để trống");
-        }
+		if (lessonId == null) {
+			throw new RuntimeException("lessonId không được để trống");
+		}
 
-        if (videoFile == null || videoFile.isEmpty()) {
-            throw new RuntimeException("File video không được để trống");
-        }
+		if (request.getTitle() == null || request.getTitle().isBlank()) {
+			throw new RuntimeException("Tiêu đề video không được để trống");
+		}
 
-        Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lesson"));
+		if (videoFile == null || videoFile.isEmpty()) {
+			throw new RuntimeException("File video không được để trống");
+		}
 
-        String videoUrl = fileService.saveFile(videoFile, "videos");
+		Lesson lesson = lessonRepository.findById(lessonId)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy lesson"));
 
-        String thumbnailUrl = null;
+		String videoUrl = fileService.saveFile(videoFile, "videos");
 
-        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
-            thumbnailUrl = fileService.saveFile(thumbnailFile, "images");
-        }
+		String thumbnailUrl = null;
 
-        Integer nextDisplayOrder = getNextDisplayOrder(lessonId);
+		if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+			thumbnailUrl = fileService.saveFile(thumbnailFile, "images");
+		}
 
-        LocalDateTime now = LocalDateTime.now();
+		Integer nextDisplayOrder = getNextDisplayOrder(lessonId);
 
-        Video video = Video.builder()
-                .lesson(lesson)
-                .title(request.getTitle().trim())
-                .videoUrl(videoUrl)
-                .durationSeconds(request.getDurationSeconds())
-                .thumbnailUrl(thumbnailUrl)
-                .displayOrder(nextDisplayOrder)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+		LocalDateTime now = LocalDateTime.now();
 
-        Video savedVideo = videoRepository.save(video);
+		Video video = Video.builder().lesson(lesson).title(request.getTitle().trim()).videoUrl(videoUrl)
+				.durationSeconds(request.getDurationSeconds()).thumbnailUrl(thumbnailUrl).displayOrder(nextDisplayOrder)
+				.createdAt(now).updatedAt(now).status(request.getStatus()).build();
 
-        return videoMapper.toVideoResponse(savedVideo);
-    }
+		Video savedVideo = videoRepository.save(video);
 
-    public List<VideoResponse> layDanhSachVideoTheoLesson(Long lessonId) {
-        return videoRepository.findAllByLessonLessonIdOrderByDisplayOrderAsc(lessonId)
-                .stream()
-                .map(videoMapper::toVideoResponse)
-                .toList();
-    }
+		return videoMapper.toVideoResponse(savedVideo);
+	}
 
-    private Integer getNextDisplayOrder(Long lessonId) {
-        Integer maxDisplayOrder = videoRepository.findMaxDisplayOrderByLessonId(lessonId);
+	public List<VideoResponse> layDanhSachVideoTheoLesson(Long lessonId) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (maxDisplayOrder == null) {
-            return 1;
-        }
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
 
-        return maxDisplayOrder + 1;
-    }
-    
-    public VideoResponse layChiTietVideoCuaTeacher(Long videoId) {
+		String username = authentication.getName();
 
-        if (videoId == null) {
-            throw new RuntimeException("videoId không được để trống");
-        }
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+		List<Object[]> rows = videoRepository.findVideosWithProgressByLessonId(lessonId, user.getUserId());
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return videoMapper.toVideoResponseWithProgressList(rows);
+	}
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Người dùng chưa đăng nhập");
-        }
+	private Integer getNextDisplayOrder(Long lessonId) {
+		Integer maxDisplayOrder = videoRepository.findMaxDisplayOrderByLessonId(lessonId);
 
-        String username = authentication.getName();
+		if (maxDisplayOrder == null) {
+			return 1;
+		}
 
-        Video video = videoRepository.findVideoOfTeacher(videoId, username)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy video hoặc bạn không có quyền xem"));
+		return maxDisplayOrder + 1;
+	}
 
-        return videoMapper.toVideoResponse(video);
-    }
-    
-    public VideoResponse layChiTietVideoCuaTeacherByAdmin(Long videoId) {
-    	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	public VideoResponse layChiTietVideoCuaTeacher(Long videoId) {
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Người dùng chưa đăng nhập");
-        }
+		if (videoId == null) {
+			throw new RuntimeException("videoId không được để trống");
+		}
 
-        String username = authentication.getName();
-        
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
-        if(!"admin".equals(user.getRole().getRoleName()))
-        	throw new RuntimeException("Bạn không có quyền truy cập!");
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (videoId == null) {
-            throw new RuntimeException("videoId không được để trống");
-        }
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
 
-        
-        Video video = videoRepository.findVideoOfTeacherByAdmin(videoId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy video hoặc bạn không có quyền xem"));
+		String username = authentication.getName();
 
-        return videoMapper.toVideoResponse(video);
-    }
+		Video video = videoRepository.findVideoOfTeacher(videoId, username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy video hoặc bạn không có quyền xem"));
+
+		return videoMapper.toVideoResponse(video);
+	}
+
+	public VideoResponse layChiTietVideoCuaTeacherByAdmin(Long videoId) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+		if (!"admin".equals(user.getRole().getRoleName()))
+			throw new RuntimeException("Bạn không có quyền truy cập!");
+
+		if (videoId == null) {
+			throw new RuntimeException("videoId không được để trống");
+		}
+
+		Video video = videoRepository.findVideoOfTeacherByAdmin(videoId)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy video hoặc bạn không có quyền xem"));
+
+		return videoMapper.toVideoResponse(video);
+	}
 }

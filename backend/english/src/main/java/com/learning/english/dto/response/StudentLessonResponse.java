@@ -1,6 +1,12 @@
 package com.learning.english.dto.response;
 
-import lombok.*;
+import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -9,15 +15,30 @@ import lombok.*;
 @Builder
 public class StudentLessonResponse {
 
-    private Long lessonId;
+    private Long courseItemId;
 
-    private Long courseId;
+    private Long id;
+
+    private String type;
+    // LESSON / EXAM
 
     private String title;
 
     private String description;
 
-    private Integer lessonOrder;
+    private Integer itemOrder;
 
-    private Boolean isLocked;
+    private String status;
+
+    private Boolean completed;
+
+    private Boolean locked;
+
+    private Boolean current;
+
+    private Boolean freePreview;
+
+    private String lockReason;
+
+    private LocalDateTime createdAt;
 }

@@ -14,7 +14,37 @@ import com.learning.english.entity.Video;
 public interface VideoRepository extends JpaRepository<Video, Long> {
 	List<Video> findByLesson_LessonIdOrderByVideoIdAsc(Long lessonId);
 
-	List<Video> findAllByLessonLessonIdOrderByDisplayOrderAsc(Long lessonId);
+	List<Video> findByLessonLessonId(Long lessonId);
+
+	@Query("""
+			    SELECT COUNT(v)
+			    FROM Video v
+			    WHERE v.lesson.lessonId = :lessonId and v.status = 'PUBLISHED'
+			""")
+	long countVideos(Long lessonId);
+
+	@Query(value = """
+			SELECT
+			    v.videoId AS videoId,
+			    v.lessonId AS lessonId,
+			    v.title AS title,
+			    v.videoUrl AS videoUrl,
+			    v.durationSeconds AS durationSeconds,
+			    v.thumbnailUrl AS thumbnailUrl,
+			    v.displayOrder AS displayOrder,
+			    v.createdAt AS createdAt,
+			    v.updatedAt AS updatedAt,
+			    v.status AS status,
+			    CAST(ISNULL(vp.isCompleted, 0) AS bit) AS isCompleted,
+			    ISNULL(vp.watchedSeconds, 0) AS watchedSeconds
+			FROM videos v
+			LEFT JOIN video_progress vp
+			    ON v.videoId = vp.videoId
+			   AND vp.userId = :userId
+			WHERE v.lessonId = :lessonId
+			ORDER BY v.displayOrder ASC
+			""", nativeQuery = true)
+	List<Object[]> findVideosWithProgressByLessonId(@Param("lessonId") Long lessonId, @Param("userId") Long userId);
 
 	@Query("""
 			    SELECT MAX(v.displayOrder)
@@ -43,6 +73,6 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 			    WHERE v.videoId = :videoId
 			""")
 	Optional<Video> findVideoOfTeacherByAdmin(@Param("videoId") Long videoId);
-	
+
 	Long countByLessonLessonId(Long lessonId);
 }

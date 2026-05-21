@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.learning.english.dto.request.CourseDuyetRequest;
 import com.learning.english.dto.request.CourseRejectRequest;
 import com.learning.english.dto.request.CourseRequest;
+import com.learning.english.dto.request.MultiCoursePaymentRequest;
 import com.learning.english.dto.request.TeacherDuyetRequest;
 import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
@@ -51,8 +52,18 @@ public class CourseController {
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size
 	) {
-	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, size);
+	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, 12);
 	}
+	
+//	@GetMapping("/danh-sach-khoa-hoc-da-mua")
+//	public Page<CourseResponse> dsKhoaHocDaMua(
+//	        @RequestParam(required = false) String keyword,
+//	        @RequestParam(required = false) Long levelId,
+//	        @RequestParam(required = false) Integer page
+//	) {
+//	    return courseService.dsKhoaHocDaMua(keyword, levelId, page, 12);
+////	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, size);
+//	}
 	
 	@GetMapping("/danh-sach-khoa-hoc-teacher")
 	public Page<CourseResponse> dsKhoaHocCuaGiaoVien(
@@ -61,7 +72,7 @@ public class CourseController {
 	        @RequestParam(required = false) Long levelId,
 	        @RequestParam(required = false) Integer page
 	) {
-	    return courseService.dsAllKhoaHocCuaTeacherPhanTrang(status, keyword, levelId, page, 1);
+	    return courseService.dsAllKhoaHocCuaTeacherPhanTrang(status, keyword, levelId, page, 12);
 	}
 	
 	@GetMapping("/danh-sach-khoa-hoc-teacher-combobox")
@@ -77,12 +88,12 @@ public class CourseController {
 	        @RequestParam(required = false) Long levelId,
 	        @RequestParam(required = false) Integer page
 	) {
-	    return courseService.dsAllKhoaHoc(status, keyword, levelId, page, 1);
+	    return courseService.dsAllKhoaHoc(status, keyword, levelId, page, 12);
 	}
 	
 	@GetMapping("/chi-tiet-khoa-hoc-teacher/{courseId}")
 	public ResponseEntity<CourseDetailResponse> getCourseDetail(@PathVariable("courseId") Long courseId) {
-	    return ResponseEntity.ok(courseService.getCourseDetail(courseId));
+	    return ResponseEntity.ok(courseService.chiTietKhoaHoc(courseId));
 	}
 	
 	
@@ -143,6 +154,13 @@ public class CourseController {
             @PathVariable Long courseId
     ) {
         return coursePaymentService.taoThanhToanKhoaHoc(courseId);
+    }
+    
+    @PostMapping("/tao-thanh-toan")
+    public CoursePaymentResponse taoThanhToanNhieuKhoaHoc(
+            @RequestBody MultiCoursePaymentRequest multiCoursePaymentRequest
+    ) {
+        return coursePaymentService.taoThanhToanNhieuKhoaHoc(multiCoursePaymentRequest);
     }
     
     @GetMapping("/check-mua")

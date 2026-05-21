@@ -580,3 +580,126 @@
     gap: 12px;
   }
 }
+
+.exam-overview-card-new {
+    display: block;
+    padding: 24px;
+}
+
+.exam-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.exam-title-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.exam-title-block h1 {
+    margin: 10px 0 8px;
+}
+
+.exam-main-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 360px;
+}
+
+.exam-info-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 14px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.exam-info-item {
+    min-height: 76px;
+    padding: 14px 16px;
+    border: 1px solid #edf0f5;
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+.exam-info-item span {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.exam-info-item strong {
+    display: block;
+    color: #0f172a;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+@media (max-width: 992px) {
+    .exam-overview-header {
+        flex-direction: column;
+    }
+
+    .exam-main-actions {
+        justify-content: flex-start;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .exam-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .exam-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exam-main-actions .btn {
+        width: 100%;
+    }
+}
+
+.teacher-exam-page-top {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.teacher-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.teacher-breadcrumb-item {
+  color: #6b7280;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.teacher-breadcrumb-item:hover {
+  color: #2563eb;
+}
+
+.teacher-breadcrumb-item.active {
+  color: #0d47a1;
+  font-weight: 600;
+  cursor: default;
+}
+
+.teacher-breadcrumb-separator {
+  color: #9ca3af;
+  font-size: 12px;
+}

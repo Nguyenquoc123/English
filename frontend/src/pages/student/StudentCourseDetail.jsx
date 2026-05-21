@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./StudentCourseDetail.css";
 import { getFileUrl } from "../../utils/fileurl";
@@ -13,6 +13,18 @@ function StudentCourseDetail() {
     const API_BASE = "http://localhost:8080";
 
     const [activeTab, setActiveTab] = useState("overview");
+    const [expandedItemId, setExpandedItemId] = useState(null);
+    const [expandedChild, setExpandedChild] = useState(null);
+
+    const [lessonChildren, setLessonChildren] = useState({});
+
+    const [loadingChild, setLoadingChild] = useState(false);
+
+    const [previewModal, setPreviewModal] = useState({
+        open: false,
+        type: "",
+        data: null,
+    });
 
     const [course, setCourse] = useState(null);
     const [lessons, setLessons] = useState([]);
@@ -21,6 +33,8 @@ function StudentCourseDetail() {
     const [loadingCourse, setLoadingCourse] = useState(false);
     const [loadingLessons, setLoadingLessons] = useState(false);
     const [loadingReviews, setLoadingReviews] = useState(false);
+    const videoRef = useRef(null);
+    const saveProgressIntervalRef = useRef(null);
 
     const [error, setError] = useState("");
 
@@ -28,9 +42,11 @@ function StudentCourseDetail() {
     const [reviewComment, setReviewComment] = useState("");
     const [submittingReview, setSubmittingReview] = useState(false);
     const [purchasing, setPurchasing] = useState(false);
+    const [addCard, setAddCard] = useState(false);
 
     useEffect(() => {
         loadCourseDetail();
+
     }, [courseId]);
 
     useEffect(() => {
@@ -43,9 +59,150 @@ function StudentCourseDetail() {
         }
     }, [activeTab]);
 
+    useEffect(() => {
+        return () => {
+            clearAutoSaveVideoProgress();
+        };
+    }, []);
+
     const getToken = () => {
         return localStorage.getItem("english_token") || localStorage.getItem("token");
     };
+
+
+
+    // const saveVideoProgress = async (videoId, watchedSeconds) => {
+    //     try {
+    //         const token = getToken();
+
+    //         if (!token) {
+    //             return;
+    //         }
+
+    //         if (!videoId || watchedSeconds == null) {
+    //             return;
+    //         }
+
+    //         await fetch(`${API_BASE}/video-progress`, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 Authorization: `Bearer ${token}`,
+    //             },
+    //             body: JSON.stringify({
+    //                 watchedSeconds: Math.floor(watchedSeconds),
+    //                 videoId: videoId
+    //             }),
+    //         });
+    //     } catch (err) {
+    //         console.error("Lỗi lưu tiến độ video:", err);
+    //     }
+    // };
+
+    const saveVideoProgress = async (videoId, watchedSeconds) => {
+        try {
+            const token = getToken();
+
+            if (!token) {
+                return null;
+            }
+
+            if (!videoId || watchedSeconds == null) {
+                return null;
+            }
+
+            const response = await fetch(`${API_BASE}/video-progress`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    watchedSeconds: Math.floor(watchedSeconds),
+                    videoId: videoId,
+                }),
+            });
+
+            let data = null;
+
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+
+            if (!response.ok) {
+                console.error(data?.message || "Lưu tiến độ video thất bại");
+                return null;
+            }
+
+            return data?.result || data?.data || data;
+        } catch (err) {
+            console.error("Lỗi lưu tiến độ video:", err);
+            return null;
+        }
+    };
+
+
+    const markVideoCompletedLocal = (videoId, watchedSeconds) => {
+        setLessonChildren((prev) => {
+            const next = { ...prev };
+
+            Object.keys(next).forEach((key) => {
+                next[key] = next[key].map((item) =>
+                    item.videoId === videoId
+                        ? {
+                            ...item,
+                            isCompleted: true,
+                            watchedSeconds: Math.floor(watchedSeconds || item.watchedSeconds || 0),
+                        }
+                        : item
+                );
+            });
+
+            return next;
+        });
+
+        setPreviewModal((prev) => {
+            if (!prev.data || prev.data.videoId !== videoId) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                data: {
+                    ...prev.data,
+                    isCompleted: true,
+                    watchedSeconds: Math.floor(watchedSeconds || prev.data.watchedSeconds || 0),
+                },
+            };
+        });
+    };
+
+    const startAutoSaveVideoProgress = (video) => {
+        clearAutoSaveVideoProgress();
+
+        saveProgressIntervalRef.current = setInterval(() => {
+            const videoElement = videoRef.current;
+
+            if (!videoElement || !video?.videoId) {
+                return;
+            }
+
+            saveVideoProgress(
+                video.videoId,
+                videoElement.currentTime
+            );
+        }, 20000);
+    };
+
+    const clearAutoSaveVideoProgress = () => {
+        if (saveProgressIntervalRef.current) {
+            clearInterval(saveProgressIntervalRef.current);
+            saveProgressIntervalRef.current = null;
+        }
+    };
+
 
     const loadCourseDetail = async () => {
         try {
@@ -73,11 +230,11 @@ function StudentCourseDetail() {
             }
 
             if (!response.ok) {
+                setError(data?.message || "Không thể tải chi tiết khóa học");
                 return;
             }
-            console.log(data)
 
-            const result = data.result || data.data || data;
+            const result = data?.result || data?.data || data;
             setCourse(result);
         } catch (err) {
             console.error(err);
@@ -86,6 +243,7 @@ function StudentCourseDetail() {
             setLoadingCourse(false);
         }
     };
+
 
     const loadLessons = async () => {
         try {
@@ -103,15 +261,15 @@ function StudentCourseDetail() {
                 }
             );
 
-            const data = await response.json();
-
             if (!response.ok) {
-                alert(data?.message || "Không thể tải danh sách bài học");
+                navigate("/dang-nhap");
                 return;
             }
 
+            const data = await response.json();
             const result = data.result || data.data || data;
-            setLessons(Array.isArray(result) ? result : result.lessons || []);
+
+            setLessons(Array.isArray(result) ? result : []);
         } catch (err) {
             console.error(err);
             alert("Lỗi kết nối server");
@@ -119,19 +277,52 @@ function StudentCourseDetail() {
             setLoadingLessons(false);
         }
     };
+    // const loadLessons = async () => {
+    //     try {
+    //         setLoadingLessons(true);
+
+    //         const token = getToken();
+
+    //         const response = await fetch(
+    //             `${API_BASE}/lesson/all-lesson/${courseId}`,
+    //             {
+    //                 method: "GET",
+    //                 headers: {
+    //                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    //                 },
+    //             }
+    //         );
+
+
+
+    //         if (!response.ok) {
+    //             navigate("/dang-nhap")
+    //             return;
+    //         }
+    //         const data = await response.json();
+    //         const result = data.result || data.data || data;
+    //         setLessons(Array.isArray(result) ? result : result.lessons || []);
+    //     } catch (err) {
+    //         console.error(err);
+    //         alert("Lỗi kết nối server");
+    //     } finally {
+    //         setLoadingLessons(false);
+    //     }
+    // };
 
     const loadReviews = async () => {
         try {
             setLoadingReviews(true);
 
-            const response = await fetch(`${API_BASE}/khoa-hoc/${courseId}/reviews`);
+            const response = await fetch(`${API_BASE}/danh-gia/ds-danh-gia/${courseId}`);
+
 
             const data = await response.json();
-
             if (!response.ok) {
                 alert(data?.message || "Không thể tải đánh giá");
                 return;
             }
+
 
             const result = data.result || data.data || data;
             setReviews(Array.isArray(result) ? result : []);
@@ -152,6 +343,49 @@ function StudentCourseDetail() {
         navigate(`/courses/${courseId}/purchase`);
     };
 
+    async function themVaoGioHang(courseId) {
+
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+            `http://localhost:8080/gio-hang/them/${courseId}`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.log(data)
+            alert(data.message);
+            return;
+        }
+
+        alert(data.message);
+
+        return data;
+    }
+
+    const handleThemVaoGio = async () => {
+        try {
+
+            const result = await themVaoGioHang(courseId);
+
+
+
+            console.log(result);
+
+        } catch (error) {
+
+            alert(error.message);
+
+        }
+    };
+
     const handleSubmitReview = async (e) => {
         e.preventDefault();
 
@@ -170,7 +404,7 @@ function StudentCourseDetail() {
 
             const token = getToken();
 
-            const response = await fetch(`${API_BASE}/khoa-hoc/${courseId}/reviews`, {
+            const response = await fetch(`${API_BASE}/danh-gia/them-danh-gia/${courseId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -222,13 +456,398 @@ function StudentCourseDetail() {
         return "Có phí";
     };
 
-    const handleLessonClick = (lesson) => {
-        if (!course?.isEnrolled && !lesson.isFreePreview) {
-            alert("Bạn cần mua khóa học để học bài này");
+    // const handleLessonClick = (lesson) => {
+    //     if (!course?.isEnrolled && !lesson.isFreePreview) {
+    //         alert("Bạn cần mua khóa học để học bài này");
+    //         return;
+    //     }
+
+    //     navigate(`/khoa-hoc/${courseId}/lessons/${lesson.lessonId}`);
+    // };
+
+    const handleContentClick = (item) => {
+        if (item.locked) {
+            alert(item.lockReason || "Nội dung này đang bị khóa");
             return;
         }
 
-        navigate(`/khoa-hoc/${courseId}/lessons/${lesson.lessonId}`);
+        if (item.type === "EXAM") {
+            navigate(`/exams/${item.id}`);
+            return;
+        }
+
+        if (item.type === "LESSON") {
+            setExpandedItemId((currentId) =>
+                currentId === item.courseItemId ? null : item.courseItemId
+            );
+        }
+    };
+
+    const getChildKey = (lessonId, childType) => {
+        return `${lessonId}-${childType}`;
+    };
+
+    const getChildData = (lessonId, childType) => {
+        const key = getChildKey(lessonId, childType);
+        return lessonChildren[key] || [];
+    };
+
+    const setChildData = (lessonId, childType, data) => {
+        const key = getChildKey(lessonId, childType);
+
+        setLessonChildren((prev) => ({
+            ...prev,
+            [key]: data,
+        }));
+    };
+
+    const fetchLessonChildData = async (lessonId, childType) => {
+        const token = getToken();
+
+        let url = "";
+
+        if (childType === "videos") {
+            url = `${API_BASE}/video/${lessonId}/lessons`;
+        }
+
+        if (childType === "vocabularies") {
+            url = `${API_BASE}/tu-vung/lessons/${lessonId}`;
+        }
+
+        if (childType === "grammars") {
+            url = `${API_BASE}/grammar/${lessonId}/grammars`;
+        }
+
+        if (childType === "practice") {
+            url = `${API_BASE}/practice-configs/${lessonId}`;
+        }
+
+        if (!url) {
+            throw new Error("Loại nội dung không hợp lệ");
+        }
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+        });
+
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch {
+            data = null;
+        }
+
+        if (!response.ok) {
+            throw new Error(data?.message || "Không thể tải dữ liệu");
+        }
+
+        const result = data?.result || data?.data || data;
+
+        return Array.isArray(result) ? result : [];
+    };
+
+    const handleLessonChildClick = async (e, lessonId, childType) => {
+        e.stopPropagation();
+
+        const nextExpanded = {
+            lessonId,
+            childType,
+        };
+
+        if (
+            expandedChild?.lessonId === lessonId &&
+            expandedChild?.childType === childType
+        ) {
+            setExpandedChild(null);
+            return;
+        }
+
+        setExpandedChild(nextExpanded);
+
+        const currentData = getChildData(lessonId, childType);
+
+        if (currentData.length > 0) {
+            return;
+        }
+
+        try {
+            setLoadingChild(true);
+
+            const data = await fetchLessonChildData(lessonId, childType);
+
+            setChildData(lessonId, childType, data);
+        } catch (err) {
+            console.error(err);
+            alert(err.message || "Không thể tải dữ liệu");
+        } finally {
+            setLoadingChild(false);
+        }
+    };
+
+    const formatDate = (value) => {
+        if (!value) return "--";
+
+        try {
+            const date = new Date(value);
+
+            if (Number.isNaN(date.getTime())) {
+                return value;
+            }
+
+            return date.toLocaleString("vi-VN");
+        } catch {
+            return value;
+        }
+    };
+
+    const formatDuration = (seconds) => {
+        if (!seconds) return "--:--";
+
+        const total = Number(seconds);
+        const minutes = Math.floor(total / 60);
+        const remainSeconds = total % 60;
+
+        return `${minutes}:${String(remainSeconds).padStart(2, "0")}`;
+    };
+
+    const openPreviewModal = (type, data) => {
+        clearAutoSaveVideoProgress();
+
+        setPreviewModal({
+            open: true,
+            type,
+            data,
+        });
+    };
+
+    const closePreviewModal = () => {
+        if (previewModal.type === "video" && previewModal.data && videoRef.current) {
+            saveVideoProgress(
+                previewModal.data.videoId,
+                videoRef.current.currentTime
+            );
+        }
+
+        clearAutoSaveVideoProgress();
+
+        setPreviewModal({
+            open: false,
+            type: "",
+            data: null,
+        });
+    };
+
+    const getChildTitle = (childType) => {
+        if (childType === "videos") return "Video bài giảng";
+        if (childType === "vocabularies") return "Từ vựng";
+        if (childType === "grammars") return "Ngữ pháp";
+        if (childType === "practice") return "Bài ôn tập";
+        return "Nội dung";
+    };
+
+    const getPracticeTypeText = (type) => {
+        if (type === "MULTIPLE_CHOICE") return "Trắc nghiệm";
+        if (type === "LISTENING_CHOICE") return "Nghe chọn đáp án";
+        if (type === "LISTENING_FILL_BLANK") return "Nghe điền từ";
+        if (type === "ARRANGE_SENTENCE") return "Sắp xếp câu";
+        if (type === "WRITING_SHORT") return "Viết ngắn";
+
+        return type || "Dạng ôn tập";
+    };
+
+    const renderChildContent = (lessonId, childType) => {
+        const data = getChildData(lessonId, childType);
+
+        if (
+            loadingChild &&
+            expandedChild?.lessonId === lessonId &&
+            expandedChild?.childType === childType
+        ) {
+            return (
+                <div className="lesson-child-loading">
+                    <span className="spinner-border spinner-border-sm text-primary me-2"></span>
+                    Đang tải {getChildTitle(childType).toLowerCase()}...
+                </div>
+            );
+        }
+
+        if (data.length === 0) {
+            return (
+                <div className="lesson-child-empty">
+                    Chưa có {getChildTitle(childType).toLowerCase()}.
+                </div>
+            );
+        }
+
+        if (childType === "videos") {
+            return (
+                <div className="lesson-child-list">
+                    {data.map((video) => {
+                        const isVideoCompleted = Boolean(video.isCompleted);
+
+                        return (
+                            <button
+                                type="button"
+                                className={
+                                    isVideoCompleted
+                                        ? "lesson-child-row completed"
+                                        : "lesson-child-row"
+                                }
+                                key={video.videoId}
+                                onClick={() => openPreviewModal("video", video)}
+                            >
+                                <div className="lesson-child-thumb">
+                                    {video.thumbnailUrl ? (
+                                        <img
+                                            src={getFileUrl(video.thumbnailUrl)}
+                                            alt={video.title}
+                                        />
+                                    ) : (
+                                        <i className="bi bi-play-fill"></i>
+                                    )}
+                                </div>
+
+                                <div className="flex-grow-1 text-start">
+                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                        <strong>{video.title || "Video chưa có tiêu đề"}</strong>
+
+                                        {isVideoCompleted && (
+                                            <span className="badge text-bg-success">
+                                                Hoàn thành
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <span>
+                                        Thời lượng: {formatDuration(video.durationSeconds)} · Thứ tự:{" "}
+                                        {video.displayOrder || "--"}
+                                    </span>
+                                </div>
+
+                                <div className="d-flex align-items-center gap-2">
+                                    {isVideoCompleted ? (
+                                        <i className="bi bi-check-circle text-success"></i>
+                                    ) : (
+                                        <i className="bi bi-play-circle text-primary"></i>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        if (childType === "vocabularies") {
+            return (
+                <div className="lesson-child-list">
+                    {data.map((vocab) => (
+                        <button
+                            type="button"
+                            className="lesson-child-row"
+                            key={vocab.vocabularyId}
+                            onClick={() => openPreviewModal("vocabulary", vocab)}
+                        >
+                            <div className="lesson-child-icon vocabulary">
+                                <i className="bi bi-card-text"></i>
+                            </div>
+
+                            <div className="flex-grow-1 text-start">
+                                <strong>{vocab.word || "Chưa có từ vựng"}</strong>
+                                <span>
+                                    {vocab.pronunciation || "--"} · {vocab.meaning || "--"}
+                                </span>
+                            </div>
+
+                            <i className="bi bi-chevron-right text-muted"></i>
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        if (childType === "grammars") {
+            return (
+                <div className="lesson-child-list">
+                    {data.map((grammar) => (
+                        <button
+                            type="button"
+                            className="lesson-child-row"
+                            key={grammar.grammarId}
+                            onClick={() => openPreviewModal("grammar", grammar)}
+                        >
+                            <div className="lesson-child-icon grammar">
+                                <i className="bi bi-journal-text"></i>
+                            </div>
+
+                            <div className="flex-grow-1 text-start">
+                                <strong>{grammar.title || "Chưa có tiêu đề"}</strong>
+                                <span>
+                                    Cập nhật: {formatDate(grammar.updatedAt || grammar.createdAt)}
+                                </span>
+                            </div>
+
+                            <i className="bi bi-chevron-right text-muted"></i>
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        if (childType === "practice") {
+            return (
+                <div className="lesson-child-list">
+                    {data.map((config, index) => (
+                        <button
+                            type="button"
+                            className={
+                                config.isEnabled
+                                    ? "lesson-child-row"
+                                    : "lesson-child-row disabled-practice"
+                            }
+                            key={config.configId || index}
+                            disabled={!config.isEnabled}
+                            onClick={() => openPreviewModal("practice", config)}
+                        >
+                            <div className="lesson-child-icon practice">
+                                <i className="bi bi-check2-circle"></i>
+                            </div>
+
+                            <div className="flex-grow-1 text-start">
+                                <strong>
+                                    {getPracticeTypeText(config.practiceType)}
+                                </strong>
+
+                                <span>
+                                    {config.practiceType || "PRACTICE"} ·{" "}
+                                    {config.questionCount || 0} câu hỏi
+                                </span>
+                            </div>
+
+                            <div className="d-flex align-items-center gap-2">
+                                <span
+                                    className={
+                                        config.isEnabled
+                                            ? "badge text-bg-success"
+                                            : "badge text-bg-secondary"
+                                    }
+                                >
+                                    {config.isEnabled ? "Đang mở" : "Đang khóa"}
+                                </span>
+
+                                <i className="bi bi-chevron-right text-muted"></i>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        return null;
     };
 
     if (loadingCourse) {
@@ -260,13 +879,29 @@ function StudentCourseDetail() {
 
     return (
         <div className="student-course-detail-page">
-            <CourseBreadcrumb
-                items={[
-                    studentHome,
-                    studentCourses,
-                    { label: "Chi tiết khóa học" },
-                ]}
-            />
+            <div className="course-breadcrumb">
+                <button
+                    type="button"
+                    className="breadcrumb-link"
+                    onClick={() => navigate("/")}
+                >
+                    Trang chủ
+                </button>
+
+                <i className="bi bi-chevron-right"></i>
+
+                <button
+                    type="button"
+                    className="breadcrumb-link"
+                    onClick={() => navigate("/danh-sach-khoa-hoc")}
+                >
+                    Khóa học
+                </button>
+
+                <i className="bi bi-chevron-right"></i>
+
+                <strong>Chi tiết khóa học</strong>
+            </div>
 
             <div className="course-hero-section">
                 <div className="row g-4 align-items-stretch">
@@ -313,21 +948,36 @@ function StudentCourseDetail() {
                                 {course.shortDescription ||
                                     "Khóa học được thiết kế giúp học viên học tiếng Anh hiệu quả hơn."}
                             </p>
-
-                            <div className="student-course-price-main">
-                                {formatPrice(course.price)}
-                            </div>
-
+                            {!course.isEnrolled &&
+                                <div className="student-course-price-main">
+                                    {formatPrice(course.price)}
+                                </div>
+                            }
                             <div className="d-flex gap-2 flex-wrap mt-3">
-                                {course.isEnrolled ? (
+                                {course.accessType === "FREE" &&
+
                                     <button
                                         className="btn btn-primary px-4"
-                                        onClick={() => setActiveTab("lessons")}
+                                        onClick={handlePurchase}
+                                        disabled={purchasing}
                                     >
-                                        <i className="bi bi-play-circle me-1"></i>
-                                        Vào học
+                                        {purchasing ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-1"></span>
+                                                Đang xử lý...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-cart-check me-1"></i>
+                                                Đăng ký ngay
+                                            </>
+                                        )}
                                     </button>
-                                ) : (
+
+
+                                }
+                                {!course.isEnrolled && course.accessType === "PAID" &&
+
                                     <button
                                         className="btn btn-primary px-4"
                                         onClick={handlePurchase}
@@ -345,26 +995,37 @@ function StudentCourseDetail() {
                                             </>
                                         )}
                                     </button>
-                                )}
+
+
+                                }
+
+                                {!course.isEnrolled && course.accessType === "PAID" &&
+
+                                    <button
+                                        className="btn btn-success px-4"
+                                        onClick={handleThemVaoGio}
+                                        disabled={addCard}
+                                    >
+                                        {addCard ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-1"></span>
+                                                Đang xử lý...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-cart-check me-1"></i>
+                                                Thêm vào giỏ hàng
+                                            </>
+                                        )}
+                                    </button>
+
+
+                                }
+
 
                             </div>
 
-                            <div className="course-quick-stats mt-4">
-                                <div>
-                                    <strong>{course.lessonCount || 0}</strong>
-                                    <span>Bài học</span>
-                                </div>
 
-                                <div>
-                                    <strong>{course.studentCount || 0}</strong>
-                                    <span>Học viên</span>
-                                </div>
-
-                                <div>
-                                    <strong>{course.rating || 0}</strong>
-                                    <span>Đánh giá</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -372,7 +1033,7 @@ function StudentCourseDetail() {
 
             <div className="row g-4 mt-2">
                 <div className="col-lg-8">
-                    <ul className="nav student-course-tabs">
+                    <ul className="nav student-course-tabs mb-1">
                         <li className="nav-item">
                             <button
                                 type="button"
@@ -397,17 +1058,6 @@ function StudentCourseDetail() {
                             </button>
                         </li>
 
-                        <li className="nav-item">
-                            <button
-                                type="button"
-                                className={
-                                    activeTab === "exams" ? "nav-link active" : "nav-link"
-                                }
-                                onClick={() => setActiveTab("exams")}
-                            >
-                                Kỳ thi
-                            </button>
-                        </li>
 
                         <li className="nav-item">
                             <button
@@ -480,33 +1130,7 @@ function StudentCourseDetail() {
                                 </div>
                             </div>
 
-                            <div className="review-summary mt-4">
-                                <h5>Đánh giá khóa học</h5>
 
-                                <div className="d-flex align-items-center gap-3 flex-wrap">
-                                    <div className="review-score">{course.rating || 0}</div>
-
-                                    <div>
-                                        <div className="rating-stars">
-                                            {"★★★★★".slice(0, Math.round(course.rating || 0))}
-                                            <span>
-                                                {"★★★★★".slice(Math.round(course.rating || 0))}
-                                            </span>
-                                        </div>
-
-                                        <small className="text-muted">
-                                            Dựa trên {course.reviewCount || reviews.length || 0} đánh giá
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <button
-                                    className="btn btn-sm btn-outline-primary mt-3"
-                                    onClick={() => setActiveTab("reviews")}
-                                >
-                                    Xem tất cả đánh giá
-                                </button>
-                            </div>
                         </div>
                     )}
 
@@ -514,11 +1138,11 @@ function StudentCourseDetail() {
                         <div className="student-course-card">
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h5 className="mb-1">Danh sách bài học</h5>
+                                    <h5 className="mb-1">Danh sách nội dung khóa học</h5>
                                     <small className="text-muted">
                                         {course.isEnrolled
-                                            ? "Bạn có thể truy cập toàn bộ bài học của khóa học."
-                                            : "Một số bài học sẽ bị khóa cho đến khi bạn mua khóa học."}
+                                            ? "Bạn có thể học theo đúng thứ tự nội dung của khóa học."
+                                            : "Bạn cần mua khóa học để mở khóa toàn bộ nội dung."}
                                     </small>
                                 </div>
 
@@ -536,43 +1160,177 @@ function StudentCourseDetail() {
                             {loadingLessons ? (
                                 <div className="text-center text-muted py-4">
                                     <div className="spinner-border spinner-border-sm text-primary me-2"></div>
-                                    Đang tải bài học...
+                                    Đang tải nội dung khóa học...
                                 </div>
                             ) : (
                                 <div className="lesson-list-box">
-                                    {lessons.map((lesson) => {
-                                        const locked = !course.isEnrolled && !lesson.isFreePreview;
+                                    {lessons.map((item) => {
+                                        const isExpanded = expandedItemId === item.courseItemId;
+                                        const isLesson = item.type === "LESSON";
+                                        const isExam = item.type === "EXAM";
 
                                         return (
-                                            <button
-                                                type="button"
-                                                className="student-lesson-item"
-                                                key={lesson.lessonId}
-                                                onClick={() => handleLessonClick(lesson)}
+                                            <div
+                                                className={
+                                                    item.locked
+                                                        ? "student-content-wrapper locked"
+                                                        : item.current
+                                                            ? "student-content-wrapper current"
+                                                            : "student-content-wrapper"
+                                                }
+                                                key={item.courseItemId}
                                             >
-                                                <div className="lesson-index">
-                                                    {String(lesson.lessonOrder).padStart(2, "0")}
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className="student-lesson-item"
+                                                    onClick={() => handleContentClick(item)}
+                                                >
+                                                    <div className="lesson-index">
+                                                        {String(item.itemOrder || 0).padStart(2, "0")}
+                                                    </div>
 
-                                                <div className="flex-grow-1 text-start">
-                                                    <strong>{lesson.title}</strong>
-                                                    <span>{lesson.description || "Chưa có mô tả."}</span>
-                                                </div>
+                                                    <div className="flex-grow-1 text-start">
+                                                        <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                            <strong>{item.title || "Chưa có tiêu đề"}</strong>
 
-                                                <div className="lesson-meta">
-                                                    {locked ? (
-                                                        <i className="bi bi-lock"></i>
-                                                    ) : (
-                                                        <i className="bi bi-play-circle"></i>
-                                                    )}
-                                                </div>
-                                            </button>
+                                                            {isLesson && (
+                                                                <span className="badge text-bg-primary">
+                                                                    Bài học
+                                                                </span>
+                                                            )}
+
+
+
+                                                            {item.freePreview && (
+                                                                <span className="badge text-bg-info">
+                                                                    Xem thử
+                                                                </span>
+                                                            )}
+
+                                                            {item.current && !item.completed && !item.locked && (
+                                                                <span className="badge text-bg-primary">
+                                                                    Đang học
+                                                                </span>
+                                                            )}
+
+                                                            {item.completed && (
+                                                                <span className="badge text-bg-success">
+                                                                    Hoàn thành
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <span>{item.description || "Chưa có mô tả."}</span>
+
+                                                        {item.locked && (
+                                                            <small className="d-block text-danger mt-1">
+                                                                {item.lockReason || "Nội dung này đang bị khóa"}
+                                                            </small>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="lesson-meta">
+                                                        {item.locked ? (
+                                                            <i className="bi bi-lock"></i>
+                                                        ) : item.completed ? (
+                                                            <i className="bi bi-check-circle text-success"></i>
+                                                        ) : isExam ? (
+                                                            <i className="bi bi-clipboard-check text-warning"></i>
+                                                        ) : isExpanded ? (
+                                                            <i className="bi bi-chevron-up text-primary"></i>
+                                                        ) : (
+                                                            <i className="bi bi-chevron-down text-primary"></i>
+                                                        )}
+                                                    </div>
+                                                </button>
+
+                                                {isLesson && isExpanded && !item.locked && (
+                                                    <div className="lesson-tree-wrapper">
+                                                        {[
+                                                            {
+                                                                type: "videos",
+                                                                title: "Video bài giảng",
+                                                                description: "Xem các video hướng dẫn của bài học",
+                                                                icon: "bi-play-circle",
+                                                                colorClass: "video",
+                                                            },
+                                                            {
+                                                                type: "vocabularies",
+                                                                title: "Từ vựng",
+                                                                description: "Học từ vựng thuộc bài học này",
+                                                                icon: "bi-card-text",
+                                                                colorClass: "vocabulary",
+                                                            },
+                                                            {
+                                                                type: "grammars",
+                                                                title: "Ngữ pháp",
+                                                                description: "Xem phần ngữ pháp của bài học",
+                                                                icon: "bi-journal-text",
+                                                                colorClass: "grammar",
+                                                            },
+                                                            {
+                                                                type: "practice",
+                                                                title: "Bài ôn tập",
+                                                                description: "Luyện tập để hoàn thành bài học",
+                                                                icon: "bi-check2-circle",
+                                                                colorClass: "practice",
+                                                            },
+                                                        ].map((child) => {
+                                                            const isChildExpanded =
+                                                                expandedChild?.lessonId === item.id &&
+                                                                expandedChild?.childType === child.type;
+
+                                                            return (
+                                                                <div
+                                                                    className={
+                                                                        isChildExpanded
+                                                                            ? "lesson-tree-row-wrapper active"
+                                                                            : "lesson-tree-row-wrapper"
+                                                                    }
+                                                                    key={child.type}
+                                                                >
+                                                                    <button
+                                                                        type="button"
+                                                                        className="lesson-tree-row"
+                                                                        onClick={(e) =>
+                                                                            handleLessonChildClick(e, item.id, child.type)
+                                                                        }
+                                                                    >
+                                                                        <div className={`lesson-tree-icon ${child.colorClass}`}>
+                                                                            <i className={`bi ${child.icon}`}></i>
+                                                                        </div>
+
+                                                                        <div className="flex-grow-1 text-start">
+                                                                            <strong>{child.title}</strong>
+                                                                            <span>{child.description}</span>
+                                                                        </div>
+
+                                                                        <i
+                                                                            className={
+                                                                                isChildExpanded
+                                                                                    ? "bi bi-chevron-up text-primary"
+                                                                                    : "bi bi-chevron-down text-muted"
+                                                                            }
+                                                                        ></i>
+                                                                    </button>
+
+                                                                    {isChildExpanded && (
+                                                                        <div className="lesson-child-panel">
+                                                                            {renderChildContent(item.id, child.type)}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
                                         );
                                     })}
 
                                     {lessons.length === 0 && (
                                         <div className="text-center text-muted py-4">
-                                            Khóa học chưa có bài học.
+                                            Khóa học chưa có nội dung.
                                         </div>
                                     )}
                                 </div>
@@ -580,139 +1338,136 @@ function StudentCourseDetail() {
                         </div>
                     )}
 
-                    {activeTab === "exams" && (
-                        <div className="student-course-card">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 className="mb-1">Danh sách kỳ thi</h5>
-                                    <small className="text-muted">
-                                        {course.isEnrolled
-                                            ? "Bạn có thể xem và tham gia các kỳ thi của khóa học nếu đủ điều kiện."
-                                            : "Bạn cần mua khóa học để tham gia các kỳ thi."}
-                                    </small>
-                                </div>
-
-                                {!course.isEnrolled && (
-                                    <button
-                                        className="btn btn-sm btn-primary"
-                                        onClick={handlePurchase}
-                                        disabled={purchasing}
-                                    >
-                                        Mua để tham gia thi
-                                    </button>
-                                )}
-                            </div>
-
-                            <StudentExamListSection courseId={courseId} compact />
-                        </div>
-                    )}
-
                     {activeTab === "reviews" && (
-                        <div className="student-course-card">
-                            <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
-                                <div>
-                                    <h5 className="mb-1">Đánh giá của học viên</h5>
-                                    <small className="text-muted">
-                                        Xem nhận xét từ các học viên đã tham gia khóa học.
-                                    </small>
+                        <div className="course-review-section compact">
+                            <div className="review-shop-header">
+                                <div className="review-shop-score">
+                                    <div className="score-number">
+                                        {course.rating || 0}
+                                        <span>/5</span>
+                                    </div>
+
+                                    <div className="score-stars">
+                                        {"★★★★★".slice(0, Math.round(Number(course.rating || 0)))}
+                                        <span>
+                                            {"★★★★★".slice(Math.round(Number(course.rating || 0)))}
+                                        </span>
+                                    </div>
+
+                                    <p>{reviews.length} đánh giá</p>
                                 </div>
 
-                                <div className="review-score-small">
-                                    {course.rating || 0}
-                                    <span>/5</span>
+                                <div className="review-shop-info">
+                                    <h4>Đánh giá của học viên</h4>
+                                    <p>Nhận xét thực tế từ những học viên đã tham gia khóa học.</p>
+
+                                    <div className="review-summary-note">
+                                        <i className="bi bi-shield-check"></i>
+                                        Đánh giá đến từ học viên đã mua hoặc tham gia khóa học.
+                                    </div>
                                 </div>
                             </div>
 
                             {course.isEnrolled ? (
-                                <form className="review-form" onSubmit={handleSubmitReview}>
-                                    <h6>Viết đánh giá của bạn</h6>
+                                <form className="review-shop-form" onSubmit={handleSubmitReview}>
+                                    <div className="review-form-title">
+                                        <i className="bi bi-pencil-square"></i>
 
-                                    <div className="row g-3">
-                                        <div className="col-md-3">
-                                            <label className="form-label">Số sao</label>
-
-                                            <select
-                                                className="form-select"
-                                                value={reviewRating}
-                                                onChange={(e) => setReviewRating(e.target.value)}
-                                            >
-                                                <option value="5">5 sao</option>
-                                                <option value="4">4 sao</option>
-                                                <option value="3">3 sao</option>
-                                                <option value="2">2 sao</option>
-                                                <option value="1">1 sao</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="col-md-9">
-                                            <label className="form-label">Nhận xét</label>
-
-                                            <textarea
-                                                className="form-control"
-                                                rows="3"
-                                                placeholder="Chia sẻ cảm nhận của bạn về khóa học..."
-                                                value={reviewComment}
-                                                onChange={(e) => setReviewComment(e.target.value)}
-                                            ></textarea>
+                                        <div>
+                                            <h5>Viết đánh giá của bạn</h5>
+                                            <p>Chia sẻ cảm nhận để giúp học viên khác chọn khóa học phù hợp.</p>
                                         </div>
                                     </div>
 
-                                    <button
-                                        className="btn btn-primary mt-3"
-                                        disabled={submittingReview}
-                                    >
-                                        {submittingReview ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-1"></span>
-                                                Đang gửi...
-                                            </>
-                                        ) : (
-                                            "Gửi đánh giá"
-                                        )}
-                                    </button>
+                                    <div className="review-form-group">
+                                        <label>Số sao</label>
+
+                                        <select
+                                            value={reviewRating}
+                                            onChange={(e) => setReviewRating(e.target.value)}
+                                        >
+                                            <option value="5">★★★★★ - Rất tốt</option>
+                                            <option value="4">★★★★☆ - Tốt</option>
+                                            <option value="3">★★★☆☆ - Bình thường</option>
+                                            <option value="2">★★☆☆☆ - Chưa tốt</option>
+                                            <option value="1">★☆☆☆☆ - Tệ</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="review-form-group">
+                                        <label>Nhận xét</label>
+
+                                        <textarea
+                                            rows="4"
+                                            placeholder="Bạn thấy khóa học này như thế nào?"
+                                            value={reviewComment}
+                                            onChange={(e) => setReviewComment(e.target.value)}
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="review-form-action">
+                                        <button className="review-submit-btn" disabled={submittingReview}>
+                                            {submittingReview ? (
+                                                <>
+                                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                                    Đang gửi...
+                                                </>
+                                            ) : (
+                                                "Gửi đánh giá"
+                                            )}
+                                        </button>
+                                    </div>
                                 </form>
                             ) : (
-                                <div className="alert alert-info">
-                                    Bạn cần mua khóa học để có thể gửi đánh giá.
+                                <div className="review-login-box compact">
+                                    <i className="bi bi-lock"></i>
+                                    <span>Bạn cần mua khóa học để có thể gửi đánh giá.</span>
                                 </div>
                             )}
 
-                            <div className="review-list mt-4">
+                            <div className="review-shop-list">
+                                <div className="review-list-heading">
+                                    <h5>Nhận xét từ học viên</h5>
+                                    <span>{reviews.length} đánh giá</span>
+                                </div>
+
                                 {loadingReviews ? (
-                                    <div className="text-center text-muted py-4">
+                                    <div className="review-empty compact">
+                                        <span className="spinner-border spinner-border-sm me-2"></span>
                                         Đang tải đánh giá...
                                     </div>
-                                ) : (
+                                ) : reviews.length > 0 ? (
                                     reviews.map((review) => (
-                                        <div className="review-item" key={review.reviewId}>
+                                        <div className="review-shop-item" key={review.reviewId}>
                                             <div className="review-avatar">
-                                                {review.fullName?.charAt(0) || "U"}
+                                                {review.fullName?.charAt(0)?.toUpperCase() || "U"}
                                             </div>
 
-                                            <div className="flex-grow-1">
-                                                <div className="d-flex justify-content-between gap-2">
-                                                    <strong>{review.fullName || "Học viên"}</strong>
-                                                    <small className="text-muted">
-                                                        {review.createdAt || "--"}
-                                                    </small>
+                                            <div className="review-item-body">
+                                                <div className="review-item-top">
+                                                    <div>
+                                                        <h6>{review.fullName || "Học viên"}</h6>
+
+                                                        <div className="review-stars">
+                                                            {"★★★★★".slice(0, Number(review.rating || 0))}
+                                                            <span>
+                                                                {"★★★★★".slice(Number(review.rating || 0))}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <small>{review.createdAt || "--"}</small>
                                                 </div>
 
-                                                <div className="rating-stars small-stars">
-                                                    {"★★★★★".slice(0, Number(review.rating || 0))}
-                                                    <span>
-                                                        {"★★★★★".slice(Number(review.rating || 0))}
-                                                    </span>
-                                                </div>
-
-                                                <p>{review.comment}</p>
+                                                <p>{review.comment || "Không có nội dung đánh giá."}</p>
                                             </div>
                                         </div>
                                     ))
-                                )}
-
-                                {!loadingReviews && reviews.length === 0 && (
-                                    <div className="text-center text-muted py-4">
-                                        Chưa có đánh giá nào.
+                                ) : (
+                                    <div className="review-empty compact">
+                                        <i className="bi bi-chat-dots"></i>
+                                        <h6>Chưa có đánh giá nào</h6>
+                                        <p>Hãy là người đầu tiên chia sẻ cảm nhận về khóa học này.</p>
                                     </div>
                                 )}
                             </div>
@@ -765,56 +1520,195 @@ function StudentCourseDetail() {
                         </div>
                     </div>
 
-                    <div className="student-side-card mt-3">
-                        <h6>Giá khóa học</h6>
 
-                        <div className="side-price">{formatPrice(course.price)}</div>
-
-                        {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                            <div className="old-price">
-                                {formatPrice(course.originalPrice)}
-                            </div>
-                        )}
-
-                        {course.isEnrolled ? (
-                            <button
-                                className="btn btn-success w-100 mt-3"
-                                onClick={() => setActiveTab("lessons")}
-                            >
-                                <i className="bi bi-play-circle me-1"></i>
-                                Tiếp tục học
-                            </button>
-                        ) : (
-                            <button
-                                className="btn btn-primary w-100 mt-3"
-                                onClick={handlePurchase}
-                                disabled={purchasing}
-                            >
-                                {purchasing ? "Đang xử lý..." : "Mua khóa học ngay"}
-                            </button>
-                        )}
-
-                        <ul className="course-includes">
-                            <li>
-                                <i className="bi bi-infinity"></i>
-                                Truy cập trọn đời
-                            </li>
-                            <li>
-                                <i className="bi bi-phone"></i>
-                                Học được trên mobile & desktop
-                            </li>
-                            <li>
-                                <i className="bi bi-clipboard-check"></i>
-                                Có phần ôn tập và bài thi
-                            </li>
-                            <li>
-                                <i className="bi bi-star"></i>
-                                Được đánh giá sau khi học
-                            </li>
-                        </ul>
-                    </div>
                 </div>
             </div>
+
+            {previewModal.open && (
+                <div
+                    className="modal fade show"
+                    style={{
+                        display: "block",
+                        backgroundColor: "rgba(15, 23, 42, 0.55)",
+                    }}
+                    tabIndex="-1"
+                >
+                    <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                        <div className="modal-content border-0 rounded-4">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    {previewModal.type === "video" && "Video bài giảng"}
+                                    {previewModal.type === "vocabulary" && "Chi tiết từ vựng"}
+                                    {previewModal.type === "grammar" && "Chi tiết ngữ pháp"}
+                                    {previewModal.type === "practice" && "Chi tiết câu hỏi"}
+                                </h5>
+
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={closePreviewModal}
+                                ></button>
+                            </div>
+
+                            <div className="modal-body">
+                                {previewModal.type === "video" && previewModal.data && (
+                                    <div>
+                                        <h5 className="fw-bold mb-3">
+                                            {previewModal.data.title}
+                                        </h5>
+
+                                        <video
+                                            ref={videoRef}
+                                            className="w-100 rounded-3 bg-dark"
+                                            style={{ maxHeight: 520 }}
+                                            controls
+                                            poster={
+                                                previewModal.data.thumbnailUrl
+                                                    ? getFileUrl(previewModal.data.thumbnailUrl)
+                                                    : undefined
+                                            }
+                                            onPlay={() => {
+                                                startAutoSaveVideoProgress(previewModal.data);
+                                            }}
+                                            onPause={() => {
+                                                if (previewModal.data && videoRef.current) {
+                                                    saveVideoProgress(
+                                                        previewModal.data.videoId,
+                                                        videoRef.current.currentTime
+                                                    );
+                                                }
+
+                                                clearAutoSaveVideoProgress();
+                                            }}
+                                            onEnded={async () => {
+                                                if (!previewModal.data || !videoRef.current) {
+                                                    return;
+                                                }
+
+                                                const currentVideoId = previewModal.data.videoId;
+                                                const watchedSeconds =
+                                                    videoRef.current.duration || videoRef.current.currentTime;
+
+                                                const result = await saveVideoProgress(
+                                                    currentVideoId,
+                                                    watchedSeconds
+                                                );
+
+                                                if (result?.videoCompleted) {
+                                                    markVideoCompletedLocal(currentVideoId, watchedSeconds);
+                                                }
+
+                                                if (result?.shouldReloadLessons) {
+                                                    await loadLessons();
+                                                }
+
+                                                clearAutoSaveVideoProgress();
+                                            }}
+                                        >
+                                            <source src={getFileUrl(previewModal.data.videoUrl)} />
+                                            Trình duyệt của bạn không hỗ trợ video.
+                                        </video>
+
+                                        <div className="text-muted small mt-3">
+                                            Thời lượng:{" "}
+                                            {formatDuration(previewModal.data.durationSeconds)} · Ngày tạo:{" "}
+                                            {formatDate(previewModal.data.createdAt)}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {previewModal.type === "vocabulary" && previewModal.data && (
+                                    <div>
+                                        <h4 className="fw-bold mb-2">
+                                            {previewModal.data.word}
+                                        </h4>
+
+                                        <div className="text-muted mb-3">
+                                            {previewModal.data.pronunciation || "Chưa có phiên âm"}
+                                        </div>
+
+                                        <div className="border rounded-3 p-3 mb-3">
+                                            <div className="text-muted small">Nghĩa</div>
+                                            <strong>{previewModal.data.meaning || "--"}</strong>
+                                        </div>
+
+                                        <div className="border rounded-3 p-3">
+                                            <div className="text-muted small">Ví dụ</div>
+                                            <p className="mb-0">
+                                                {previewModal.data.exampleSentence || "Chưa có câu ví dụ."}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {previewModal.type === "grammar" && previewModal.data && (
+                                    <div>
+                                        <h4 className="fw-bold mb-3">
+                                            {previewModal.data.title}
+                                        </h4>
+
+                                        {previewModal.data.contentHtml ? (
+                                            <div
+                                                className="course-html-content"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: previewModal.data.contentHtml,
+                                                }}
+                                            ></div>
+                                        ) : (
+                                            <p className="text-muted mb-0">
+                                                Chưa có nội dung ngữ pháp.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {previewModal.type === "practice" && previewModal.data && (
+                                    <div>
+                                        <div className="mb-3">
+                                            <span
+                                                className={
+                                                    previewModal.data.isEnabled
+                                                        ? "badge text-bg-success"
+                                                        : "badge text-bg-secondary"
+                                                }
+                                            >
+                                                {previewModal.data.isEnabled ? "Đang mở" : "Đang khóa"}
+                                            </span>
+                                        </div>
+
+                                        <h4 className="fw-bold mb-2">
+                                            {getPracticeTypeText(previewModal.data.practiceType)}
+                                        </h4>
+
+                                        <div className="text-muted mb-4">
+                                            {previewModal.data.practiceType}
+                                        </div>
+
+                                        <div className="border rounded-3 p-3 mb-3">
+                                            <div className="text-muted small">Số câu hỏi</div>
+                                            <strong>{previewModal.data.questionCount || 0} câu hỏi</strong>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            disabled={!previewModal.data.isEnabled || !previewModal.data.questionCount}
+                                            onClick={() => {
+                                                navigate(
+                                                    `/khoa-hoc/${courseId}/lessons/${previewModal.data.lessonId}/practice/${previewModal.data.practiceType}`
+                                                );
+                                            }}
+                                        >
+                                            <i className="bi bi-play-circle me-1"></i>
+                                            Bắt đầu ôn tập
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

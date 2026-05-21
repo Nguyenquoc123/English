@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
-import { getFileUrl } from "../../utils/fileurl.js"
+import { getFileUrl } from "../../utils/fileurl.js";
 import Page from "../../compenents/phantrang/page.jsx";
 
 function DSKhoaHoc() {
@@ -14,113 +14,12 @@ function DSKhoaHoc() {
   const [levels, setLevels] = useState([]);
 
   const [loading, setLoading] = useState(false);
+  const [levelLoading, setLevelLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(6);
+  const [size] = useState(6);
   const [totalPages, setTotalPages] = useState(0);
-
-  const sampleCourses = [
-    {
-      courseId: 1,
-      title: "Tiếng Anh giao tiếp cơ bản",
-      description:
-        "Làm quen với các mẫu câu giao tiếp thông dụng trong cuộc sống hằng ngày.",
-      price: 0,
-      accessType: "FREE",
-      thumbnailUrl: "/course-1.jpg",
-      teacherName: "Nguyễn Thu Lan",
-      teacherAvatar: "/avatar-1.jpg",
-      levelName: "Sơ cấp",
-      rating: 4.8,
-      totalStudents: 1200,
-    },
-    {
-      courseId: 2,
-      title: "Ngữ pháp tiếng Anh nền tảng",
-      description:
-        "Hệ thống kiến thức ngữ pháp cơ bản kèm bài tập luyện tập chuyên sâu.",
-      price: 199000,
-      accessType: "PAID",
-      thumbnailUrl: "/course-2.jpg",
-      teacherName: "Trần Văn Minh",
-      teacherAvatar: "/avatar-2.jpg",
-      levelName: "Sơ cấp",
-      rating: 4.9,
-      totalStudents: 850,
-    },
-    {
-      courseId: 3,
-      title: "Luyện nghe tiếng Anh trung cấp",
-      description:
-        "Cải thiện kỹ năng nghe thông qua audio, hội thoại thực tế và bài tập tương tác.",
-      price: 299000,
-      accessType: "PAID",
-      thumbnailUrl: "/course-3.jpg",
-      teacherName: "Lê Hoàng Anh",
-      teacherAvatar: "/avatar-3.jpg",
-      levelName: "Trung cấp",
-      rating: 4.7,
-      totalStudents: 620,
-    },
-    {
-      courseId: 4,
-      title: "Từ vựng tiếng Anh theo chủ đề",
-      description:
-        "Học từ vựng theo chủ đề với flashcard và các bài ôn tập nhanh hiệu quả.",
-      price: 0,
-      accessType: "FREE",
-      thumbnailUrl: "/course-4.jpg",
-      teacherName: "Phạm Thu Hà",
-      teacherAvatar: "/avatar-4.jpg",
-      levelName: "Sơ cấp",
-      rating: 4.9,
-      totalStudents: 2100,
-    },
-    {
-      courseId: 5,
-      title: "Viết email tiếng Anh chuyên nghiệp",
-      description:
-        "Luyện viết email, đoạn văn ngắn và phản hồi trong môi trường công việc quốc tế.",
-      price: 399000,
-      accessType: "PAID",
-      thumbnailUrl: "/course-5.jpg",
-      teacherName: "Nguyễn Quốc Bảo",
-      teacherAvatar: "/avatar-5.jpg",
-      levelName: "Cao cấp",
-      rating: 5.0,
-      totalStudents: 430,
-    },
-    {
-      courseId: 6,
-      title: "Phát âm tiếng Anh cho người mới",
-      description:
-        "Rèn luyện phát âm cơ bản, trọng âm và ngữ điệu trong tiếng Anh chuẩn bản xứ.",
-      price: 0,
-      accessType: "FREE",
-      thumbnailUrl: "/course-6.jpg",
-      teacherName: "Vũ Minh Tâm",
-      teacherAvatar: "/avatar-6.jpg",
-      levelName: "Sơ cấp",
-      rating: 4.8,
-      totalStudents: 1500,
-    },
-  ];
-
-  const sampleLevels = [
-    {
-      levelId: 1,
-      levelName: "Sơ cấp",
-    },
-    {
-      levelId: 2,
-      levelName: "Trung cấp",
-    },
-    {
-      levelId: 3,
-      levelName: "Cao cấp",
-    },
-  ];
 
   useEffect(() => {
     loadLevels();
@@ -129,17 +28,23 @@ function DSKhoaHoc() {
 
   const loadLevels = async () => {
     try {
+      setLevelLoading(true);
 
       const response = await fetch("http://localhost:8080/level/all-level");
       const data = await response.json();
 
-      if (response.ok) {
-        setLevels(data);
+      if (!response.ok) {
+        setLevels([]);
+        return;
       }
 
+      const result = data.result || data.data || data;
+      setLevels(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error(err);
-      setLevels(sampleLevels);
+      setLevels([]);
+    } finally {
+      setLevelLoading(false);
     }
   };
 
@@ -161,13 +66,13 @@ function DSKhoaHoc() {
       params.append("page", pageValue);
       params.append("size", size);
 
-      const url = `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public?${params.toString()}`;
+      const response = await fetch(
+        `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public?${params.toString()}`,
+        {
+          method: "GET",
+        }
+      );
 
-      const response = await fetch(url, {
-        method: "GET",
-      });
-
-      console.log(response)
       let data = null;
 
       try {
@@ -180,8 +85,6 @@ function DSKhoaHoc() {
         setError(data?.message || "Không thể tải danh sách khóa học");
         return;
       }
-
-      console.log(data);
 
       setCourses(data.content || []);
       setPage(data.number || 0);
@@ -201,17 +104,31 @@ function DSKhoaHoc() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-
     setPage(0);
     loadCourses(0);
   };
 
+  const handleReset = () => {
+    setKeyword("");
+    setLevelId("");
+    setPage(0);
+
+    setTimeout(() => {
+      loadCourses(0);
+    }, 0);
+  };
+
   const formatPrice = (price) => {
-    if (!price || price === 0) {
+    if (!price || Number(price) === 0) {
       return "Miễn phí";
     }
 
-    return price.toLocaleString("vi-VN") + " VNĐ";
+    return Number(price).toLocaleString("vi-VN") + " VNĐ";
+  };
+
+  const formatNumber = (number) => {
+    if (!number) return "0";
+    return Number(number).toLocaleString("vi-VN");
   };
 
   const handleViewDetail = (courseId) => {
@@ -220,17 +137,14 @@ function DSKhoaHoc() {
 
   return (
     <div className="course-page">
-
       <main className="course-container">
         <section className="filter-box">
-          
-
           <form className="filter-form" onSubmit={handleSearch}>
             <div className="filter-group">
               <label>Từ khóa tìm kiếm</label>
               <input
                 type="text"
-                placeholder="Nhập khóa học cần tìm"
+                placeholder="Nhập tên khóa học cần tìm"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
               />
@@ -241,8 +155,11 @@ function DSKhoaHoc() {
               <select
                 value={levelId}
                 onChange={(e) => setLevelId(e.target.value)}
+                disabled={levelLoading}
               >
-                <option value="">Tất cả cấp độ</option>
+                <option value="">
+                  {levelLoading ? "Đang tải..." : "Tất cả cấp độ"}
+                </option>
 
                 {levels.map((level) => (
                   <option key={level.levelId} value={level.levelId}>
@@ -253,7 +170,12 @@ function DSKhoaHoc() {
             </div>
 
             <button type="submit" className="search-btn">
-              🔍 Tìm kiếm
+              <i className="bi bi-search me-1"></i>
+              Tìm kiếm
+            </button>
+
+            <button type="button" className="reset-btn" onClick={handleReset}>
+              Làm mới
             </button>
           </form>
         </section>
@@ -266,66 +188,79 @@ function DSKhoaHoc() {
           <p className="status-text">Không tìm thấy khóa học phù hợp.</p>
         )}
 
-        <section className="course-grid">
-          {courses.map((course) => (
-            <div className="course-card" key={course.courseId}>
-              <div className="course-image">
-                <img src={getFileUrl(course.thumbnailUrl)} alt={course.title} />
+        {!loading && !error && courses.length > 0 && (
+          <section className="course-grid">
+            {courses.map((course) => (
+              <div className="course-card" key={course.courseId}>
+                <div className="course-image">
+                  <img
+                    src={getFileUrl(course.thumbnailUrl)}
+                    alt={course.title}
+                  />
 
-                <div className="course-badges">
-                  <span>{course.levelName}</span>
 
-                  {course.accessType === "FREE" ? (
-                    <span className="free-badge">FREE</span>
-                  ) : (
-                    <span className="paid-badge">PAID</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="course-body">
-                <div className="teacher-info">
-                  <img src={course.teacherAvatar} alt={course.teacherName} />
-                  <span>{course.teacherName}</span>
                 </div>
 
-                <h2>{course.title}</h2>
-
-                <p className="course-description">{course.shortDescription}</p>
-
-                <div className="course-price-row">
-                  <span
-                    className={
-                      course.price === 0 ? "course-price free" : "course-price"
-                    }
-                  >
-                    {formatPrice(course.price)}
-                  </span>
-
-                  <div className="course-meta">
-                    <span>👥 {course.totalStudents}</span>
-                    <span>⭐ {course.rating}</span>
+                <div className="course-body">
+                  <div className="teacher-info">
+                    <img src={getFileUrl(course.avatarUrl)} alt={course.teacherName || "Giáo viên"} />
+                    <span>{course.teacherName || "Chưa có giáo viên"}</span>
                   </div>
+
+                  <div className="course-tags">
+                    <span className="level-tag">{course.levelName || "Chưa có cấp độ"}</span>
+
+                    {course.accessType === "FREE" ||
+                      course.courseType === "FREE" ||
+                      Number(course.price) === 0 ? (
+                      <span className="free-tag">FREE</span>
+                    ) : (
+                      <span className="paid-tag">PAID</span>
+                    )}
+                  </div>
+
+                  <h2 title={course.title}>{course.title || "Chưa có tiêu đề"}</h2>
+
+                  <p className="course-description" title={course.shortDescription}>
+                    {course.shortDescription || "Chưa có mô tả ngắn."}
+                  </p>
+
+                  <div className="course-price-row">
+                    <span
+                      className={
+                        Number(course.price) === 0 ? "course-price free" : "course-price"
+                      }
+                    >
+                      {formatPrice(course.price)}
+                    </span>
+
+                    {/* <div className="course-meta">
+                      <span>👥 {formatNumber(course.totalStudents)}</span>
+                      <span>⭐ {course.rating || 0}</span>
+                    </div> */}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="detail-btn"
+                    onClick={() => handleViewDetail(course.courseId)}
+                  >
+                    Xem chi tiết
+                  </button>
                 </div>
-
-                <button
-                  className="detail-btn"
-                  onClick={() => handleViewDetail(course.courseId)}
-                >
-                  Xem chi tiết
-                </button>
               </div>
-            </div>
-          ))}
-
-        </section>
-
+            ))}
+          </section>
+        )}
       </main>
-      {courses && <Page
-        page={page}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />}
+
+      {!loading && !error && courses.length > 0 && (
+        <Page
+          page={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }

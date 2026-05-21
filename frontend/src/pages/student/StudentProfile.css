@@ -381,3 +381,39 @@
     flex-direction: column;
   }
 }
+
+.student-profile-heading {
+  display: flex;
+  align-items: left;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.student-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.student-breadcrumb-item {
+  color: #6b7280;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.student-breadcrumb-item:hover {
+  color: #2563eb;
+}
+
+.student-breadcrumb-item.active {
+  color: #0d47a1;
+  font-weight: 600;
+  cursor: default;
+}
+
+.student-breadcrumb-separator {
+  color: #9ca3af;
+  font-size: 12px;
+}

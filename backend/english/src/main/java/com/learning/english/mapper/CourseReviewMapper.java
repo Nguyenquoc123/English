@@ -15,4 +15,7 @@ public interface CourseReviewMapper {
     @Mapping(target = "fullName", source = "user.fullName")
     @Mapping(target = "avatarUrl", source = "user.avatarUrl")
     CourseReviewResponse toCourseReviewResponse(CourseReview review);
+    
+    
+    
 }

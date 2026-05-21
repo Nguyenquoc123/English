@@ -1,10 +1,10 @@
 package com.learning.english.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "transactions")
@@ -24,17 +24,17 @@ public class Transaction {
     @JoinColumn(name = "userid", nullable = false)
     private User user;
 
-    @Column(name = "targettype", nullable = false, length = 50)
-    private String targetType;
+    @Column(name = "totalamount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal totalAmount;
 
-    @Column(name = "targetid", nullable = false)
-    private Long targetId;
-
-    @Column(name = "amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "paymenturl")
+    private String paymentUrl;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;
+
+    @Column(name = "paidat")
+    private LocalDateTime paidAt;
 
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;

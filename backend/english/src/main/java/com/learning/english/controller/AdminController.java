@@ -109,10 +109,17 @@ public class AdminController {
         ));
     }
 
-    @GetMapping("/lessons/free")
-    public ResponseEntity<List<LessonResponse>> getFreeLessons() {
-        return ResponseEntity.ok(adminService.getFreeLessons());
-    }
+    // ==================== LESSON FREE MANAGEMENT ====================
+
+    // GET /admin/lessons/free
+//    @GetMapping("/lessons/free")
+//    public ResponseEntity<List<LessonResponse>> getFreeLessons() {
+//        return ResponseEntity.ok(adminService.getFreeLessons());
+//    }
+//    @GetMapping("/lessons/free")
+//    public ResponseEntity<List<LessonResponse>> getFreeLessons() {
+//        return ResponseEntity.ok(adminService.getFreeLessons());
+//    }
 
     @PostMapping("/lessons/free")
     public ResponseEntity<LessonResponse> createFreeLesson(
@@ -165,10 +172,13 @@ public class AdminController {
         return ResponseEntity.ok(adminService.createNotification(request, username));
     }
 
-    @GetMapping("/transactions")
-    public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
-        return ResponseEntity.ok(adminService.getAllTransactions());
-    }
+    // ==================== TRANSACTION MANAGEMENT ====================
+
+    // GET /admin/transactions
+//    @GetMapping("/transactions")
+//    public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
+//        return ResponseEntity.ok(adminService.getAllTransactions());
+//    }
 
     @GetMapping("/reviews")
     public ResponseEntity<List<CourseReviewResponse>> getAllReviews() {

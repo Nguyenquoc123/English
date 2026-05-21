@@ -1,18 +1,19 @@
+import { useNavigate } from "react-router-dom";
+
 function LessonFilterBox({
+  courseId,
   keyword,
   setKeyword,
   status,
   setStatus,
-  onSearch,
-  onReset,
+  onSearch
 }) {
+  const navigate = useNavigate();
+
   return (
     <div className="card border-0 shadow-sm mb-4 lesson-filter-card">
       <div className="card-body">
-        <h5 className="fw-bold mb-3">
-          <i className="bi bi-funnel text-primary me-2"></i>
-          Tìm kiếm và lọc bài học
-        </h5>
+       
 
         <form onSubmit={onSearch}>
           <div className="row g-3 align-items-end">
@@ -20,9 +21,7 @@ function LessonFilterBox({
               <label className="form-label">Từ khóa tìm kiếm</label>
 
               <div className="input-group">
-                <span className="input-group-text bg-light">
-                  <i className="bi bi-search"></i>
-                </span>
+               
 
                 <input
                   type="text"
@@ -43,9 +42,9 @@ function LessonFilterBox({
                 onChange={(e) => setStatus(e.target.value)}
               >
                 <option value="">Tất cả trạng thái</option>
-                <option value="Draft">Draft</option>
-                <option value="Published">Published</option>
-                <option value="Hidden">Hidden</option>
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+                <option value="HIDDEN">Hidden</option>
               </select>
             </div>
 
@@ -58,10 +57,13 @@ function LessonFilterBox({
             <div className="col-md-2">
               <button
                 type="button"
-                className="btn btn-outline-secondary w-100"
-                onClick={onReset}
+                className="btn btn-primary w-100"
+                onClick={() => {
+                  navigate(`/teacher/courses/${courseId}/lessons/create`);
+                }}
               >
-                Làm mới
+                <i className="bi bi-plus-lg me-1"></i>
+                Thêm bài học
               </button>
             </div>
           </div>

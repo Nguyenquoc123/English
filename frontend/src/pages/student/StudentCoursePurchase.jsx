@@ -43,7 +43,7 @@ function StudentCoursePurchase() {
 
             if (!token) {
                 alert("Vui lòng đăng nhập để mua khóa học");
-                navigate("/login");
+                navigate("/dang-nhap");
                 return;
             }
 
@@ -218,13 +218,29 @@ function StudentCoursePurchase() {
 
     return (
         <div className="student-purchase-page">
-            <CourseBreadcrumb
-                items={[
-                    studentCourses,
-                    studentCourseDetail(courseId),
-                    { label: "Mua khóa học" },
-                ]}
-            />
+            <div className="purchase-breadcrumb">
+                <button
+                    type="button"
+                    className="purchase-breadcrumb-link"
+                    onClick={() => navigate("/khoa-hoc")}
+                >
+                    Khóa học
+                </button>
+
+                <i className="bi bi-chevron-right"></i>
+
+                <button
+                    type="button"
+                    className="purchase-breadcrumb-link"
+                    onClick={() => navigate(`/khoa-hoc/${courseId}`)}
+                >
+                    Chi tiết khóa học
+                </button>
+
+                <i className="bi bi-chevron-right"></i>
+
+                <strong>Mua khóa học</strong>
+            </div>
 
             <div className="purchase-heading">
                 <h2>Mua khóa học</h2>
@@ -244,14 +260,18 @@ function StudentCoursePurchase() {
                                 </div>
                             )}
 
-                            <div className="purchase-cover-overlay">
-                                <span>{course.levelName || "Chưa có cấp độ"}</span>
-                                <span>{getAccessTypeText()}</span>
-                            </div>
+                            
                         </div>
 
                         <div className="purchase-course-body">
-                            <h3>{course.title}</h3>
+                            <button
+                                type="button"
+                                className="purchase-course-title-link"
+                                onClick={() => navigate(`/khoa-hoc/${courseId}`)}
+                                title="Xem chi tiết khóa học"
+                            >
+                                {course.title}
+                            </button>
 
                             <div className="purchase-section-title">Thông tin khóa học</div>
 
@@ -337,7 +357,7 @@ function StudentCoursePurchase() {
                             >
                                 <div>
                                     <i className="bi bi-bank"></i>
-                                    <span>Chuyển khoản ngân hàng</span>
+                                    <span>Chuyển khoản ngân hàng(Vietinbank)</span>
                                 </div>
 
                                 <i className="bi bi-check-circle-fill"></i>

@@ -37,8 +37,8 @@ public class CourseReview {
     @Column(name = "rating")
     private Integer rating;
 
-    @Lob
-    @Column(name = "comment")
+    
+    @Column(name = "comment", nullable = false, length = 500)
     private String comment;
 
     @Column(name = "createdat")

@@ -17,7 +17,10 @@ public interface PracticeAttemptMapper {
 
     @Mapping(target = "lessonId", source = "lesson.lessonId")
     @Mapping(target = "lessonTitle", source = "lesson.title")
+    @Mapping(target = "examId", source = "exam.examId")
+    @Mapping(target = "examTitle", source = "exam.title")
     @Mapping(target = "details", ignore = true)
+    @Mapping(target = "courseId", source = "lesson.course.courseId")
     PracticeSubmitResponse toPracticeSubmitResponse(Attempt attempt);
 
     @Mapping(target = "questionId", source = "question.questionId")
