@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFileUrl } from "../../utils/fileurl";
 import "./TeacherVideoCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherVideoCreate() {
   const navigate = useNavigate();
@@ -379,8 +381,7 @@ function TeacherVideoCreate() {
                 }
                 disabled={loading}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

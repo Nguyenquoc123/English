@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { adminLessonTrail } from "../../../utils/breadcrumbPaths";
 import "./LessonGrammarList.css";
 
 function LessonGrammarList() {
@@ -14,7 +16,6 @@ function LessonGrammarList() {
     loadGrammars();
   }, [lessonId]);
 
-  // Tải danh sách ngữ pháp của bài học
   const loadGrammars = async () => {
     try {
       setLoading(true);
@@ -44,15 +45,10 @@ function LessonGrammarList() {
 
   return (
     <div className="lesson-grammar-list-page">
-      {/* Header */}
       <div className="mb-4">
-        <button
-          className="btn btn-light btn-sm mb-2"
-          onClick={() => navigate(`/admin/courses/${courseId}/lessons/${lessonId}/review`)}
-        >
-          <i className="bi bi-arrow-left me-1"></i>
-          Quay lại chi tiết bài học
-        </button>
+        <CourseBreadcrumb
+          items={adminLessonTrail(courseId, lessonId, "Quản lý ngữ pháp")}
+        />
         <h4 className="fw-bold mb-1" style={{ color: "#0f3c9c" }}>
           Quản lý ngữ pháp
         </h4>
@@ -68,7 +64,6 @@ function LessonGrammarList() {
         </div>
       )}
 
-      {/* Bảng danh sách ngữ pháp */}
       <div className="card border-0 shadow-sm rounded-4 p-3">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>

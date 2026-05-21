@@ -104,10 +104,7 @@ public class PracticeConfigService {
             throw new RuntimeException("Bạn cần mua khóa học để làm bài ôn tập này");
         }
 
-        /*
-            FLASHCARD có thể lấy từ bảng questions nếu bạn tạo questionType = FLASHCARD.
-            Nếu bạn dùng vocabularies làm flashcard thì có thể bỏ check config cho FLASHCARD.
-        */
+        
         if (!"FLASHCARD".equalsIgnoreCase(normalizedPracticeType)) {
             boolean enabled = practiceConfigRepository
                     .existsByLessonLessonIdAndPracticeTypeAndIsEnabledTrue(

@@ -1,32 +1,7 @@
-/* ══════════════════════════════════════════
-   ĐĂNG NHẬP — prefix: dn-
-══════════════════════════════════════════ */
+
 
 *, *::before, *::after { box-sizing: border-box; }
 
-/* ── Page layout ── */
-.dn-page {
-  min-height: 100vh;
-  display: flex;
-}
-
-/* ══════════════════════════════════════════
-   LEFT PANEL  —  nền sáng lavender
-══════════════════════════════════════════ */
-.dn-left {
-  width: 58%;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.dn-left-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* ── Top bar: logo + badge ── */
 .dn-left-topbar {
   display: flex;
   align-items: center;
@@ -66,7 +41,6 @@
   color: #6366f1;
 }
 
-/* Badge */
 .dn-badge {
   display: inline-flex;
   align-items: center;
@@ -87,7 +61,6 @@
   font-size: 14px;
 }
 
-/* ── Heading ── */
 .dn-heading {
   font-size: 52px;
   font-weight: 800;
@@ -114,7 +87,6 @@
   z-index: 1;
 }
 
-/* ── Features  —  3 cột ngang ── */
 .dn-features {
   display: flex;
   gap: 20px;
@@ -148,12 +120,11 @@
   line-height: 1.45;
 }
 
-/* ── Illustration ── */
 .dn-illustration {
   position: relative;
   margin-top: auto;
   z-index: 1;
-  /* Hình nằm sát đáy, tràn xuống nhẹ */
+
 }
 
 .dn-illustration img {
@@ -161,11 +132,10 @@
   max-width: 700px;
   display: block;
   object-fit: contain;
-  /* drop shadow mềm */
+
   filter: drop-shadow(0 24px 48px rgba(99, 102, 241, 0.18));
 }
 
-/* Floating badges */
 .dn-float {
   position: absolute;
   width: 48px;
@@ -199,7 +169,6 @@
   50%       { transform: translateY(-10px); }
 }
 
-/* Decorative blobs */
 .dn-blob {
   position: absolute;
   border-radius: 50%;
@@ -222,18 +191,8 @@
   left: -50px;
 }
 
-/* ══════════════════════════════════════════
-   RIGHT PANEL
-══════════════════════════════════════════ */
 .dn-right {
   position: relative;
-  flex: 1;
-  background: #f8f8ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-  overflow: hidden;
 }
 
 .dn-right-blob {
@@ -247,7 +206,6 @@
   pointer-events: none;
 }
 
-/* ── Card ── */
 .dn-card {
   background: #fff;
   border-radius: 20px;
@@ -259,8 +217,6 @@
   z-index: 1;
 }
 
-/* Card logo */
-/* Back button */
 .dn-back {
   display: inline-flex;
   align-items: center;
@@ -321,7 +277,6 @@
   margin: 0 0 28px;
 }
 
-/* ── Fields ── */
 .dn-field {
   margin-bottom: 20px;
 }
@@ -356,7 +311,6 @@
   text-decoration: underline;
 }
 
-/* Input wrapper */
 .dn-input-wrap {
   position: relative;
   display: flex;
@@ -401,7 +355,6 @@
   color: #9ca3af;
 }
 
-/* Eye toggle */
 .dn-eye {
   height: 46px;
   width: 42px;
@@ -422,7 +375,6 @@
   color: #6366f1;
 }
 
-/* Remember */
 .dn-remember {
   display: flex;
   align-items: center;
@@ -442,7 +394,6 @@
   flex-shrink: 0;
 }
 
-/* Error */
 .dn-error {
   display: flex;
   align-items: center;
@@ -461,7 +412,6 @@
   flex-shrink: 0;
 }
 
-/* Submit button */
 .dn-btn-submit {
   width: 100%;
   height: 48px;
@@ -490,7 +440,6 @@
   cursor: not-allowed;
 }
 
-/* Spinner */
 .dn-spinner {
   width: 18px;
   height: 18px;
@@ -505,59 +454,11 @@
   to { transform: rotate(360deg); }
 }
 
-/* Divider */
-.dn-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 22px 0;
-  color: #9ca3af;
-  font-size: 13px;
-}
-
-.dn-divider::before,
-.dn-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #e5e7eb;
-}
-
-/* Google button */
-.dn-btn-google {
-  width: 100%;
-  height: 46px;
-  background: #fff;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: background 0.15s, border-color 0.15s;
-  margin-bottom: 20px;
-}
-
-.dn-btn-google:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #d1d5db;
-}
-
-.dn-btn-google:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* Register link */
 .dn-register {
   text-align: center;
   font-size: 13px;
   color: #6b7280;
-  margin: 0;
+  margin: 22px 0 0;
 }
 
 .dn-register a {
@@ -570,35 +471,15 @@
   text-decoration: underline;
 }
 
-/* ══════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════ */
 @media (max-width: 1024px) {
-  .dn-left {
-    width: 52%;
-    padding: 32px 36px 0;
-  }
-
   .dn-heading {
     font-size: 42px;
   }
 }
 
-@media (max-width: 860px) {
-  .dn-left {
-    display: none;
-  }
-
-  .dn-right {
-    background: #eef0ff;
-  }
-}
-
 @media (max-width: 480px) {
   .dn-right {
-    padding: 24px 16px;
     align-items: flex-start;
-    padding-top: 48px;
   }
 
   .dn-card {
@@ -607,5 +488,11 @@
 
   .dn-card-title {
     font-size: 22px;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) and (max-width: 900px) {
+  .dn-card {
+    padding: 20px 16px;
   }
 }

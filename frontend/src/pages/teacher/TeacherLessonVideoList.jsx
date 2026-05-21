@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
 import TeacherLessonVideoDetail from "./TeacherLessonVideoDetail";
 

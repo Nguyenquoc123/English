@@ -1,7 +1,5 @@
 package com.learning.english.configuration;
 
-
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -15,7 +13,6 @@ import com.learning.english.entity.Role;
 import com.learning.english.entity.User;
 import com.learning.english.repository.RoleRepository;
 import com.learning.english.repository.UserRepository;
-
 
 @Component
 @Order(2)
@@ -32,7 +29,6 @@ public class DeclareAdmin implements CommandLineRunner{
 	@Override
 	public void run(String... args){
 		
-		// "admin" viết thường — phải khớp với tên role đã seed trong DeclareRole
 		// JWT scope claim = roleName → Spring Security tạo authority "SCOPE_admin"
 		Role role = roleRepository.findByRoleName("admin").orElseThrow(() -> new RuntimeException("Không tìm thấy role 'admin' — hãy chắc chắn DeclareRole đã chạy trước"));
 		Optional<User> admin_ = userRepository.findByUsername("admin");

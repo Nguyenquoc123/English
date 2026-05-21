@@ -46,9 +46,7 @@ public interface TeacherLessonDetailMapper {
     @Mapping(target = "videoId", source = "videoId")
     @Mapping(target = "title", source = "title")
     @Mapping(target = "videoUrl", source = "videoUrl")
-//    @Mapping(target = "duration", source = "duration")
     @Mapping(target = "thumbnailUrl", source = "thumbnailUrl")
-//    @Mapping(target = "status", source = "status")
     @Mapping(target = "createdAt", source = "createdAt")
     LessonVideoResponse toVideoResponse(Video video);
 
@@ -63,7 +61,6 @@ public interface TeacherLessonDetailMapper {
     @Mapping(target = "grammarId", source = "grammarId")
     @Mapping(target = "title", source = "title")
     @Mapping(target = "content", source = "contentHtml")
-//    @Mapping(target = "status", source = "status")
     LessonGrammarResponse toGrammarResponse(Grammar grammar);
 
     @Mapping(target = "questionId", source = "questionId")

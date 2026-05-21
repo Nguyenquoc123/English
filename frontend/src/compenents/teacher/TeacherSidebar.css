@@ -10,7 +10,6 @@
   transition: transform 0.25s ease;
 }
 
-/* Khi mở sidebar */
 .teacher-sidebar.show {
   transform: translateX(0);
 }

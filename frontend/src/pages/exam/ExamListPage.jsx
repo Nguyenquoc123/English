@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./ExamListPage.css";
 
-
 function ExamListPage() {
   const navigate = useNavigate();
   const { courseId } = useParams();
@@ -45,7 +44,6 @@ function ExamListPage() {
         params.append("status", status);
       }
 
-      // Chỉ thêm courseId khi đang ở trang chi tiết khóa học
       if (courseId) {
         params.append("courseId", courseId);
       }

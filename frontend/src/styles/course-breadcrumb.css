@@ -1,0 +1,33 @@
+.course-breadcrumb,
+.purchase-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.course-breadcrumb a {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.course-breadcrumb a:hover {
+  color: #0f3c9c;
+  text-decoration: underline;
+}
+
+.course-breadcrumb strong,
+.purchase-breadcrumb strong {
+  color: #0f3c9c;
+  font-weight: 600;
+}
+
+.course-breadcrumb .bi-chevron-right,
+.purchase-breadcrumb .bi-chevron-right {
+  font-size: 12px;
+  color: #9ca3af;
+}

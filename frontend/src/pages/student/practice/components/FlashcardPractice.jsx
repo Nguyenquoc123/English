@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import CourseBreadcrumb from "../../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  studentHome,
+  studentCourses,
+  studentCourseDetail,
+  studentLesson,
+} from "../../../../utils/breadcrumbPaths";
 
 function FlashcardPractice({ API_BASE, lessonId, courseId, getToken }) {
   const navigate = useNavigate();
@@ -39,10 +46,7 @@ function FlashcardPractice({ API_BASE, lessonId, courseId, getToken }) {
 
       const token = getToken();
 
-      /*
-        Có thể dùng luôn vocabulary làm flashcard:
-        GET /vocabularies/{lessonId}/lessons
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/vocabularies/${lessonId}/lessons`,
@@ -130,14 +134,15 @@ function FlashcardPractice({ API_BASE, lessonId, courseId, getToken }) {
     return (
       <div className="student-practice-page">
         <div className="student-practice-container">
-          <button
-            type="button"
-            className="practice-back-link"
-            onClick={() => navigate(`/courses/${courseId}/lessons/${lessonId}`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại lesson
-          </button>
+          <CourseBreadcrumb
+            items={[
+              studentHome,
+              studentCourses,
+              studentCourseDetail(courseId),
+              studentLesson(courseId, lessonId),
+              { label: "Flashcard" },
+            ]}
+          />
 
           <div className="practice-empty-state">
             <i className="bi bi-card-text"></i>
@@ -152,14 +157,15 @@ function FlashcardPractice({ API_BASE, lessonId, courseId, getToken }) {
   return (
     <div className="student-practice-page">
       <div className="student-practice-container">
-        <button
-          type="button"
-          className="practice-back-link"
-          onClick={() => navigate(`/courses/${courseId}/lessons/${lessonId}`)}
-        >
-          <i className="bi bi-arrow-left"></i>
-          Quay lại lesson
-        </button>
+        <CourseBreadcrumb
+          items={[
+            studentHome,
+            studentCourses,
+            studentCourseDetail(courseId),
+            studentLesson(courseId, lessonId),
+            { label: "Flashcard" },
+          ]}
+        />
 
         <div className="flashcard-header">
           <div>

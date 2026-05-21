@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { adminLessonTrail } from "../../../utils/breadcrumbPaths";
 import "./LessonPracticeOverview.css";
 
 const PRACTICE_TYPES = [
@@ -21,7 +23,6 @@ function LessonPracticeOverview() {
     loadPracticeData();
   }, [lessonId]);
 
-  // Tải dữ liệu ôn tập từ API bài học admin
   const loadPracticeData = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -42,7 +43,6 @@ function LessonPracticeOverview() {
     }
   };
 
-  // Tổng hợp số câu hỏi và trạng thái theo từng loại ôn tập
   const practiceRows = useMemo(() => {
     return PRACTICE_TYPES.map((item) => {
       const count = questions.filter((q) => q.questionType === item.type).length;
@@ -57,15 +57,10 @@ function LessonPracticeOverview() {
 
   return (
     <div className="lesson-practice-overview-page">
-      {/* Header */}
       <div className="mb-4">
-        <button
-          className="btn btn-light btn-sm mb-2"
-          onClick={() => navigate(`/admin/courses/${courseId}/lessons/${lessonId}/review`)}
-        >
-          <i className="bi bi-arrow-left me-1"></i>
-          Quay lại chi tiết bài học
-        </button>
+        <CourseBreadcrumb
+          items={adminLessonTrail(courseId, lessonId, "Quản lý ôn tập")}
+        />
         <h4 className="fw-bold mb-1" style={{ color: "#0f3c9c" }}>
           Quản lý ôn tập
         </h4>
@@ -74,7 +69,6 @@ function LessonPracticeOverview() {
         </p>
       </div>
 
-      {/* Thẻ các dạng ôn tập */}
       <div className="row g-3">
         {practiceRows.map((row) => (
           <div className="col-lg-4 col-md-6" key={row.type}>

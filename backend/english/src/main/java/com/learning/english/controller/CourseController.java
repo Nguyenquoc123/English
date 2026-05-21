@@ -49,19 +49,21 @@ public class CourseController {
 	public Page<CourseResponse> dsKhoaHocPublic(
 	        @RequestParam(required = false) String keyword,
 	        @RequestParam(required = false) Long levelId,
-	        @RequestParam(required = false) Integer page
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size
 	) {
 	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, 12);
 	}
 	
-	@GetMapping("/danh-sach-khoa-hoc-da-mua")
-	public Page<CourseResponse> dsKhoaHocDaMua(
-	        @RequestParam(required = false) String keyword,
-	        @RequestParam(required = false) Long levelId,
-	        @RequestParam(required = false) Integer page
-	) {
-	    return courseService.dsKhoaHocDaMua(keyword, levelId, page, 12);
-	}
+//	@GetMapping("/danh-sach-khoa-hoc-da-mua")
+//	public Page<CourseResponse> dsKhoaHocDaMua(
+//	        @RequestParam(required = false) String keyword,
+//	        @RequestParam(required = false) Long levelId,
+//	        @RequestParam(required = false) Integer page
+//	) {
+//	    return courseService.dsKhoaHocDaMua(keyword, levelId, page, 12);
+////	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, size);
+//	}
 	
 	@GetMapping("/danh-sach-khoa-hoc-teacher")
 	public Page<CourseResponse> dsKhoaHocCuaGiaoVien(
@@ -139,6 +141,11 @@ public class CourseController {
     @GetMapping("/chi-tiet-khoa-hoc-student/{courseId}")
 	public ResponseEntity<StudentCourseDetailResponse> getCourseDetailStudent(@PathVariable("courseId") Long courseId) {
 	    return ResponseEntity.ok(courseService.layChiTietKhoaHocChoHocVien(courseId));
+	}
+
+	@GetMapping("/danh-sach-khoa-hoc-da-mua")
+	public List<CourseResponse> dsKhoaHocDaMua() {
+		return courseService.dsKhoaHocDaMua();
 	}
     
     

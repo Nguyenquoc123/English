@@ -22,7 +22,6 @@ public class Question {
     @Column(name = "questionid")
     private Long questionId;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "createdby", nullable = false)
     private User createdBy;

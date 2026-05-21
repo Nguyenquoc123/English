@@ -197,7 +197,6 @@ function UserManagement() {
     return date.toLocaleString("vi-VN");
   };
 
-  // Stats computed client-side
   const stats = {
     total: users.length,
     active: users.filter((u) => u.status === "active").length,
@@ -222,7 +221,6 @@ function UserManagement() {
         </button>
       </div>
 
-      {/* Stats bar */}
       <div className="user-stats">
         <div className="user-stat-card user-stat-total">
           <div className="user-stat-value">{stats.total}</div>
@@ -242,7 +240,6 @@ function UserManagement() {
         </div>
       </div>
 
-      {/* Filter card */}
       <div className="admin-filter-card">
         <form onSubmit={handleSearch}>
           <div className="row g-3 align-items-end">
@@ -317,7 +314,6 @@ function UserManagement() {
         </div>
       )}
 
-      {/* Table card */}
       <div className="admin-table-card">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
@@ -433,7 +429,6 @@ function UserManagement() {
         </div>
       </div>
 
-      {/* User detail modal */}
       {showModal && selectedUser && (
         <div className="user-modal-overlay" onClick={handleCloseModal}>
           <div className="user-modal" onClick={(e) => e.stopPropagation()}>
@@ -447,7 +442,6 @@ function UserManagement() {
             </div>
 
             <div className="user-modal-body">
-              {/* Avatar */}
               <div className="text-center mb-4">
                 {selectedUser.avatarUrl ? (
                   <img
@@ -464,7 +458,6 @@ function UserManagement() {
                 <div className="text-muted small">{selectedUser.username}</div>
               </div>
 
-              {/* Info grid */}
               <div className="user-modal-info">
                 <div className="user-modal-info-row">
                   <span className="user-modal-info-label">Email</span>
@@ -496,7 +489,6 @@ function UserManagement() {
                 </div>
               </div>
 
-              {/* Role change — only for non-admin users */}
               {selectedUser.roleName !== "admin" && (
                 <div className="user-modal-role-section">
                   <label className="form-label fw-semibold mb-2">Đổi vai trò</label>
@@ -531,7 +523,6 @@ function UserManagement() {
                 </div>
               )}
 
-              {/* Lock/unlock button */}
               {selectedUser.roleName !== "admin" && (
                 <div className="mt-3">
                   <button

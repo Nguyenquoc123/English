@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../register/DangKy.css";
+import anhNen from "../../assets/anhnen.jpg";
+import "./DangKy.css";
 
 function DangKy() {
   const navigate = useNavigate();
@@ -80,7 +81,6 @@ function DangKy() {
 
       alert("Đăng ký thành công. Vui lòng nhập mã OTP để xác minh tài khoản.");
 
-      // Chuyển sang trang xác minh, gửi kèm email qua state
       navigate("/xac-minh", {
         state: {
           email: email,
@@ -95,52 +95,40 @@ function DangKy() {
   };
 
   return (
-    <div className="register-page">
-      <div className="register-left">
-        <div className="register-intro">
-          <h1>Tạo tài khoản mới</h1>
-
-          <p>
-            Tham gia nền tảng học và thi tiếng Anh trực tuyến để học bài,
-            luyện tập, làm bài thi và theo dõi tiến độ học tập.
-          </p>
-
-          <div className="register-image-box">
-            <img src="/register-illustration.png" alt="Register" />
-          </div>
-
-          {/* <div className="register-features">
-            <div className="register-feature-item">▣ Học mọi lúc mọi nơi</div>
-            <div className="register-feature-item">▣ Luyện tập đa dạng</div>
-            <div className="register-feature-item">▣ Thi trực tuyến</div>
-            <div className="register-feature-item">⌁ Theo dõi tiến độ học tập</div>
-            <div className="register-feature-item">◎ Hỗ trợ AI tra từ vựng</div>
-          </div> */}
-        </div>
+    <div className="register-page auth-split-page">
+      <div className="register-left auth-split-left">
+        <img src={anhNen} alt="English LMS" className="register-left-img auth-split-img" />
       </div>
 
-      <div className="register-right">
+      <div className="register-right auth-split-right">
         <div className="register-card">
           <Link to="/" className="register-back">
             <i className="bi bi-arrow-left" /> Trang chủ
           </Link>
 
-          <h2 className="register-logo">▣ English LMS</h2>
+          <div className="register-card-logo">
+            <span className="register-logo-icon">
+              <i className="bi bi-mortarboard-fill" />
+            </span>
+            <span className="register-logo-text">
+              English<b>LMS</b>
+            </span>
+          </div>
 
-          <h3>Đăng ký tài khoản</h3>
-
-          
+          <h2 className="register-card-title">Đăng ký tài khoản</h2>
+          <p className="register-card-sub">Tạo tài khoản để bắt đầu học tiếng Anh</p>
 
           <form onSubmit={handleRegister}>
             <div className="form-group">
               <label>Họ và tên</label>
               <div className="input-box">
-                <span>👤</span>
+                <i className="bi bi-person input-icon" />
                 <input
                   type="text"
                   placeholder="Nguyễn Văn A"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -148,12 +136,13 @@ function DangKy() {
             <div className="form-group">
               <label>Tên đăng nhập</label>
               <div className="input-box">
-                <span>◎</span>
+                <i className="bi bi-at input-icon" />
                 <input
                   type="text"
                   placeholder="username123"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -161,12 +150,13 @@ function DangKy() {
             <div className="form-group">
               <label>Email</label>
               <div className="input-box">
-                <span>✉</span>
+                <i className="bi bi-envelope input-icon" />
                 <input
                   type="email"
                   placeholder="example@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -174,12 +164,13 @@ function DangKy() {
             <div className="form-group">
               <label>Mật khẩu</label>
               <div className="input-box">
-                <span>🔒</span>
+                <i className="bi bi-lock input-icon" />
                 <input
                   type="password"
                   placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -187,26 +178,27 @@ function DangKy() {
             <div className="form-group">
               <label>Nhập lại mật khẩu</label>
               <div className="input-box">
-                <span>🔒</span>
+                <i className="bi bi-lock-fill input-icon" />
                 <input
                   type="password"
                   placeholder="Nhập lại mật khẩu"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
 
             {error && <p className="error-message">{error}</p>}
 
-            <button type="submit" disabled={loading}>
+            <button type="submit" className="register-submit" disabled={loading}>
               {loading ? "Đang đăng ký..." : "Đăng ký"}
             </button>
           </form>
 
-          <div className="login-text">
+          <p className="login-text">
             Đã có tài khoản? <Link to="/dang-nhap">Đăng nhập</Link>
-          </div>
+          </p>
         </div>
       </div>
     </div>

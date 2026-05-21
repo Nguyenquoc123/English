@@ -15,7 +15,6 @@ function CourseManagement() {
     loadCourses();
   }, []);
 
-  // Tải danh sách khóa học với bộ lọc keyword và status
   const loadCourses = async () => {
     try {
       setLoading(true);
@@ -59,7 +58,6 @@ function CourseManagement() {
     setTimeout(() => loadCourses(), 0);
   };
 
-  // Badge màu theo trạng thái khóa học
   const getStatusBadge = (statusValue) => {
     const map = {
       Draft: "badge rounded-pill text-bg-secondary",
@@ -92,7 +90,6 @@ function CourseManagement() {
 
   return (
     <div className="course-management-page">
-      {/* Tiêu đề trang */}
       <div className="admin-page-heading">
         <div>
           <h4 className="fw-bold mb-1" style={{ color: "#0f3c9c" }}>
@@ -108,7 +105,6 @@ function CourseManagement() {
         </button>
       </div>
 
-      {/* Bộ lọc tìm kiếm */}
       <div className="card border-0 shadow-sm rounded-4 p-3 mb-3">
         <form onSubmit={handleSearch}>
           <div className="row g-3 align-items-end">
@@ -168,7 +164,6 @@ function CourseManagement() {
         </div>
       )}
 
-      {/* Bảng danh sách khóa học */}
       <div className="card border-0 shadow-sm rounded-4 p-3">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>

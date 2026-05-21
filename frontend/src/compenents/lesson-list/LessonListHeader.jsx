@@ -1,17 +1,18 @@
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+
 function LessonListHeader({
   title,
   description,
   course,
-  onBack,
+  breadcrumbItems,
   rightActions,
 }) {
   return (
     <div className="lesson-page-heading">
       <div>
-        <button type="button" className="lesson-back-link" onClick={onBack}>
-          <i className="bi bi-arrow-left"></i>
-          Quay lại
-        </button>
+        {breadcrumbItems?.length > 0 && (
+          <CourseBreadcrumb items={breadcrumbItems} />
+        )}
 
       </div>
 

@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  teacherCourses,
+  teacherCourseDetail,
+  teacherLessonDetail,
+  teacherLessonPractice,
+} from "../../utils/breadcrumbPaths";
 
 function TeacherLessonPracticeQuestionList({
   embedded = false,

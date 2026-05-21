@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./LessonReviewDetail.css";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { adminLessonListTrail } from "../../../utils/breadcrumbPaths";
 
 function LessonReviewDetail() {
   const navigate = useNavigate();
@@ -18,7 +20,6 @@ function LessonReviewDetail() {
     loadLessonDetail();
   }, [courseId, lessonId]);
 
-  // Tải chi tiết bài học cho admin review
   const loadLessonDetail = async () => {
     try {
       setLoading(true);
@@ -63,7 +64,6 @@ function LessonReviewDetail() {
     return map[status] || "badge rounded-pill text-bg-light";
   };
 
-  // Đếm câu hỏi theo loại
   const countQuestionType = (type) => questions.filter((q) => q.questionType === type).length;
 
   if (loading) {
@@ -94,15 +94,10 @@ function LessonReviewDetail() {
 
   return (
     <div className="lesson-review-detail-page">
-      {/* Header */}
       <div className="mb-4">
-        <button
-          className="btn btn-light btn-sm mb-2"
-          onClick={() => navigate(`/admin/courses/${courseId}/lessons`)}
-        >
-          <i className="bi bi-arrow-left me-1"></i>
-          Quay lại danh sách bài học
-        </button>
+        <CourseBreadcrumb
+          items={adminLessonListTrail(courseId, "Duyệt bài học")}
+        />
         <div className="d-flex align-items-center gap-2 mb-1">
           <span className="badge bg-primary-subtle text-primary rounded-pill">
             <i className="bi bi-journal-bookmark me-1"></i>
@@ -117,7 +112,6 @@ function LessonReviewDetail() {
         </p>
       </div>
 
-      {/* Thẻ thống kê nội dung */}
       <div className="row g-3 mb-4">
         {[
           { label: "Video", count: videos.length, icon: "bi-camera-video", color: "primary", path: "videos" },
@@ -147,7 +141,6 @@ function LessonReviewDetail() {
         ))}
       </div>
 
-      {/* Nút điều hướng review */}
       <div className="card border-0 shadow-sm rounded-4 p-3 mb-4">
         <div className="d-flex flex-wrap gap-2">
           <button className="btn btn-outline-primary btn-sm"
@@ -168,12 +161,11 @@ function LessonReviewDetail() {
           </button>
           <button className="btn btn-outline-secondary btn-sm"
             onClick={() => navigate(`/admin/courses/${courseId}/review`)}>
-            <i className="bi bi-shield-check me-1"></i>Quay lại duyệt khóa học
+            <i className="bi bi-shield-check me-1"></i>Duyệt khóa học
           </button>
         </div>
       </div>
 
-      {/* Thông tin chi tiết bài học */}
       <div className="card border-0 shadow-sm rounded-4 p-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
@@ -210,7 +202,6 @@ function LessonReviewDetail() {
           từ vựng, ngữ pháp và câu hỏi ôn tập phù hợp hay chưa.
         </div>
 
-        {/* Thống kê câu hỏi theo loại */}
         <div className="row g-3 mt-2">
           {[
             { label: "Trắc nghiệm", type: "MULTIPLE_CHOICE" },

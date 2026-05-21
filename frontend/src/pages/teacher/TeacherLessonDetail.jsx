@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherLessonDetail.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonListTrail } from "../../utils/breadcrumbPaths";
 
 // Đổi đường dẫn này theo đúng vị trí component video của bạn
 import TeacherLessonVideoList from "./TeacherLessonVideoList";

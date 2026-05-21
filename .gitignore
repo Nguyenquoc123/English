@@ -1,9 +1,13 @@
-# Claude Code
-.claude/
-
 # OS
 .DS_Store
 Thumbs.db
+
+# Công cụ local (không đưa lên repo)
+.cursor/
+.claude/
+
+# Thư mục cũ (đã chuyển ra backend/frontend ở root)
+English/
 
 # Editor
 .vscode/

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherLessonCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonListTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherLessonCreate() {
   const navigate = useNavigate();
@@ -32,6 +34,8 @@ function TeacherLessonCreate() {
       setError("");
 
       const token = localStorage.getItem("token");
+
+      
 
       const response = await fetch(
         `${API_BASE}/khoa-hoc/chi-tiet-khoa-hoc-teacher/${courseId}`,
@@ -267,14 +271,9 @@ function TeacherLessonCreate() {
     <div className="lesson-create-page">
       <div className="lesson-create-heading">
         <div>
-          <button
-            type="button"
-            className="lesson-create-back"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại lộ trình khóa học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonListTrail(courseId, "Thêm bài học")}
+          />
 
           <h2>Thêm nội dung mới</h2>
 
@@ -511,8 +510,7 @@ function TeacherLessonCreate() {
                 onClick={() => navigate(`/teacher/courses/${courseId}/lessons`)}
                 disabled={saving}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  studentHome,
+  studentCourses,
+  studentCourseDetail,
+  studentLesson,
+} from "../../../utils/breadcrumbPaths";
 import PracticeQuestionCard from "./components/PracticeQuestionCard";
 import FlashcardPractice from "./components/FlashcardPractice";
 import "./StudentPracticePage.css";
@@ -95,30 +102,7 @@ function StudentPracticePage() {
         return;
       }
 
-      /*
-        API gợi ý:
-        GET /lessons/{lessonId}/practice/{practiceType}/student
 
-        Response mẫu:
-        {
-          "lessonId": 2,
-          "lessonTitle": "Daily Activities",
-          "practiceType": "MULTIPLE_CHOICE",
-          "questions": [
-            {
-              "questionId": 1,
-              "questionType": "MULTIPLE_CHOICE",
-              "content": "Choose the correct answer...",
-              "mediaUrl": null,
-              "correctText": null,
-              "options": [
-                { "optionId": 1, "optionText": "have" },
-                { "optionId": 2, "optionText": "has" }
-              ]
-            }
-          ]
-        }
-      */
 
       const response = await fetch(
         `${API_BASE}/practice-configs/${lessonId}/practice/${practiceType}/student`,
@@ -303,124 +287,112 @@ function StudentPracticePage() {
   return (
     <div className="student-practice-page">
       <div className="student-practice-container">
-        <div className="practice-breadcrumb">
-          <span
-            className="practice-breadcrumb-item"
-            onClick={() => navigate("/danh-sach-khoa-hoc")}
-          >
-            Khóa học
-          </span>
-
-          <i className="bi bi-chevron-right practice-breadcrumb-separator"></i>
-
-          <span
-            className="practice-breadcrumb-item"
-            onClick={() => navigate(`/khoa-hoc/${courseId}`)}
-          >
-            Chi tiết khóa học
-          </span>
-
-          <i className="bi bi-chevron-right practice-breadcrumb-separator"></i>
-
-          <span className="practice-breadcrumb-item active">
-            Ôn tập
-          </span>
-        </div>
+        <CourseBreadcrumb
+          items={[
+            studentHome,
+            studentCourses,
+            studentCourseDetail(courseId),
+            { label: "Ôn tập" },
+          ]}
+        />
 
         
+      </div>
 
-        {questions.length === 0 ? (
-          <div className="practice-empty-state">
-            <i className="bi bi-journal-x"></i>
-            <h5>Chưa có câu hỏi ôn tập</h5>
-            <p>Giáo viên chưa thêm câu hỏi cho dạng ôn tập này.</p>
+
+
+      {questions.length === 0 ? (
+        <div className="practice-empty-state">
+          <i className="bi bi-journal-x"></i>
+          <h5>Chưa có câu hỏi ôn tập</h5>
+          <p>Giáo viên chưa thêm câu hỏi cho dạng ôn tập này.</p>
+        </div>
+      ) : (
+        <div className="practice-layout">
+          <div className="practice-main">
+
+
+            {questions.map((question, index) => (
+              <PracticeQuestionCard
+                key={question.questionId}
+                API_BASE={API_BASE}
+                question={question}
+                index={index}
+                value={answers[question.questionId]}
+                onChange={handleAnswerChange}
+              />
+            ))}
           </div>
-        ) : (
-          <div className="practice-layout">
-            <div className="practice-main">
-              
 
-              {questions.map((question, index) => (
-                <PracticeQuestionCard
-                  key={question.questionId}
-                  API_BASE={API_BASE}
-                  question={question}
-                  index={index}
-                  value={answers[question.questionId]}
-                  onChange={handleAnswerChange}
-                />
-              ))}
-            </div>
-
-            <aside className="practice-sidebar">
-              <div className="practice-sidebar-card">
-                <div className="sidebar-progress-row">
-                  <span>Đã trả lời</span>
-                  <strong>{answeredCount}/{questions.length}</strong>
-                </div>
-
-                <div className="sidebar-percent-row">
-                  <span>Tiến độ</span>
-                  <strong>{progressPercent}%</strong>
-                </div>
-
-                <div className="question-number-grid">
-                  {questions.map((question, index) => {
-                    const answerValue = answers[question.questionId];
-                    const answered = Array.isArray(answerValue)
-                      ? answerValue.length > 0
-                      : typeof answerValue === "string"
-                        ? answerValue.trim() !== ""
-                        : answerValue !== undefined && answerValue !== null;
-
-                    return (
-                      <button
-                        type="button"
-                        key={question.questionId}
-                        className={[
-                          "question-number-btn",
-                          answered ? "answered" : "",
-                          currentIndex === index ? "current" : "",
-                        ].join(" ")}
-                        onClick={() => handleGoQuestion(index)}
-                      >
-                        {index + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-primary w-100 submit-practice-btn"
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Đang nộp...
-                    </>
-                  ) : (
-                    "Nộp bài"
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  className="btn btn-light w-100 mt-2 reset-practice-btn"
-                  onClick={handleReset}
-                  disabled={submitting}
-                >
-                  Làm lại
-                </button>
+          <aside className="practice-sidebar">
+            <div className="practice-sidebar-card">
+              <div className="sidebar-progress-row">
+                <span>Đã trả lời</span>
+                <strong>{answeredCount}/{questions.length}</strong>
               </div>
 
-              
-            </aside>
-          </div>
-        )}
-      </div>
+              <div className="sidebar-percent-row">
+                <span>Tiến độ</span>
+                <strong>{progressPercent}%</strong>
+              </div>
+
+              <div className="question-number-grid">
+                {questions.map((question, index) => {
+                  const answerValue = answers[question.questionId];
+                  const answered = Array.isArray(answerValue)
+                    ? answerValue.length > 0
+                    : typeof answerValue === "string"
+                      ? answerValue.trim() !== ""
+                      : answerValue !== undefined && answerValue !== null;
+
+                  return (
+                    <button
+                      type="button"
+                      key={question.questionId}
+                      className={[
+                        "question-number-btn",
+                        answered ? "answered" : "",
+                        currentIndex === index ? "current" : "",
+                      ].join(" ")}
+                      onClick={() => handleGoQuestion(index)}
+                    >
+                      {index + 1}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-primary w-100 submit-practice-btn"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Đang nộp...
+                  </>
+                ) : (
+                  "Nộp bài"
+                )}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-light w-100 mt-2 reset-practice-btn"
+                onClick={handleReset}
+                disabled={submitting}
+              >
+                Làm lại
+              </button>
+            </div>
+
+
+          </aside>
+        </div>
+      )}
+
     </div>
   );
 }

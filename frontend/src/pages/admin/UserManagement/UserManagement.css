@@ -86,7 +86,6 @@
   flex-shrink: 0;
 }
 
-/* ==================== STATS BAR ==================== */
 .user-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -121,7 +120,6 @@
 .user-stat-banned .user-stat-value { color: #dc2626; }
 .user-stat-pending .user-stat-value { color: #d97706; }
 
-/* ==================== MODAL ==================== */
 .user-modal-overlay {
   position: fixed;
   inset: 0;

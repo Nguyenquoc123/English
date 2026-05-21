@@ -8,30 +8,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CauHinh implements WebMvcConfigurer {
 
     private static final String UPLOAD_ROOT =
-            System.getProperty("user.dir") + "/uploads/";
+            "file:" + System.getProperty("user.dir").replace("\\", "/") + "/uploads/";
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
         registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "images/");
-
+                .addResourceLocations(UPLOAD_ROOT + "images/");
         registry.addResourceHandler("/videos/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "videos/");
-
+                .addResourceLocations(UPLOAD_ROOT + "videos/");
         registry.addResourceHandler("/audios/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "audios/");
-
+                .addResourceLocations(UPLOAD_ROOT + "audios/");
         registry.addResourceHandler("/thumbnails/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "thumbnails/")
+                .addResourceLocations(UPLOAD_ROOT + "thumbnails/")
                 .setCachePeriod(3600);
-
         registry.addResourceHandler("/certificates/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "certificates/")
+                .addResourceLocations(UPLOAD_ROOT + "certificates/")
                 .setCachePeriod(3600);
-
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT)
+                .addResourceLocations(UPLOAD_ROOT)
                 .setCachePeriod(3600);
     }
 }

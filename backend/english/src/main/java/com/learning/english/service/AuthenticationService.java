@@ -49,7 +49,6 @@ public class AuthenticationService {
     @Value("${jwt.signerKey}")
     String signerKey;
 
-    // key = email, value = thông tin OTP
     private final Map<String, OtpData> otpStorage = new ConcurrentHashMap<>();
 
     public AuthenticationResponse dangKy(UserRequest userRequest) {
@@ -59,7 +58,6 @@ public class AuthenticationService {
         if (userRepository.existsByUsername(userRequest.getUsername()))
             throw new RuntimeException("Username đã tồn tại!");
 
-        // "student" viết thường — khớp với tên role đã seed trong DeclareRole
         Optional<Role> role = roleRepository.findByRoleName("student");
         if (role.isEmpty())
             throw new RuntimeException("Role không tồn tại");

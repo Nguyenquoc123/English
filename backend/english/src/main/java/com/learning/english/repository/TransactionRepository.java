@@ -7,32 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * TransactionRepository — Repository tầng truy cập dữ liệu cho entity Transaction (Giao dịch).
- *
- * @Repository:
- *   Đánh dấu interface là Spring Repository component.
- *   Spring tự tạo proxy implementation khi khởi động.
- *   Chuyển đổi exception JPA/JDBC sang Spring DataAccessException.
- *
- * extends JpaRepository<Transaction, Long>:
- *   - Transaction: Entity ánh xạ với bảng "transactions" trong database.
- *   - Long: Kiểu dữ liệu của Primary Key (transactionId là Long/bigint).
- *
- *   Các method CRUD có sẵn:
- *     - save(transaction): Lưu giao dịch mới.
- *     - findById(id): Tìm giao dịch theo ID.
- *     - findAll(): Lấy tất cả giao dịch.
- *
- * Giao dịch (Transaction) trong hệ thống:
- *   Lưu lịch sử thanh toán của học sinh khi mua khóa học hoặc đề thi.
- *   Các field quan trọng:
- *     - amount: Số tiền giao dịch (BigDecimal để tránh sai số float/double).
- *     - status: Trạng thái ("PENDING", "SUCCESS", "FAILED", v.v.).
- *     - targetType: Loại mục tiêu thanh toán ("COURSE", "EXAM").
- *     - targetId: ID của khóa học hoặc đề thi được thanh toán.
- *     - user: User thực hiện giao dịch.
- */
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
@@ -103,27 +77,21 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 //            Long transactionId,
 //            String targetType
 //    );
+    
+//    Optional<Transaction> findFirstByUserUserIdAndTargetTypeAndTargetIdAndStatusOrderByCreatedAtDesc(
+//            Long userId,
+//            String targetType,
+//            Long targetId,
+//            String status
+//    );
 
-    /**
-     * findAllByOrderByCreatedAtDesc — Lấy TẤT CẢ giao dịch, sắp xếp mới nhất lên đầu.
-     *
-     * Dùng trong: Admin endpoint GET /admin/transactions (ADM-10 theo SRS)
-     * Admin cần theo dõi toàn bộ lịch sử thanh toán của học viên mua khóa học / kỳ thi.
-     *
-     * Spring Data JPA query derivation:
-     *   - findAll                 = SELECT * FROM transactions
-     *   - By                      = (không có điều kiện WHERE)
-     *   - OrderByCreatedAtDesc    = ORDER BY created_at DESC
-     *
-     * SQL tương đương:
-     *   SELECT * FROM transactions ORDER BY created_at DESC
-     *
-     * Tại sao sắp xếp DESC?
-     *   Admin thường muốn xem giao dịch mới nhất trước (recent activity).
-     *   Sắp xếp tăng dần (ASC) sẽ hiển thị giao dịch cũ nhất trên cùng.
-     *
-     * @return Danh sách tất cả Transaction, mới nhất lên đầu
-     */
+    
+//    Optional<Transaction> findByTransactionIdAndTargetType(
+//            Long transactionId,
+//            String targetType
+//    );
+
+    
     List<Transaction> findAllByOrderByCreatedAtDesc();
 
     /**
@@ -162,6 +130,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * Dùng trong Admin Dashboard: Hiển thị tổng doanh thu của toàn hệ thống.
      */
     @org.springframework.data.jpa.repository.Query("SELECT SUM(t.totalAmount) FROM Transaction t WHERE t.status = 'SUCCESS'")
+    
+//    @org.springframework.data.jpa.repository.Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.status = 'SUCCESS'")
     java.math.BigDecimal sumSuccessAmount();
     
     

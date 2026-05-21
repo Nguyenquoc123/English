@@ -76,7 +76,7 @@ function StudentExamCard({ exam, courseId }) {
   };
 
   const handleViewDetail = () => {
-    navigate(`/courses/${courseId}/exams/${exam.examId}`);
+    navigate(`/exams/${exam.examId}`);
   };
 
   const handleStartExam = () => {
@@ -90,7 +90,7 @@ function StudentExamCard({ exam, courseId }) {
       return;
     }
 
-    navigate(`/exams/${exam.examId}/`);
+    navigate(`/exams/${exam.examId}`);
   };
 
   const statusInfo = getStatusInfo(exam.status);

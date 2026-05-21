@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentProfileUpdate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
 
 function StudentProfileUpdate() {
@@ -286,20 +288,15 @@ function StudentProfileUpdate() {
   return (
     <div className="student-profile-update-page">
       <div className="profile-update-container">
+        <CourseBreadcrumb
+          items={[studentHome, studentProfile, { label: "Cập nhật hồ sơ" }]}
+        />
+
         <div className="profile-update-heading">
           <div>
             <h2>Cập nhật hồ sơ cá nhân</h2>
             <p>Quản lý và điều chỉnh thông tin cá nhân của bạn để duy trì hồ sơ học tập tốt nhất.</p>
           </div>
-
-          <button
-            type="button"
-            className="btn btn-light profile-back-btn"
-            onClick={() => navigate("/student/profile")}
-          >
-            <i className="bi bi-arrow-left me-1"></i>
-            Quay lại
-          </button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -457,8 +454,7 @@ function StudentProfileUpdate() {
                     onClick={() => navigate("/student/profile")}
                     disabled={saving}
                   >
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Quay lại
+                    Hủy
                   </button>
 
                   <button

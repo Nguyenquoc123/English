@@ -17,4 +17,5 @@ import lombok.experimental.FieldDefaults;
 public class TeacherRegisterRequest {
     private String bio;
     private String experience;
+    private String phone;
 }

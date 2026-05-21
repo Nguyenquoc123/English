@@ -53,6 +53,9 @@ public class TeacherProfileService {
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
+		String phone = normalizePhone(request.getPhone());
+		validatePhone(phone);
+
 		if (request.getBio() == null || request.getBio().trim().isEmpty()) {
 			throw new RuntimeException("Bio không được để trống");
 		}
@@ -79,6 +82,7 @@ public class TeacherProfileService {
 			if ("REJECTED".equalsIgnoreCase(existingProfile.getApprovalStatus())) {
 				existingProfile.setBio(request.getBio());
 				existingProfile.setExperience(request.getExperience());
+				existingProfile.setPhone(phone);
 				existingProfile.setApprovalStatus("PENDING");
 				existingProfile.setReviewedAt(null);
 				existingProfile.setReviewedBy(null);
@@ -104,7 +108,7 @@ public class TeacherProfileService {
 		}
 
 		TeacherProfile teacherProfile = TeacherProfile.builder().user(user).approvalStatus("PENDING")
-				.bio(request.getBio()).experience(request.getExperience()).createdAt(LocalDateTime.now())
+				.bio(request.getBio()).experience(request.getExperience()).phone(phone)
 				.certificates(new ArrayList<>()).createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
 
 		for (MultipartFile file : certificateFiles) {
@@ -121,7 +125,7 @@ public class TeacherProfileService {
 		}
 
 		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
-		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
+		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
 	}
 
 	public TeacherProfileResponse getProfileDangKy() {
@@ -211,5 +215,21 @@ public class TeacherProfileService {
 		Boolean kq = teacherProfileRepository.existsByUser(user);
 
 		return kq;
+	}
+
+	private String normalizePhone(String phone) {
+		if (phone == null) {
+			return "";
+		}
+		return phone.trim().replaceAll("[\\s.\\-]", "");
+	}
+
+	private void validatePhone(String phone) {
+		if (phone == null || phone.isEmpty()) {
+			throw new RuntimeException("Số điện thoại không được để trống");
+		}
+		if (!phone.matches("^(\\+84|84|0)[0-9]{9,10}$")) {
+			throw new RuntimeException("Số điện thoại không hợp lệ (VD: 0912345678)");
+		}
 	}
 }

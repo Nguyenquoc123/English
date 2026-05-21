@@ -365,9 +365,6 @@ public class ExamQuestionService {
 
 		List<PracticeQuestionResponse> questions = practiceConfigMapper.toExamQuestionResponses(examQuestions);
 
-//		Long totalPoint = examQuestions.stream().map(ExamQuestion::getPoint).filter(Objects::nonNull).reduce(0L,
-//				Long::sum);
-
 		return StudentExamQuestionResponse.builder()
 
 				.examId(exam.getExamId())
@@ -384,8 +381,6 @@ public class ExamQuestionService {
 
 
 				.questionCount(questions.size())
-
-//				.totalPoint(totalPoint)
 
 				.questions(questions)
 

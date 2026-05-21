@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFileUrl } from "../../../utils/fileurl";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  adminCourses,
+  adminCourseReview,
+  adminLessonReview,
+  adminLessonVideos,
+} from "../../../utils/breadcrumbPaths";
 import "./LessonVideoDetail.css";
 
 function LessonVideoDetail() {
@@ -14,7 +21,6 @@ function LessonVideoDetail() {
     loadVideo();
   }, [videoId]);
 
-  // Tải chi tiết video cho admin xem
   const loadVideo = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -58,16 +64,16 @@ function LessonVideoDetail() {
 
   return (
     <div className="lesson-video-detail-page">
-      {/* Nút quay lại */}
-      <button
-        className="btn btn-light btn-sm mb-3"
-        onClick={() => navigate(`/admin/courses/${courseId}/lessons/${lessonId}/videos`)}
-      >
-        <i className="bi bi-arrow-left me-1"></i>
-        Quay lại danh sách video
-      </button>
+      <CourseBreadcrumb
+        items={[
+          adminCourses,
+          adminCourseReview(courseId),
+          adminLessonReview(courseId, lessonId),
+          adminLessonVideos(courseId, lessonId),
+          { label: "Chi tiết video" },
+        ]}
+      />
 
-      {/* Card xem video */}
       <div className="card border-0 shadow-sm rounded-4 p-4">
         <h4 className="fw-bold mb-3" style={{ color: "#0f3c9c" }}>{video.title}</h4>
 

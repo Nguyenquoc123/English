@@ -8,11 +8,6 @@
 }
 
 .admin-mini-bar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #f5f7fb;
-  border-bottom: 1px solid #e5e7eb;
   padding: 14px 24px;
   display: flex;
   align-items: center;

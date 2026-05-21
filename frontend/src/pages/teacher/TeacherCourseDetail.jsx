@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherCourseDetail.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherCourses } from "../../utils/breadcrumbPaths";
 import CourseDetailHero from "../../compenents/course-detail/CourseDetailHero";
 import TeacherCourseActions from "../../compenents/course-detail/TeacherCourseActions";
 import CourseMetricCards from "../../compenents/course-detail/CourseMetricCards";
@@ -8,7 +10,6 @@ import CourseDetailTabs from "../../compenents/course-detail/CourseDetailTabs";
 import CourseOverviewPanel from "../../compenents/course-detail/CourseOverviewPanel";
 import TeacherCourseApprovalPanel from "../../compenents/course-detail/TeacherCourseApprovalPanel";
 import TeacherLessonList from "./TeacherLessonList";
-
 
 function TeacherCourseDetail() {
   const navigate = useNavigate();

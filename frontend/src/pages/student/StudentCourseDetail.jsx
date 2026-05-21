@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./StudentCourseDetail.css";
 import { getFileUrl } from "../../utils/fileurl";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentCourses } from "../../utils/breadcrumbPaths";
 import StudentExamListSection from "./exam/components/StudentExamListSection";
 
 function StudentCourseDetail() {

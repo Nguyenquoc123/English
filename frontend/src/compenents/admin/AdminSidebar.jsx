@@ -19,7 +19,6 @@ function AdminSidebar({ isOpen, onClose }) {
   return (
     <aside className={`admin-sidebar bg-white shadow-lg ${isOpen ? "show" : ""}`}>
 
-      {/* Header */}
       <div className="d-flex align-items-center justify-content-between px-3 py-3 border-bottom">
         <div className="d-flex align-items-center gap-2">
           <div className="admin-logo-box">
@@ -35,7 +34,6 @@ function AdminSidebar({ isOpen, onClose }) {
         </button>
       </div>
 
-      {/* Navigation */}
       <div className="p-3">
 
         <p className="admin-sidebar-title">Tổng quan</p>

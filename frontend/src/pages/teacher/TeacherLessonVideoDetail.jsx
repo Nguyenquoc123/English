@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFileUrl } from "../../utils/fileurl";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  teacherCourses,
+  teacherCourseDetail,
+  teacherLessonDetail,
+  teacherLessonVideos,
+} from "../../utils/breadcrumbPaths";
 
 function TeacherLessonVideoDetail({
   videoId: videoIdProp,
