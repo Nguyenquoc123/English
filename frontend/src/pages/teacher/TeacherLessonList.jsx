@@ -26,8 +26,7 @@ function TeacherLessonList() {
     setAllLessons,
     loading,
     error,
-    handleSearch,
-    handleResetFilter,
+    handleSearch
   } = useCourseLessons({
     courseId,
     endpointBuilder: (courseId, queryString) =>
@@ -43,8 +42,16 @@ function TeacherLessonList() {
     return "badge rounded-pill text-bg-light";
   };
 
-  const handleViewDetail = (lessonId) => {
-    navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`);
+  const handleViewDetail = (item) => {
+    if (item.type === "LESSON") {
+      navigate(`/teacher/courses/${courseId}/lessons/${item.id}`);
+      return;
+    }
+
+    if (item.type === "EXAM") {
+      navigate(`/teacher/courses/${courseId}/exams/${item.id}`);
+      return;
+    }
   };
 
   const handleEdit = (lessonId) => {
@@ -87,48 +94,36 @@ function TeacherLessonList() {
 
   return (
     <div className="teacher-lesson-page">
-      <LessonListHeader
+      {/* <LessonListHeader
         title="Danh sách bài học của khóa học"
         description="Quản lý các bài học thuộc khóa học, theo dõi trạng thái và cập nhật nội dung lesson."
         course={course}
         onBack={() => navigate(`/teacher/courses/${courseId}`)}
-        rightActions={
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/create`)
-            }
-          >
-            <i className="bi bi-plus-lg me-1"></i>
-            Thêm bài học
-          </button>
-        }
-      />
+        
+      /> */}
 
-      <LessonStatsCards allLessons={allLessons} />
+      {/* <LessonStatsCards allLessons={allLessons} /> */}
 
       <LessonFilterBox
+        courseId={courseId}
         keyword={keyword}
         setKeyword={setKeyword}
         status={status}
         setStatus={setStatus}
         onSearch={handleSearch}
-        onReset={handleResetFilter}
       />
 
       <LessonTable
         lessons={lessons}
-        allLessons={allLessons}
         loading={loading}
         error={error}
         getStatusBadge={getStatusBadge}
-        renderActions={(lesson) => (
+        renderActions={(item) => (
           <TeacherLessonActions
-            lesson={lesson}
-            onView={handleViewDetail}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+            item={item}
+            onView={() => handleViewDetail(item)}
+            onEdit={() => handleEdit(item)}
+            onDelete={() => handleDelete(item)}
           />
         )}
       />

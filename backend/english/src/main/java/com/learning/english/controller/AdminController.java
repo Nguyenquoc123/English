@@ -135,10 +135,10 @@ public class AdminController {
     // ==================== LESSON FREE MANAGEMENT ====================
 
     // GET /admin/lessons/free
-    @GetMapping("/lessons/free")
-    public ResponseEntity<List<LessonResponse>> getFreeLessons() {
-        return ResponseEntity.ok(adminService.getFreeLessons());
-    }
+//    @GetMapping("/lessons/free")
+//    public ResponseEntity<List<LessonResponse>> getFreeLessons() {
+//        return ResponseEntity.ok(adminService.getFreeLessons());
+//    }
 
     // POST /admin/lessons/free
     @PostMapping("/lessons/free")
@@ -205,10 +205,10 @@ public class AdminController {
     // ==================== TRANSACTION MANAGEMENT ====================
 
     // GET /admin/transactions
-    @GetMapping("/transactions")
-    public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
-        return ResponseEntity.ok(adminService.getAllTransactions());
-    }
+//    @GetMapping("/transactions")
+//    public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
+//        return ResponseEntity.ok(adminService.getAllTransactions());
+//    }
 
     // ==================== COURSE REVIEW MANAGEMENT ====================
 

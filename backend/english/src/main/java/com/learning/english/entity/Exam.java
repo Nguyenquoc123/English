@@ -32,9 +32,6 @@ public class Exam {
     @Column(name = "durationminutes", nullable = false)
     private Integer durationMinutes;
 
-    @Column(name = "maxattempts", nullable = false)
-    private Integer maxAttempts;
-
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
@@ -42,11 +39,6 @@ public class Exam {
     @JoinColumn(name = "createdby", nullable = false)
     private User createdBy;
 
-    @Column(name = "starttime")
-    private LocalDateTime startTime;
-
-    @Column(name = "endtime")
-    private LocalDateTime endTime;
 
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;

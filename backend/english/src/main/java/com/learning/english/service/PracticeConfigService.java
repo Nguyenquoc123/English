@@ -136,6 +136,8 @@ public class PracticeConfigService {
                 .questions(questions)
                 .build();
     }
+    
+    
 
     private String normalizePracticeType(String practiceType) {
         if (practiceType == null || practiceType.isBlank()) {

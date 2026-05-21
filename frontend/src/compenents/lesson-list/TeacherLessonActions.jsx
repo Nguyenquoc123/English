@@ -1,5 +1,5 @@
 function TeacherLessonActions({
-  lesson,
+  item,
   onView,
   onEdit,
   onDelete,
@@ -10,7 +10,7 @@ function TeacherLessonActions({
         type="button"
         className="btn btn-sm btn-light"
         title="Xem chi tiết"
-        onClick={() => onView(lesson.lessonId)}
+        onClick={() => onView(item)}
       >
         <i className="bi bi-eye"></i>
       </button>
@@ -19,7 +19,7 @@ function TeacherLessonActions({
         type="button"
         className="btn btn-sm btn-light"
         title="Cập nhật"
-        onClick={() => onEdit(lesson.lessonId)}
+        onClick={() => onEdit(item)}
       >
         <i className="bi bi-pencil"></i>
       </button>
@@ -27,8 +27,8 @@ function TeacherLessonActions({
       <button
         type="button"
         className="btn btn-sm btn-light text-danger"
-        title="Xóa bài học"
-        onClick={() => onDelete(lesson.lessonId)}
+        title={item.type === "EXAM" ? "Xóa bài thi" : "Xóa bài học"}
+        onClick={() => onDelete(item)}
       >
         <i className="bi bi-trash"></i>
       </button>

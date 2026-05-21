@@ -17,12 +17,7 @@ function TeacherCourseCreate() {
   const [levelId, setLevelId] = useState("");
 
   const [accessType, setAccessType] = useState("FREE");
-
-  // PAID thì dùng price
   const [price, setPrice] = useState(0);
-
-  // FREE thì dùng examPrice
-  const [examPrice, setExamPrice] = useState(0);
 
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
@@ -153,12 +148,12 @@ function TeacherCourseCreate() {
       return "Vui lòng chọn cấp độ";
     }
 
-    if (accessType === "PAID" && Number(price) <= 0) {
-      return "Khóa học có phí phải nhập giá khóa học lớn hơn 0";
+    if (!accessType) {
+      return "Vui lòng chọn loại khóa học";
     }
 
-    if (accessType === "FREE" && Number(examPrice) < 0) {
-      return "Giá quyền thi không được âm";
+    if (accessType === "PAID" && Number(price) <= 0) {
+      return "Khóa học có phí phải nhập giá khóa học lớn hơn 0";
     }
 
     return "";
@@ -190,13 +185,11 @@ function TeacherCourseCreate() {
 
         levelId: Number(levelId),
 
-        // Bạn đang dùng courseType trong code hiện tại
-        // Nếu backend của bạn dùng accessType thì đổi courseType thành accessType
+        // Backend dùng courseType: FREE / PAID
         courseType: accessType,
 
+        // FREE thì giá = 0, PAID thì lấy giá nhập
         price: accessType === "PAID" ? Number(price) : 0,
-
-        examPrice: accessType === "FREE" ? Number(examPrice) : 0,
       };
 
       const formData = new FormData();
@@ -256,10 +249,19 @@ function TeacherCourseCreate() {
     setLevelId("");
     setAccessType("FREE");
     setPrice(0);
-    setExamPrice(0);
     setThumbnailFile(null);
     setPreviewImage("");
     setError("");
+  };
+
+  const handleCourseTypeChange = (e) => {
+    const selectedType = e.target.value;
+
+    setAccessType(selectedType);
+
+    if (selectedType === "FREE") {
+      setPrice(0);
+    }
   };
 
   const selectedLevelName =
@@ -281,11 +283,7 @@ function TeacherCourseCreate() {
 
           <h2>Tạo khóa học mới</h2>
 
-          <p>
-            Nhập thông tin cơ bản của khóa học. Sau khi tạo, khóa học sẽ ở trạng
-            thái Draft để giáo viên tiếp tục thêm lesson, video, từ vựng, ngữ
-            pháp, câu hỏi và bài thi.
-          </p>
+          
         </div>
       </div>
 
@@ -410,48 +408,21 @@ function TeacherCourseCreate() {
 
                   <div className="col-md-6">
                     <label className="form-label fw-semibold">
-                      Loại khóa học
+                      Loại khóa học <span className="text-danger">*</span>
                     </label>
 
-                    <div className="course-type-group">
-                      <input
-                        type="radio"
-                        className="btn-check"
-                        name="accessType"
-                        id="freeCourse"
-                        checked={accessType === "FREE"}
-                        onChange={() => {
-                          setAccessType("FREE");
-                          setPrice(0);
-                        }}
-                      />
-                      <label
-                        className="btn btn-outline-success"
-                        htmlFor="freeCourse"
-                      >
-                        <i className="bi bi-gift me-1"></i>
-                        Free
-                      </label>
+                    <select
+                      className="form-select"
+                      value={accessType}
+                      onChange={handleCourseTypeChange}
+                    >
+                      <option value="FREE">Khóa học miễn phí</option>
+                      <option value="PAID">Khóa học có phí</option>
+                    </select>
 
-                      <input
-                        type="radio"
-                        className="btn-check"
-                        name="accessType"
-                        id="paidCourse"
-                        checked={accessType === "PAID"}
-                        onChange={() => {
-                          setAccessType("PAID");
-                          setExamPrice(0);
-                        }}
-                      />
-                      <label
-                        className="btn btn-outline-primary"
-                        htmlFor="paidCourse"
-                      >
-                        <i className="bi bi-credit-card me-1"></i>
-                        Paid
-                      </label>
-                    </div>
+                    <small className="text-muted">
+                      Chọn miễn phí hoặc có phí cho khóa học.
+                    </small>
                   </div>
 
                   {accessType === "PAID" && (
@@ -480,36 +451,6 @@ function TeacherCourseCreate() {
 
                       <small className="text-muted">
                         Học viên cần mua khóa học để học toàn bộ nội dung.
-                      </small>
-                    </div>
-                  )}
-
-                  {accessType === "FREE" && (
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        Giá quyền thi
-                      </label>
-
-                      <div className="input-group">
-                        <span className="input-group-text bg-light">
-                          <i className="bi bi-patch-check"></i>
-                        </span>
-
-                        <input
-                          type="number"
-                          className="form-control"
-                          min="0"
-                          step="1000"
-                          placeholder="Nhập giá quyền thi"
-                          value={examPrice}
-                          onChange={(e) => setExamPrice(e.target.value)}
-                        />
-
-                        <span className="input-group-text bg-light">VNĐ</span>
-                      </div>
-
-                      <small className="text-muted">
-                        Nếu phần thi miễn phí, nhập 0.
                       </small>
                     </div>
                   )}
@@ -640,7 +581,9 @@ function TeacherCourseCreate() {
 
                   <div className="summary-item">
                     <span>Loại khóa học</span>
-                    <strong>{accessType}</strong>
+                    <strong>
+                      {accessType === "FREE" ? "Miễn phí" : "Có phí"}
+                    </strong>
                   </div>
 
                   {accessType === "PAID" && (
@@ -648,15 +591,6 @@ function TeacherCourseCreate() {
                       <span>Giá khóa học</span>
                       <strong>
                         {Number(price || 0).toLocaleString("vi-VN")} VNĐ
-                      </strong>
-                    </div>
-                  )}
-
-                  {accessType === "FREE" && (
-                    <div className="summary-item">
-                      <span>Giá quyền thi</span>
-                      <strong>
-                        {Number(examPrice || 0).toLocaleString("vi-VN")} VNĐ
                       </strong>
                     </div>
                   )}

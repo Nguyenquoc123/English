@@ -1,17 +1,12 @@
 package com.learning.english.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(
-    name = "enrollments",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "UQ_enrollments", columnNames = {"userid", "courseid"})
-    }
-)
+@Table(name = "enrollments")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,16 +30,9 @@ public class Enrollment {
     @Column(name = "hascourseaccess", nullable = false)
     private Boolean hasCourseAccess;
 
-    @Column(name = "hasexamaccess", nullable = false)
-    private Boolean hasExamAccess;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coursetransactionid")
-    private Transaction courseTransaction;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "examaccesstransactionid")
-    private Transaction examAccessTransaction;
+    @JoinColumn(name = "coursetransactionitemid")
+    private TransactionItem courseTransactionItem;
 
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;

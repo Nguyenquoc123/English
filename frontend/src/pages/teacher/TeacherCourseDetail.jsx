@@ -7,6 +7,7 @@ import CourseMetricCards from "../../compenents/course-detail/CourseMetricCards"
 import CourseDetailTabs from "../../compenents/course-detail/CourseDetailTabs";
 import CourseOverviewPanel from "../../compenents/course-detail/CourseOverviewPanel";
 import TeacherCourseApprovalPanel from "../../compenents/course-detail/TeacherCourseApprovalPanel";
+import TeacherLessonList from "./TeacherLessonList";
 
 
 function TeacherCourseDetail() {
@@ -184,37 +185,20 @@ function TeacherCourseDetail() {
 
   return (
     <div className="course-detail-page">
-      <div className="detail-page-header">
-        <div>
-          <button className="back-link" onClick={() => navigate(-1)}>
-            <i className="bi bi-arrow-left"></i>
-            Quay lại
-          </button>
+      <nav className="teacher-breadcrumb">
+        <span
+          className="teacher-breadcrumb-item"
+          onClick={() => navigate("/teacher/courses")}
+        >
+          Khóa học
+        </span>
 
-          <h2>Xem chi tiết khóa học</h2>
-          <p>Theo dõi thông tin khóa học và trạng thái duyệt.</p>
-        </div>
+        <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
 
-        <div className="d-flex gap-2 flex-wrap">
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate(`/teacher/courses/${course.courseId}/edit`)}
-          >
-            <i className="bi bi-pencil-square me-1"></i>
-            Cập nhật
-          </button>
-
-          <button
-            className="btn btn-primary"
-            onClick={() =>
-              navigate(`/teacher/courses/${course.courseId}/lessons/create`)
-            }
-          >
-            <i className="bi bi-plus-lg me-1"></i>
-            Thêm lesson
-          </button>
-        </div>
-      </div>
+        <span className="teacher-breadcrumb-item active">
+          Chi tiết khóa học
+        </span>
+      </nav>
 
       <CourseDetailHero
         course={course}
@@ -232,11 +216,11 @@ function TeacherCourseDetail() {
         }
       />
 
-      <CourseMetricCards
+      {/* <CourseMetricCards
         course={course}
         formatNumber={formatNumber}
         formatPrice={formatPrice}
-      />
+      /> */}
 
       <CourseDetailTabs
         activeTab={activeTab}
@@ -253,6 +237,10 @@ function TeacherCourseDetail() {
           showEditButton={true}
           onEdit={() => navigate(`/teacher/courses/${course.courseId}/edit`)}
         />
+      )}
+
+      {activeTab === "lessons" && (
+        <TeacherLessonList courseId={course.courseId} />
       )}
 
       {activeTab === "approval" && (

@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherLessonDetail.css";
 
+// Đổi đường dẫn này theo đúng vị trí component video của bạn
+import TeacherLessonVideoList from "./TeacherLessonVideoList";
+import TeacherLessonVocabularyList from "./TeacherLessonVocabularyList";
+import TeacherLessonGrammarList from "./TeacherLessonGrammarList";
+import TeacherLessonPracticeOverview from "./TeacherLessonPracticeOverview";
+
 function TeacherLessonDetail() {
   const navigate = useNavigate();
   const { courseId, lessonId } = useParams();
@@ -9,12 +15,10 @@ function TeacherLessonDetail() {
   const API_BASE = "http://localhost:8080";
 
   const [lesson, setLesson] = useState(null);
-  const [videos, setVideos] = useState([]);
-  const [vocabularies, setVocabularies] = useState([]);
-  const [grammars, setGrammars] = useState([]);
-  const [questions, setQuestions] = useState([]);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -52,12 +56,7 @@ function TeacherLessonDetail() {
       }
 
       const lessonData = data.result || data.data || data;
-
       setLesson(lessonData);
-      setVideos(lessonData.videos || []);
-      setVocabularies(lessonData.vocabularies || []);
-      setGrammars(lessonData.grammars || []);
-      setQuestions(lessonData.questions || []);
     } catch (err) {
       console.error(err);
       setError("Lỗi kết nối server");
@@ -67,44 +66,74 @@ function TeacherLessonDetail() {
   };
 
   const getStatusBadge = (status) => {
-    if (status === "Published") return "badge rounded-pill text-bg-success";
-    if (status === "Draft") return "badge rounded-pill text-bg-secondary";
-    if (status === "Hidden") return "badge rounded-pill text-bg-danger";
-    if (status === "Pending") return "badge rounded-pill text-bg-warning";
+    const normalizedStatus = String(status || "").toUpperCase();
+
+    if (normalizedStatus === "PUBLISHED") {
+      return "badge rounded-pill text-bg-success";
+    }
+
+    if (normalizedStatus === "DRAFT") {
+      return "badge rounded-pill text-bg-secondary";
+    }
+
+    if (normalizedStatus === "HIDDEN") {
+      return "badge rounded-pill text-bg-danger";
+    }
+
+    if (normalizedStatus === "PENDING") {
+      return "badge rounded-pill text-bg-warning";
+    }
+
     return "badge rounded-pill text-bg-light";
   };
 
-  const countQuestionType = (type) => {
-    return questions.filter((q) => q.questionType === type).length;
+  const handleEdit = () => {
+    navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/edit`);
   };
 
-  const handleHideLesson = async () => {
-    const ok = window.confirm("Bạn có chắc muốn ẩn bài học này không?");
+  const handleDelete = async () => {
+    const ok = window.confirm("Bạn có chắc muốn xóa bài học này không?");
     if (!ok) return;
 
     try {
+      setDeleting(true);
+
       const token = localStorage.getItem("token");
 
+      /*
+        Đổi endpoint này theo API xóa/ẩn lesson thật của bạn.
+        Nếu backend của bạn đang dùng ẩn bài học thì đổi thành PUT + endpoint hide.
+      */
       const response = await fetch(
-        `${API_BASE}/teacher/khoa-hoc/${courseId}/lessons/${lessonId}/hide`,
+        `${API_BASE}/lesson/${courseId}/teacher/lessons/${lessonId}`,
         {
-          method: "PUT",
+          method: "DELETE",
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }
       );
 
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
       if (!response.ok) {
-        alert("Ẩn bài học thất bại");
+        alert(data?.message || "Xóa bài học thất bại");
         return;
       }
 
-      alert("Ẩn bài học thành công");
-      loadLessonDetail();
+      alert("Xóa bài học thành công");
+      navigate(`/teacher/courses/${courseId}`);
     } catch (err) {
       console.error(err);
-      alert("Lỗi hệ thống");
+      alert("Lỗi hệ thống, vui lòng thử lại");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -138,200 +167,53 @@ function TeacherLessonDetail() {
   return (
     <div className="teacher-lesson-detail-page">
       <div className="lesson-detail-heading">
-        <div>
-          <button
-            type="button"
-            className="lesson-detail-back"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons`)}
+        <nav className="teacher-breadcrumb">
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate("/teacher/courses")}
           >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại danh sách bài học
-          </button>
+            Khóa học
+          </span>
 
-          <div className="course-pill">
-            <i className="bi bi-journal-bookmark"></i>
-            {lesson.courseTitle}
-          </div>
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
 
-          <h2>
-            Lesson {lesson.lessonOrder}: {lesson.title}
-          </h2>
-
-          <p>{lesson.description || "Bài học chưa có mô tả."}</p>
-        </div>
-
-        <div className="lesson-status-panel">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <span>Trạng thái bài học</span>
-            <span className={getStatusBadge(lesson.status)}>
-              {lesson.status}
-            </span>
-          </div>
-
-          <div className="progress lesson-progress">
-            <div
-              className="progress-bar"
-              style={{ width: `${lesson.progressPercent || 0}%` }}
-            ></div>
-          </div>
-
-          <small className="text-muted">
-            Mức hoàn thiện nội dung: {lesson.progressPercent || 0}%
-          </small>
-        </div>
-      </div>
-
-      <div className="lesson-summary-grid">
-        <button
-          type="button"
-          className="lesson-summary-card summary-link-card"
-          onClick={() =>
-            navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/videos`)
-          }
-        >
-          <div className="summary-icon bg-blue">
-            <i className="bi bi-camera-video"></i>
-          </div>
-          <div>
-            <span>Video</span>
-            <strong>{videos.length}</strong>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="lesson-summary-card summary-link-card"
-          onClick={() =>
-            navigate(
-              `/teacher/courses/${courseId}/lessons/${lessonId}/vocabularies`
-            )
-          }
-        >
-          <div className="summary-icon bg-green">
-            <i className="bi bi-card-text"></i>
-          </div>
-          <div>
-            <span>Từ vựng</span>
-            <strong>{vocabularies.length}</strong>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="lesson-summary-card summary-link-card"
-          onClick={() =>
-            navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/grammars`)
-          }
-        >
-          <div className="summary-icon bg-purple">
-            <i className="bi bi-pencil-square"></i>
-          </div>
-          <div>
-            <span>Ngữ pháp</span>
-            <strong>{grammars.length}</strong>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="lesson-summary-card summary-link-card"
-          onClick={() =>
-            navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/practice`)
-          }
-        >
-          <div className="summary-icon bg-orange">
-            <i className="bi bi-check2-circle"></i>
-          </div>
-          <div>
-            <span>Câu hỏi ôn tập</span>
-            <strong>{questions.length}</strong>
-          </div>
-        </button>
-      </div>
-
-      <div className="lesson-action-card">
-        <div className="d-flex flex-wrap gap-2">
-          <button
-            className="btn btn-outline-primary"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/edit`)
-            }
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate(`/teacher/courses/${courseId}`)}
           >
-            <i className="bi bi-pencil-square me-1"></i>
-            Cập nhật bài học
-          </button>
+            Chi tiết khóa học
+          </span>
 
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() =>
-              navigate(
-                `/teacher/courses/${courseId}/lessons/${lessonId}/videos/create`
-              )
-            }
-          >
-            <i className="bi bi-camera-video me-1"></i>
-            Thêm video
-          </button>
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
 
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() =>
-              navigate(
-                `/teacher/courses/${courseId}/lessons/${lessonId}/vocabularies/create`
-              )
-            }
-          >
-            <i className="bi bi-card-text me-1"></i>
-            Thêm từ vựng
-          </button>
-
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() =>
-              navigate(
-                `/teacher/courses/${courseId}/lessons/${lessonId}/grammar/create`
-              )
-            }
-          >
-            <i className="bi bi-pencil-square me-1"></i>
-            Thêm ngữ pháp
-          </button>
-
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() =>
-              navigate(
-                `/teacher/courses/${courseId}/lessons/${lessonId}/questions/create`
-              )
-            }
-          >
-            <i className="bi bi-question-circle me-1"></i>
-            Thêm câu hỏi ôn tập
-          </button>
-
-          <button className="btn btn-outline-danger" onClick={handleHideLesson}>
-            <i className="bi bi-eye-slash me-1"></i>
-            Ẩn bài học
-          </button>
-        </div>
+          <span className="teacher-breadcrumb-item active">
+            Bài học
+          </span>
+        </nav>
       </div>
 
       <div className="lesson-content-card">
         <ul className="nav lesson-detail-tabs">
           <li className="nav-item">
-            <button type="button" className="nav-link active">
+            <button
+              type="button"
+              className={
+                activeTab === "overview" ? "nav-link active" : "nav-link"
+              }
+              onClick={() => setActiveTab("overview")}
+            >
               <i className="bi bi-info-circle me-1"></i>
-              Thông tin
+              Tổng quan
             </button>
           </li>
 
           <li className="nav-item">
             <button
               type="button"
-              className="nav-link"
-              onClick={() =>
-                navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/videos`)
+              className={
+                activeTab === "videos" ? "nav-link active" : "nav-link"
               }
+              onClick={() => setActiveTab("videos")}
             >
               <i className="bi bi-play-circle me-1"></i>
               Video
@@ -341,10 +223,10 @@ function TeacherLessonDetail() {
           <li className="nav-item">
             <button
               type="button"
-              className="nav-link"
-              onClick={() =>
-                navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/vocabularies`)
+              className={
+                activeTab === "vocabularies" ? "nav-link active" : "nav-link"
               }
+              onClick={() => setActiveTab("vocabularies")}
             >
               <i className="bi bi-card-text me-1"></i>
               Từ vựng
@@ -354,10 +236,10 @@ function TeacherLessonDetail() {
           <li className="nav-item">
             <button
               type="button"
-              className="nav-link"
-              onClick={() =>
-                navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/grammars`)
+              className={
+                activeTab === "grammars" ? "nav-link active" : "nav-link"
               }
+              onClick={() => setActiveTab("grammars")}
             >
               <i className="bi bi-journal-text me-1"></i>
               Ngữ pháp
@@ -367,10 +249,10 @@ function TeacherLessonDetail() {
           <li className="nav-item">
             <button
               type="button"
-              className="nav-link"
-              onClick={() =>
-                navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/practice`)
+              className={
+                activeTab === "practice" ? "nav-link active" : "nav-link"
               }
+              onClick={() => setActiveTab("practice")}
             >
               <i className="bi bi-check2-circle me-1"></i>
               Ôn tập
@@ -378,87 +260,102 @@ function TeacherLessonDetail() {
           </li>
         </ul>
 
-        <div className="tab-content-box">
-          <h5>Thông tin bài học</h5>
+        {activeTab === "overview" && (
+          <div className="lesson-overview-box">
+            <div className="lesson-overview-title">
+              <h5>Thông tin bài học</h5>
 
-          <div className="lesson-info-grid">
-            <div>
-              <span>Tên bài học</span>
-              <strong>{lesson.title}</strong>
+              <span className={getStatusBadge(lesson.status)}>
+                {lesson.status || "--"}
+              </span>
             </div>
 
-            <div>
-              <span>Thứ tự bài học</span>
-              <strong>{lesson.lessonOrder}</strong>
+            <div className="lesson-overview-info">
+              <div className="lesson-overview-row">
+                <span>Tên bài học</span>
+                <strong>{lesson.title || "--"}</strong>
+              </div>
+
+              <div className="lesson-overview-row">
+                <span>Trạng thái</span>
+                <strong>
+                  <span className={getStatusBadge(lesson.status)}>
+                    {lesson.status || "--"}
+                  </span>
+                </strong>
+              </div>
+
+              <div className="lesson-overview-row lesson-overview-row-full">
+                <span>Mô tả</span>
+                <p>{lesson.description || "Chưa có mô tả."}</p>
+              </div>
             </div>
 
-            <div>
-              <span>Trạng thái</span>
-              <strong>
-                <span className={getStatusBadge(lesson.status)}>
-                  {lesson.status}
-                </span>
-              </strong>
-            </div>
+            <div className="lesson-overview-actions">
+              <button
+                type="button"
+                className="btn btn-outline-primary"
+                onClick={handleEdit}
+              >
+                <i className="bi bi-pencil-square me-1"></i>
+                Sửa bài học
+              </button>
 
-            <div>
-              <span>Ngày tạo</span>
-              <strong>{lesson.createdAt || "--"}</strong>
-            </div>
-
-            <div>
-              <span>Ngày cập nhật</span>
-              <strong>{lesson.updatedAt || "--"}</strong>
-            </div>
-
-            <div>
-              <span>Khóa học</span>
-              <strong>{lesson.courseTitle}</strong>
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Đang xóa...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-trash me-1"></i>
+                    Xóa bài học
+                  </>
+                )}
+              </button>
             </div>
           </div>
+        )}
 
-          <div className="lesson-description-panel mt-4">
-            <span>Mô tả bài học</span>
-            <p>{lesson.description || "Chưa có mô tả."}</p>
+        {activeTab === "videos" && (
+          <div className="lesson-tab-panel">
+            <TeacherLessonVideoList
+              embedded={true}
+              courseId={courseId}
+              lessonId={lessonId}
+            />
           </div>
+        )}
 
-          <div className="row g-3 mt-3">
-            <div className="col-md-4">
-              <div className="small-info-box">
-                <span>Trắc nghiệm</span>
-                <strong>{countQuestionType("MULTIPLE_CHOICE")} câu</strong>
-              </div>
-            </div>
+        {activeTab === "vocabularies" && (
+          <TeacherLessonVocabularyList
+            embedded={true}
+            courseId={courseId}
+            lessonId={lessonId}
+          />
+        )}
 
-            <div className="col-md-4">
-              <div className="small-info-box">
-                <span>Nghe chọn đáp án</span>
-                <strong>{countQuestionType("LISTENING_CHOICE")} câu</strong>
-              </div>
-            </div>
+        {activeTab === "grammars" && (
+          <TeacherLessonGrammarList
+            embedded={true}
+            courseId={courseId}
+            lessonId={lessonId}
+          />
+        )}
 
-            <div className="col-md-4">
-              <div className="small-info-box">
-                <span>Nghe điền từ</span>
-                <strong>{countQuestionType("LISTENING_FILL_BLANK")} câu</strong>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="small-info-box">
-                <span>Sắp xếp câu</span>
-                <strong>{countQuestionType("ARRANGE_SENTENCE")} câu</strong>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="small-info-box">
-                <span>Viết ngắn</span>
-                <strong>{countQuestionType("WRITING_SHORT")} câu</strong>
-              </div>
-            </div>
-          </div>
-        </div>
+        {activeTab === "practice" && (
+          <TeacherLessonPracticeOverview
+            embedded={true}
+            courseId={courseId}
+            lessonId={lessonId}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 package com.learning.english.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "teacher_earnings")
@@ -28,15 +28,13 @@ public class TeacherEarning {
     @JoinColumn(name = "courseid", nullable = false)
     private Course course;
 
-    @Column(name = "sourcetype", nullable = false, length = 50)
-    private String sourceType;
-
-    @Column(name = "sourceid", nullable = false)
-    private Long sourceId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transactionid", nullable = false)
     private Transaction transaction;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transactionitemid", nullable = false)
+    private TransactionItem transactionItem;
 
     @Column(name = "grossamount", nullable = false, precision = 18, scale = 2)
     private BigDecimal grossAmount;

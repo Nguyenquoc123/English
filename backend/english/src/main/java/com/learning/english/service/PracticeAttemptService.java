@@ -277,13 +277,7 @@ public class PracticeAttemptService {
 		/*
 		 * Check số lần làm
 		 */
-		Long totalAttempts = attemptRepository.countByExamExamIdAndUserUserId(exam.getExamId(), user.getUserId());
-
-		if (exam.getMaxAttempts() != null && totalAttempts >= exam.getMaxAttempts()) {
-
-			throw new RuntimeException("Bạn đã vượt quá số lần làm bài");
-		}
-
+		
 		/*
 		 * Lấy câu hỏi bài thi
 		 */
@@ -427,9 +421,7 @@ public class PracticeAttemptService {
 		Attempt attempt = attemptRepository.findPracticeResultByAttemptId(attemptId)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả bài ôn tập"));
 
-		if (!"PRACTICE".equalsIgnoreCase(attempt.getAttemptType())) {
-			throw new RuntimeException("Lượt làm này không phải bài ôn tập");
-		}
+		
 
 		if (!attempt.getUser().getUserId().equals(user.getUserId())) {
 			throw new RuntimeException("Bạn không có quyền xem kết quả bài ôn tập này");

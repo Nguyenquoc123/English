@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.learning.english.dto.request.LessonRequest;
 import com.learning.english.dto.request.LessonUpdateRequest;
 import com.learning.english.dto.response.CourseLessonListResponse;
+import com.learning.english.dto.response.LessonListResponse;
 import com.learning.english.dto.response.LessonResponse;
 import com.learning.english.dto.response.StudentLessonDetailResponse;
 import com.learning.english.dto.response.StudentLessonResponse;
@@ -29,12 +30,12 @@ public class LessonController {
 	LessonService lessonService;
 	
 	@GetMapping("/{courseId}/teacher")
-    public CourseLessonListResponse getLessonsByCourse(
+    public List<LessonListResponse> getLessonsByCourse(
             @PathVariable Long courseId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status
     ) {
-        return lessonService.getLessonsByCourse(courseId, keyword, status);
+        return lessonService.layDanhSachNoiDungKhoaHoc(courseId, keyword, status);
     }
 	
 	@GetMapping("/{courseId}/teacher/lessons/{lessonId}")
@@ -80,7 +81,7 @@ public class LessonController {
 	public List<StudentLessonResponse> layDanhSachBaiHocChoHocVien(
             @PathVariable Long courseId
     ) {
-        return lessonService.layDanhSachBaiHocChoHocVien(courseId);
+        return lessonService.layNoiDungKhoaHocChoStudent(courseId);
     }
 
 	@GetMapping("/{lessonId}/student-detail")

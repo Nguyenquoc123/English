@@ -1,56 +1,68 @@
 function LessonTable({
   lessons,
-  allLessons,
   loading,
   error,
   getStatusBadge,
   renderActions,
 }) {
+  const getTypeBadge = (type) => {
+    if (type === "EXAM") {
+      return "badge text-bg-warning";
+    }
+
+    return "badge text-bg-primary";
+  };
+
+  const getTypeText = (type) => {
+    if (type === "EXAM") {
+      return "Bài thi";
+    }
+
+    return "Bài học";
+  };
+
+  const formatDate = (value) => {
+    if (!value) {
+      return "--";
+    }
+
+    try {
+      return new Date(value).toLocaleString("vi-VN");
+    } catch {
+      return value;
+    }
+  };
+
   return (
     <div className="card border-0 shadow-sm lesson-table-card">
-      <div className="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-        <div>
-          <h5 className="fw-bold mb-1">Danh sách bài học</h5>
-          <small className="text-muted">
-            Các bài học thuộc khóa học hiện tại, được sắp xếp theo thứ tự
-            lessonOrder.
-          </small>
-        </div>
-
-        <small className="text-muted">
-          Hiển thị {lessons.length}/{allLessons.length} bài học
-        </small>
-      </div>
-
       <div className="table-responsive">
         <table className="table table-hover align-middle mb-0 lesson-table">
           <thead className="table-light">
             <tr>
               <th style={{ width: "90px" }}>Thứ tự</th>
-              <th>Bài học</th>
-              <th>Trạng thái</th>
-              <th>Video</th>
-              <th>Từ vựng</th>
-              <th>Ngữ pháp</th>
-              <th>Ôn tập</th>
-              <th>Ngày tạo</th>
-              <th className="text-end">Thao tác</th>
+              <th>Nội dung</th>
+              <th style={{ width: "120px" }}>Loại</th>
+              <th style={{ width: "130px" }}>Trạng thái</th>
+              <th style={{ width: "180px" }}>Ngày tạo</th>
+              <th className="text-end" style={{ width: "140px" }}>
+                Thao tác
+              </th>
             </tr>
           </thead>
 
           <tbody>
             {loading && (
               <tr>
-                <td colSpan="9" className="text-center text-muted py-4">
+                <td colSpan="6" className="text-center text-muted py-4">
                   <div className="spinner-border spinner-border-sm text-primary me-2"></div>
-                  Đang tải danh sách bài học...
+                  Đang tải danh sách nội dung...
                 </td>
               </tr>
             )}
 
             {!loading && error && (
               <tr>
-                <td colSpan="9" className="text-center text-danger py-4">
+                <td colSpan="6" className="text-center text-danger py-4">
                   {error}
                 </td>
               </tr>
@@ -58,58 +70,40 @@ function LessonTable({
 
             {!loading &&
               !error &&
-              lessons.map((lesson) => (
-                <tr key={lesson.lessonId}>
+              lessons.map((item) => (
+                <tr key={`${item.type}-${item.id}`}>
                   <td>
-                    <span className="lesson-order">{lesson.lessonOrder}</span>
+                    <span className="lesson-order">{item.itemOrder}</span>
                   </td>
 
                   <td>
                     <div className="lesson-title-cell">
-                      <strong>{lesson.title}</strong>
-                      <span>{lesson.description || "Chưa có mô tả"}</span>
+                      <strong>{item.title}</strong>
+                      <span>{item.description || "Chưa có mô tả"}</span>
                     </div>
                   </td>
 
                   <td>
-                    <span className={getStatusBadge(lesson.status)}>
-                      {lesson.status}
+                    <span className={getTypeBadge(item.type)}>
+                      {getTypeText(item.type)}
                     </span>
                   </td>
 
                   <td>
-                    <span className="lesson-count-badge">
-                      {lesson.videoCount || 0} video
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="lesson-mini-badge bg-primary-subtle text-primary">
-                      {lesson.vocabularyCount || 0}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="lesson-mini-badge bg-purple-subtle">
-                      {lesson.grammarCount || 0}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="lesson-count-badge">
-                      {lesson.practiceCount || 0} dạng
+                    <span className={getStatusBadge(item.status)}>
+                      {item.status}
                     </span>
                   </td>
 
                   <td>
                     <span className="text-muted small">
-                      {lesson.createdAt || "--"}
+                      {formatDate(item.createdAt)}
                     </span>
                   </td>
 
                   <td>
                     <div className="d-flex justify-content-end gap-1">
-                      {renderActions && renderActions(lesson)}
+                      {renderActions && renderActions(item)}
                     </div>
                   </td>
                 </tr>
@@ -117,26 +111,13 @@ function LessonTable({
 
             {!loading && !error && lessons.length === 0 && (
               <tr>
-                <td colSpan="9" className="text-center text-muted py-4">
-                  Không tìm thấy bài học phù hợp.
+                <td colSpan="6" className="text-center text-muted py-4">
+                  Không tìm thấy nội dung phù hợp.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="card-footer bg-white d-flex justify-content-between align-items-center">
-        <small className="text-muted">Hiển thị {lessons.length} bài học</small>
-
-        <div className="d-flex gap-2">
-          <button className="btn btn-sm btn-light" disabled>
-            Prev
-          </button>
-          <button className="btn btn-sm btn-primary">1</button>
-          <button className="btn btn-sm btn-light">2</button>
-          <button className="btn btn-sm btn-light">Next</button>
-        </div>
       </div>
     </div>
   );

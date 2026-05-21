@@ -14,14 +14,18 @@ import com.learning.english.dto.response.ExamResponse;
 import com.learning.english.dto.response.StudentExamListResponse;
 import com.learning.english.dto.response.TeacherExamDetailResponse;
 import com.learning.english.entity.Course;
+import com.learning.english.entity.CourseItem;
 import com.learning.english.entity.Exam;
 import com.learning.english.entity.User;
 import com.learning.english.mapper.ExamMapper;
 import com.learning.english.repository.AttemptRepository;
+import com.learning.english.repository.CourseItemRepository;
 import com.learning.english.repository.CourseRepository;
 import com.learning.english.repository.EnrollmentRepository;
 import com.learning.english.repository.ExamRepository;
 import com.learning.english.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class ExamService {
@@ -42,6 +46,9 @@ public class ExamService {
 	
 	@Autowired
 	CourseRepository courseRepository;
+	
+	@Autowired
+	CourseItemRepository courseItemRepository;
 
 	public List<StudentExamListResponse> layDanhSachBaiThiChoHocVien(Long courseId, String keyword, String status) {
 		User user = getCurrentUser();
@@ -66,6 +73,7 @@ public class ExamService {
 		return rows.stream().map(examMapper::toExamListResponse).toList();
 	}
 
+	@Transactional
 	public ExamResponse taoBaiThi(ExamCreateRequest request) {
 		User user = getCurrentUser();
 		Course course = courseRepository.findById(request.getCourseId())
@@ -73,13 +81,26 @@ public class ExamService {
 		boolean check = courseRepository.existsByCourseIdAndTeacherUserId(request.getCourseId(), user.getUserId());
 		if (!check)
 			throw new RuntimeException("Bạn không sở hữu khóa học này");
+		
+		Integer maxItemOrder = courseItemRepository.findMaxItemOrderByCourseId(request.getCourseId());
+	    Integer nextItemOrder = maxItemOrder == null ? 1 : maxItemOrder + 1;
+
 
 		Exam exam = Exam.builder().createdBy(user).course(course).createdAt(LocalDateTime.now())
 				.description(request.getDescription()).durationMinutes(request.getDurationMinutes())
-				.endTime(request.getEndTime()).startTime(request.getStartTime()).maxAttempts(request.getMaxAttempts())
 				.status(request.getStatus()).title(request.getTitle()).updatedAt(LocalDateTime.now()).build();
 
 		exam = examRepository.save(exam);
+		
+		CourseItem courseItem = CourseItem.builder()
+	            .course(course)
+	            .itemType("EXAM")
+	            .lesson(null)
+	            .exam(exam)
+	            .itemOrder(nextItemOrder)
+	            .build();
+		courseItemRepository.save(courseItem);
+
 		return examMapper.toExamResponse(exam);
 	}
 
@@ -115,7 +136,7 @@ public class ExamService {
 
 		Long remainingAttempts = Math.max(maxAttempts - attemptedCount, 0);
 
-		boolean hasExamAccess = enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasExamAccessTrue(userId,
+		boolean hasExamAccess = enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(userId,
 				response.getCourseId());
 
 		String message = buildCanTakeExamMessage(response, hasExamAccess, remainingAttempts);

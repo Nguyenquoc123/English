@@ -99,6 +99,16 @@ public class CourseService {
 		return courseRepository.searchCourses(null, "Published", keyword, levelId, pageable)
 				.map(courseMapper::toCourseResponse);
 	}
+	
+	public Page<CourseResponse> dsKhoaHocDaMua(String keyword, Long levelId, int page, int size) {
+		keyword = normalize(keyword);
+
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		User user = getCurrentUser();
+
+		return courseRepository.dsKhoaHocDaMua(user.getUsername(), keyword, levelId, pageable)
+				.map(courseMapper::toCourseResponse);
+	}
 
 	private String normalize(String value) {
 		if (value == null || value.trim().isEmpty()) {
@@ -115,16 +125,14 @@ public class CourseService {
 				.map(courseMapper::toCourseResponse);
 	}
 
-	public CourseDetailResponse getCourseDetail(Long courseId) {
-		List<Object[]> rows = courseRepository.chiTietKhoaHoc(courseId);
+	public CourseDetailResponse chiTietKhoaHoc(Long courseId) {
+	    List<Object[]> rows = courseRepository.chiTietKhoaHoc(courseId);
 
-		if (rows.isEmpty()) {
-			throw new RuntimeException("Không tìm thấy khóa học");
-		}
+	    if (rows == null || rows.isEmpty()) {
+	        throw new RuntimeException("Không tìm thấy khóa học với id = " + courseId);
+	    }
 
-		Object[] row = rows.get(0);
-
-		return courseMapper.mapToCourseDetailResponse(row);
+	    return courseMapper.toCourseDetailResponse(rows.get(0));
 	}
 
 	public CourseResponse taoKhoaHoc(CourseRequest request, MultipartFile thumbnailFile) throws IOException {
@@ -152,7 +160,7 @@ public class CourseService {
 		Course course = Course.builder().teacher(user).level(level).title(request.getTitle())
 				.description(request.getDescription()).shortDescription(request.getShortDescription())
 				.thumbnailUrl(thumbnailUrl).price(request.getPrice()).courseType(request.getCourseType())
-				.status("Draft").examPrice(request.getExamPrice()).submittedAt(now).reviewedAt(null).reviewedBy(null)
+				.status("Draft").submittedAt(now).reviewedAt(null).reviewedBy(null)
 				.rejectReason(null).createdAt(now).updatedAt(now).build();
 
 		Course savedCourse = courseRepository.save(course);
@@ -277,45 +285,82 @@ public class CourseService {
 
 		return courseMapper.toCourseResponse(savedCourse);
 	}
+	
+	private User getCurrentUserOrNull() {
+	    try {
+	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+	        if (authentication == null || !authentication.isAuthenticated()) {
+	            return null;
+	        }
+
+	        if ("anonymousUser".equals(authentication.getPrincipal())) {
+	            return null;
+	        }
+
+	        String username = authentication.getName();
+
+	        return userRepository.findByUsername(username).orElse(null);
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
 
 	public StudentCourseDetailResponse layChiTietKhoaHocChoHocVien(Long courseId) {
-		User user = getCurrentUser();
-		Course course = courseRepository.findPublishedCourseDetail(courseId)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
+	    User user = getCurrentUserOrNull();
 
-		boolean isEnrolled = false;
+	    Course course = courseRepository.findPublishedCourseDetail(courseId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
 
-		if (user != null) {
-			isEnrolled = enrollmentRepository
-					.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
-		}
+	    boolean isEnrolled = false;
 
-		Long lessonCount = lessonRepository.countLessonsByCourseId(courseId);
-		Long studentCount = enrollmentRepository.countByCourseCourseIdAndHasCourseAccessTrue(courseId);
-		Double rating = courseReviewRepository.avgRatingByCourseId(courseId);
-		Long reviewCount = courseReviewRepository.countReviewsByCourseId(courseId);
+	    if (user != null) {
+	        isEnrolled = enrollmentRepository
+	                .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+	                        user.getUserId(),
+	                        courseId
+	                );
+	    }
 
-		Long teacherId = course.getTeacher() != null ? course.getTeacher().getUserId() : null;
+	    Long lessonCount = lessonRepository.countLessonsByCourseId(courseId);
+	    Long studentCount = enrollmentRepository.countByCourseCourseIdAndHasCourseAccessTrue(courseId);
+	    Double rating = courseReviewRepository.avgRatingByCourseId(courseId);
+	    Long reviewCount = courseReviewRepository.countReviewsByCourseId(courseId);
 
-		Long teacherCourseCount = 0L;
+	    Long teacherId = course.getTeacher() != null
+	            ? course.getTeacher().getUserId()
+	            : null;
 
-		if (teacherId != null) {
-			teacherCourseCount = courseRepository.countPublishedCourseByTeacher(teacherId);
-		}
+	    Long teacherCourseCount = 0L;
 
-		return StudentCourseDetailResponse.builder().courseId(course.getCourseId()).title(course.getTitle())
-				.shortDescription(course.getShortDescription()).description(course.getDescription())
-				.thumbnailUrl(course.getThumbnailUrl())
-				.levelId(course.getLevel() != null ? course.getLevel().getLevelId() : null)
-				.levelName(course.getLevel() != null ? course.getLevel().getLevelName() : null)
-				.accessType(course.getCourseType()).courseType(course.getCourseType()).price(course.getPrice())
-				.originalPrice(null).status(course.getStatus()).teacherId(teacherId)
-				.teacherName(course.getTeacher() != null ? course.getTeacher().getFullName() : null)
-				.teacherAvatarUrl(course.getTeacher() != null ? course.getTeacher().getAvatarUrl() : null)
-				.teacherBio(null).teacherCourseCount(teacherCourseCount).lessonCount(lessonCount)
-				.studentCount(studentCount).rating(roundRating(rating)).reviewCount(reviewCount)
-				.isEnrolled(isEnrolled || "FREE".equals(course.getCourseType())).build();
-//				.isEnrolled(true).build();
+	    if (teacherId != null) {
+	        teacherCourseCount = courseRepository.countPublishedCourseByTeacher(teacherId);
+	    }
+
+	    return StudentCourseDetailResponse.builder()
+	            .courseId(course.getCourseId())
+	            .title(course.getTitle())
+	            .shortDescription(course.getShortDescription())
+	            .description(course.getDescription())
+	            .thumbnailUrl(course.getThumbnailUrl())
+	            .levelId(course.getLevel() != null ? course.getLevel().getLevelId() : null)
+	            .levelName(course.getLevel() != null ? course.getLevel().getLevelName() : null)
+	            .accessType(course.getCourseType())
+	            .courseType(course.getCourseType())
+	            .price(course.getPrice())
+	            .originalPrice(null)
+	            .status(course.getStatus())
+	            .teacherId(teacherId)
+	            .teacherName(course.getTeacher() != null ? course.getTeacher().getFullName() : null)
+	            .teacherAvatarUrl(course.getTeacher() != null ? course.getTeacher().getAvatarUrl() : null)
+	            .teacherBio(null)
+	            .teacherCourseCount(teacherCourseCount)
+	            .lessonCount(lessonCount)
+	            .studentCount(studentCount)
+	            .rating(roundRating(rating))
+	            .reviewCount(reviewCount)
+	            .isEnrolled(isEnrolled)
+	            .build();
 	}
 
 	private Double roundRating(Double rating) {
@@ -353,10 +398,11 @@ public class CourseService {
 		    }
 
 		    return transactionRepository
-		            .existsByTransactionIdAndTargetTypeAndStatus(
+		            .existsByTransactionIdAndStatus(
 		                    transactionId,
-		                    "COURSE",
 		                    "SUCCESS"
 		            );
 		}
+	    
+	    
 }

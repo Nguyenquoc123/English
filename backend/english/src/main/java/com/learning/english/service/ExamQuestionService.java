@@ -355,31 +355,11 @@ public class ExamQuestionService {
 		/*
 		 * Check học viên đã mua khóa học chưa
 		 */
-		if (!enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasExamAccessTrue(user.getUserId(), courseId)) {
+		if (!enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId)) {
 			throw new RuntimeException("Bạn cần thanh toán để làm bài thi này");
 		}
 
-		/*
-		 * Check thời gian mở bài thi
-		 */
-		LocalDateTime now = LocalDateTime.now();
-
-		if (exam.getStartTime() != null && now.isBefore(exam.getStartTime())) {
-			throw new RuntimeException("Bài thi chưa bắt đầu");
-		}
-
-		if (exam.getEndTime() != null && now.isAfter(exam.getEndTime())) {
-			throw new RuntimeException("Bài thi đã kết thúc");
-		}
-
-		/*
-		 * Check số lần làm bài
-		 */
-		Long attemptCount = attemptRepository.countByExamExamIdAndUserUserId(examId, user.getUserId());
-
-		if (exam.getMaxAttempts() != null && exam.getMaxAttempts() > 0 && attemptCount >= exam.getMaxAttempts()) {
-			throw new RuntimeException("Bạn đã vượt quá số lần làm bài");
-		}
+		
 
 		List<ExamQuestion> examQuestions = examQuestionRepository.findStudentQuestionsByExamId(examId);
 
@@ -402,7 +382,6 @@ public class ExamQuestionService {
 
 				.durationMinutes(exam.getDurationMinutes())
 
-				.maxAttempts(exam.getMaxAttempts())
 
 				.questionCount(questions.size())
 

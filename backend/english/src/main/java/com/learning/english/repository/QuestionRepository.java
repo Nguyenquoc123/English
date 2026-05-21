@@ -10,6 +10,12 @@ import java.util.List;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
+	
+	List<Question> findByPersonalPractice_PersonalPracticeId(
+            Long personalPracticeId
+    );
+	
+	
 	@Query("""
 			    SELECT DISTINCT q
 			    FROM LessonQuestion lq

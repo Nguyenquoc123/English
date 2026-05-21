@@ -220,18 +220,23 @@ function StudentProfile() {
         <div className="student-profile-page">
             <div className="student-profile-heading">
                 <div>
-                    <h2>Hồ sơ cá nhân</h2>
-                    <p>Xem thông tin tài khoản và quản lý hồ sơ học viên của bạn.</p>
-                </div>
+                    <nav className="student-breadcrumb">
+                        <span
+                            className="student-breadcrumb-item"
+                            onClick={() => navigate("/")}
+                        >
+                            Trang chủ
+                        </span>
 
-                <button
-                    type="button"
-                    className="btn btn-light student-back-btn"
-                    onClick={() => navigate(-1)}
-                >
-                    <i className="bi bi-arrow-left me-1"></i>
-                    Quay lại
-                </button>
+                        <i className="bi bi-chevron-right student-breadcrumb-separator"></i>
+
+                        <span className="student-breadcrumb-item active">
+                            Hồ sơ cá nhân
+                        </span>
+                    </nav>
+
+                    
+                </div>
             </div>
 
             <div className="row g-4">
@@ -403,19 +408,7 @@ function StudentProfile() {
                         </div>
                     </div>
 
-                    <div className="student-profile-extra-card mt-4">
-                        <div className="extra-card-icon">
-                            <i className="bi bi-lightbulb"></i>
-                        </div>
-
-                        <div>
-                            <h5>Gợi ý cho học viên</h5>
-                            <p>
-                                Hãy cập nhật ảnh đại diện và thông tin cá nhân để trải nghiệm
-                                học tập trên hệ thống được cá nhân hóa tốt hơn.
-                            </p>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </div>

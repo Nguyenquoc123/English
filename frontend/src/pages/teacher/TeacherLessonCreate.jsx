@@ -10,9 +10,13 @@ function TeacherLessonCreate() {
 
   const [course, setCourse] = useState(null);
 
+  const [createType, setCreateType] = useState("LESSON");
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("Draft");
+  const [status, setStatus] = useState("DRAFT");
+
+  const [durationMinutes, setDurationMinutes] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -28,11 +32,6 @@ function TeacherLessonCreate() {
       setError("");
 
       const token = localStorage.getItem("token");
-
-      /*
-        API gợi ý:
-        GET http://localhost:8080/khoa-hoc/chi-tiet-khoa-hoc-teacher/{courseId}
-      */
 
       const response = await fetch(
         `${API_BASE}/khoa-hoc/chi-tiet-khoa-hoc-teacher/${courseId}`,
@@ -73,23 +72,67 @@ function TeacherLessonCreate() {
   };
 
   const validateForm = () => {
+    if (!createType) {
+      return "Vui lòng chọn loại nội dung cần tạo";
+    }
+
     if (!title.trim()) {
-      return "Vui lòng nhập tên bài học";
+      return createType === "LESSON"
+        ? "Vui lòng nhập tên bài học"
+        : "Vui lòng nhập tên bài thi";
     }
 
     if (title.trim().length > 255) {
-      return "Tên bài học không được vượt quá 255 ký tự";
+      return createType === "LESSON"
+        ? "Tên bài học không được vượt quá 255 ký tự"
+        : "Tên bài thi không được vượt quá 255 ký tự";
     }
 
     if (description.trim().length > 2000) {
-      return "Mô tả bài học không được vượt quá 2000 ký tự";
+      return "Mô tả không được vượt quá 2000 ký tự";
     }
 
     if (!status) {
-      return "Vui lòng chọn trạng thái bài học";
+      return "Vui lòng chọn trạng thái";
+    }
+
+    if (createType === "EXAM") {
+      if (!durationMinutes) {
+        return "Vui lòng nhập thời lượng bài thi";
+      }
+
+      if (Number(durationMinutes) <= 0) {
+        return "Thời lượng bài thi phải lớn hơn 0 phút";
+      }
     }
 
     return "";
+  };
+
+  const buildRequestData = () => {
+    const commonData = {
+      courseId: Number(courseId),
+      title: title.trim(),
+      description: description.trim(),
+      status: status,
+    };
+
+    if (createType === "LESSON") {
+      return commonData;
+    }
+
+    return {
+      ...commonData,
+      durationMinutes: Number(durationMinutes),
+    };
+  };
+
+  const getApiUrl = () => {
+    if (createType === "LESSON") {
+      return `${API_BASE}/lesson/them-lesson`;
+    }
+
+    return `${API_BASE}/exams/create`;
   };
 
   const handleSubmit = async (e) => {
@@ -108,26 +151,16 @@ function TeacherLessonCreate() {
       setSaving(true);
 
       const token = localStorage.getItem("token");
+      const requestData = buildRequestData();
 
-      const requestData = {
-        courseId: courseId,
-        title: title.trim(),
-        description: description.trim(),
-        status: status,
-      };
-
-      
-      const response = await fetch(
-        `${API_BASE}/lesson/them-lesson`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify(requestData),
-        }
-      );
+      const response = await fetch(getApiUrl(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(requestData),
+      });
 
       let data = null;
 
@@ -138,17 +171,22 @@ function TeacherLessonCreate() {
       }
 
       if (!response.ok) {
-        setError(data?.message || "Tạo bài học thất bại");
+        setError(
+          data?.message ||
+            (createType === "LESSON"
+              ? "Tạo bài học thất bại"
+              : "Tạo bài thi thất bại")
+        );
         return;
       }
 
-      alert("Tạo bài học thành công");
+      alert(
+        createType === "LESSON"
+          ? "Tạo bài học thành công"
+          : "Tạo bài thi thành công"
+      );
 
-      if (data?.lessonId) {
-        navigate(`/teacher/courses/${courseId}/lessons/${data.lessonId}`);
-      } else {
-        navigate(`/teacher/courses/${courseId}/lessons`);
-      }
+      navigate(`/teacher/courses/${courseId}/lessons`);
     } catch (err) {
       console.error(err);
       setError("Lỗi hệ thống, vui lòng thử lại");
@@ -158,10 +196,60 @@ function TeacherLessonCreate() {
   };
 
   const handleReset = () => {
+    setCreateType("LESSON");
     setTitle("");
     setDescription("");
-    setStatus("Draft");
+    setStatus("DRAFT");
+    setDurationMinutes("");
     setError("");
+  };
+
+  const handleCreateTypeChange = (e) => {
+    const selectedType = e.target.value;
+
+    setCreateType(selectedType);
+    setTitle("");
+    setDescription("");
+    setError("");
+
+    if (selectedType === "LESSON") {
+      setStatus("DRAFT");
+      setDurationMinutes("");
+    } else {
+      setStatus("DRAFT");
+    }
+  };
+
+  const getTitleLabel = () => {
+    return createType === "LESSON" ? "Tên bài học" : "Tên bài thi";
+  };
+
+  const getDescriptionLabel = () => {
+    return createType === "LESSON" ? "Mô tả bài học" : "Mô tả bài thi";
+  };
+
+  const getPlaceholder = () => {
+    return createType === "LESSON"
+      ? "Nhập tiêu đề bài học"
+      : "Nhập tiêu đề bài thi";
+  };
+
+  const getPreviewIcon = () => {
+    return createType === "LESSON"
+      ? "bi bi-file-earmark-text"
+      : "bi bi-clipboard-check";
+  };
+
+  const getStatusBadgeClass = () => {
+    if (status === "PUBLISHED") {
+      return "badge rounded-pill text-bg-success";
+    }
+
+    if (status === "HIDDEN") {
+      return "badge rounded-pill text-bg-danger";
+    }
+
+    return "badge rounded-pill text-bg-secondary";
   };
 
   if (loading) {
@@ -185,15 +273,15 @@ function TeacherLessonCreate() {
             onClick={() => navigate(`/teacher/courses/${courseId}/lessons`)}
           >
             <i className="bi bi-arrow-left"></i>
-            Quay lại danh sách bài học
+            Quay lại lộ trình khóa học
           </button>
 
-          <h2>Thêm bài học mới</h2>
+          <h2>Thêm nội dung mới</h2>
 
           <p>
-            Thiết lập thông tin cơ bản cho bài học mới trong khóa học. Sau khi
-            tạo lesson, giáo viên có thể tiếp tục thêm video, từ vựng, ngữ pháp
-            và bài ôn tập.
+            Chọn loại nội dung muốn tạo cho khóa học. Nếu chọn bài học, hệ thống
+            sẽ gọi API thêm lesson. Nếu chọn bài thi, hệ thống sẽ gọi API thêm
+            exam.
           </p>
 
           {course && (
@@ -219,7 +307,7 @@ function TeacherLessonCreate() {
               <div className="card-header bg-white border-0 pb-0">
                 <h5 className="fw-bold mb-1">
                   <i className="bi bi-list-task text-primary me-2"></i>
-                  Thông tin bài học
+                  Thông tin nội dung
                 </h5>
 
                 <small className="text-muted">
@@ -231,46 +319,71 @@ function TeacherLessonCreate() {
               <div className="card-body">
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
-                    Tên bài học <span className="text-danger">*</span>
+                    Loại nội dung <span className="text-danger">*</span>
+                  </label>
+
+                  <select
+                    className="form-select"
+                    value={createType}
+                    onChange={handleCreateTypeChange}
+                  >
+                    <option value="LESSON">Bài học</option>
+                    <option value="EXAM">Bài thi</option>
+                  </select>
+
+                  <small className="text-muted">
+                    Bài học và bài thi sẽ được tạo bằng 2 API khác nhau.
+                  </small>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    {getTitleLabel()} <span className="text-danger">*</span>
                   </label>
 
                   <div className="input-group">
                     <span className="input-group-text bg-light">
-                      <i className="bi bi-file-earmark-text"></i>
+                      <i className={getPreviewIcon()}></i>
                     </span>
 
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Nhập tiêu đề bài học"
+                      placeholder={getPlaceholder()}
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
                   </div>
 
                   <small className="text-muted">
-                    Ví dụ: Present Simple, Daily Activities, Shopping
-                    Conversation...
+                    {createType === "LESSON"
+                      ? "Ví dụ: Present Simple, Daily Activities, Shopping Conversation..."
+                      : "Ví dụ: Final Test Unit 1, Bài kiểm tra giữa khóa, Bài thi tổng kết..."}
                   </small>
                 </div>
 
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
-                    Mô tả bài học
+                    {getDescriptionLabel()}
                   </label>
 
                   <textarea
                     className="form-control lesson-description-input"
                     rows="8"
-                    placeholder="Nhập mô tả ngắn hoặc nội dung giới thiệu bài học..."
+                    placeholder={
+                      createType === "LESSON"
+                        ? "Nhập mô tả ngắn hoặc nội dung giới thiệu bài học..."
+                        : "Nhập mô tả, yêu cầu hoặc hướng dẫn làm bài thi..."
+                    }
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   ></textarea>
 
                   <div className="d-flex justify-content-between mt-1">
                     <small className="text-muted">
-                      Mô tả này giúp giáo viên và học viên hiểu mục tiêu của bài
-                      học.
+                      {createType === "LESSON"
+                        ? "Mô tả này giúp học viên hiểu mục tiêu của bài học."
+                        : "Mô tả này giúp học viên hiểu quy định và mục tiêu bài thi."}
                     </small>
 
                     <small className="text-muted">
@@ -282,7 +395,7 @@ function TeacherLessonCreate() {
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold">
-                      Trạng thái bài học
+                      Trạng thái
                     </label>
 
                     <select
@@ -290,25 +403,70 @@ function TeacherLessonCreate() {
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                     >
-                      <option value="Draft">Draft</option>
-                      <option value="Published">Published</option>
-                      <option value="Hidden">Hidden</option>
+                      {createType === "LESSON" ? (
+                        <>
+                          <option value="Draft">Draft</option>
+                          <option value="Published">Published</option>
+                          <option value="Hidden">Hidden</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Draft">Draft</option>
+                          <option value="Published">Published</option>
+                          <option value="Hidden">Hidden</option>
+                        </>
+                      )}
                     </select>
 
                     <small className="text-muted">
-                      Nên để Draft cho đến khi hoàn thiện nội dung bài học.
+                      {createType === "LESSON"
+                        ? "Nên để Draft cho đến khi hoàn thiện nội dung bài học."
+                        : "Nên để Draft cho đến khi hoàn thiện câu hỏi bài thi."}
                     </small>
                   </div>
 
+                  {createType === "EXAM" && (
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">
+                        Thời lượng bài thi{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+
+                      <div className="input-group">
+                        <span className="input-group-text bg-light">
+                          <i className="bi bi-clock"></i>
+                        </span>
+
+                        <input
+                          type="number"
+                          className="form-control"
+                          min="1"
+                          step="1"
+                          placeholder="Nhập số phút"
+                          value={durationMinutes}
+                          onChange={(e) => setDurationMinutes(e.target.value)}
+                        />
+
+                        <span className="input-group-text bg-light">phút</span>
+                      </div>
+
+                      <small className="text-muted">
+                        Ví dụ: 15, 30, 45 hoặc 60 phút.
+                      </small>
+                    </div>
+                  )}
+
                   <div className="col-md-6">
                     <label className="form-label fw-semibold">
-                      Thứ tự bài học
+                      Thứ tự trong khóa học
                     </label>
 
                     <div className="auto-order-box">
                       <div>
                         <strong>Tự động</strong>
-                        <span>Hệ thống sẽ xếp bài học ở cuối danh sách.</span>
+                        <span>
+                          Hệ thống sẽ xếp nội dung này ở cuối lộ trình.
+                        </span>
                       </div>
 
                       <i className="bi bi-sort-numeric-down text-primary"></i>
@@ -332,7 +490,7 @@ function TeacherLessonCreate() {
                 ) : (
                   <>
                     <i className="bi bi-plus-square me-1"></i>
-                    Tạo bài học
+                    {createType === "LESSON" ? "Tạo bài học" : "Tạo bài thi"}
                   </>
                 )}
               </button>
@@ -364,40 +522,37 @@ function TeacherLessonCreate() {
               <div className="card-header bg-white border-0 pb-0">
                 <h5 className="fw-bold mb-1">
                   <i className="bi bi-eye text-primary me-2"></i>
-                  Xem trước bài học
+                  Xem trước nội dung
                 </h5>
 
                 <small className="text-muted">
-                  Thông tin sẽ được lưu vào bài học mới
+                  Thông tin sẽ được lưu vào khóa học
                 </small>
               </div>
 
               <div className="card-body">
                 <div className="lesson-preview-box">
                   <div className="preview-icon">
-                    <i className="bi bi-file-earmark-text"></i>
+                    <i className={getPreviewIcon()}></i>
                   </div>
 
-                  <h6>{title || "Tên bài học chưa nhập"}</h6>
+                  <h6>
+                    {title ||
+                      (createType === "LESSON"
+                        ? "Tên bài học chưa nhập"
+                        : "Tên bài thi chưa nhập")}
+                  </h6>
 
                   <p>
                     {description
                       ? description.slice(0, 160) +
                         (description.length > 160 ? "..." : "")
-                      : "Chưa có mô tả bài học."}
+                      : createType === "LESSON"
+                      ? "Chưa có mô tả bài học."
+                      : "Chưa có mô tả bài thi."}
                   </p>
 
-                  <span
-                    className={
-                      status === "Published"
-                        ? "badge rounded-pill text-bg-success"
-                        : status === "Hidden"
-                        ? "badge rounded-pill text-bg-danger"
-                        : "badge rounded-pill text-bg-secondary"
-                    }
-                  >
-                    {status}
-                  </span>
+                  <span className={getStatusBadgeClass()}>{status}</span>
                 </div>
 
                 <hr />
@@ -411,9 +566,25 @@ function TeacherLessonCreate() {
                   </div>
 
                   <div className="summary-item">
-                    <span>Tên bài học</span>
+                    <span>Loại nội dung</span>
+                    <strong>
+                      {createType === "LESSON" ? "Bài học" : "Bài thi"}
+                    </strong>
+                  </div>
+
+                  <div className="summary-item">
+                    <span>Tiêu đề</span>
                     <strong>{title || "Chưa nhập"}</strong>
                   </div>
+
+                  {createType === "EXAM" && (
+                    <div className="summary-item">
+                      <span>Thời lượng</span>
+                      <strong>
+                        {durationMinutes ? `${durationMinutes} phút` : "Chưa nhập"}
+                      </strong>
+                    </div>
+                  )}
 
                   <div className="summary-item">
                     <span>Thứ tự</span>
@@ -429,8 +600,10 @@ function TeacherLessonCreate() {
             </div>
 
             <div className="alert alert-info mt-3">
-              <strong>Gợi ý:</strong> Sau khi tạo bài học, bạn nên thêm video,
-              từ vựng, ngữ pháp và câu hỏi ôn tập để lesson hoàn chỉnh hơn.
+              <strong>Gợi ý:</strong>{" "}
+              {createType === "LESSON"
+                ? "Sau khi tạo bài học, bạn nên thêm video, từ vựng, ngữ pháp và câu hỏi ôn tập."
+                : "Sau khi tạo bài thi, bạn cần thêm câu hỏi vào bài thi trước khi mở cho học viên làm."}
             </div>
           </div>
         </div>

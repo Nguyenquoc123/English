@@ -491,3 +491,134 @@
 .small-info-box strong {
   color: #111827;
 }
+
+.lesson-overview-box {
+  padding: 24px;
+  background: #fff;
+}
+
+.lesson-overview-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eef0f4;
+  margin-bottom: 18px;
+}
+
+.lesson-overview-title h5 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.lesson-overview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lesson-overview-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid #eef0f4;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.lesson-overview-row span {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.lesson-overview-row strong {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.lesson-overview-row-full {
+  align-items: flex-start;
+}
+
+.lesson-overview-row-full p {
+  margin: 0;
+  color: #374151;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.lesson-overview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #eef0f4;
+}
+
+@media (max-width: 576px) {
+  .lesson-overview-box {
+    padding: 16px;
+  }
+
+  .lesson-overview-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lesson-overview-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .lesson-overview-actions {
+    justify-content: stretch;
+  }
+
+  .lesson-overview-actions .btn {
+    width: 100%;
+  }
+}
+
+.lesson-detail-heading {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.teacher-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.teacher-breadcrumb-item {
+  color: #6b7280;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.teacher-breadcrumb-item:hover {
+  color: #2563eb;
+}
+
+.teacher-breadcrumb-item.active {
+  color: #0d47a1;
+  font-weight: 600;
+  cursor: default;
+}
+
+.teacher-breadcrumb-separator {
+  color: #9ca3af;
+  font-size: 12px;
+}

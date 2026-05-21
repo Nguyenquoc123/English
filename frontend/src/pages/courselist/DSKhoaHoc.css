@@ -338,3 +338,93 @@ body {
     font-size: 26px;
   }
 }
+
+.course-body h2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  /* min-height: 48px; */
+  overflow: hidden;
+
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.course-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  min-height: 42px;
+  overflow: hidden;
+
+  word-break: break-word;
+}
+
+.reset-btn {
+  width: 120px;
+  height: 45px;
+  border: 1px solid #ccd2e2;
+  border-radius: 7px;
+  background: white;
+  color: #333;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reset-btn:hover {
+  background: #f3f4f8;
+}
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-price-row {
+  margin-top: auto;
+}
+
+@media (max-width: 1000px) {
+  .reset-btn {
+    width: 100%;
+  }
+}
+
+.course-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.course-tags span {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.level-tag {
+  background: #eef2ff;
+  color: #1744b8;
+}
+
+.free-tag {
+  background: #e8fff5;
+  color: #009966;
+}
+
+.paid-tag {
+  background: #fff1f2;
+  color: #d12f4b;
+}

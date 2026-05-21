@@ -20,4 +20,6 @@ public class VideoRequest {
     private String thumbnailUrl;
 
     private Integer displayOrder;
+    
+    private String status;
 }

@@ -14,11 +14,7 @@ function CourseDetailHero({
           <div className="course-cover">
             <img src={getFileUrl(course.thumbnailUrl)} alt={course.title} />
 
-            <div className="cover-status">
-              <span className={getStatusBadge(course.status)}>
-                {course.status}
-              </span>
-            </div>
+            
           </div>
         </div>
 
@@ -54,14 +50,7 @@ function CourseDetailHero({
                 </p>
               </div>
 
-              {showRevenue && (
-                <div className="text-lg-end">
-                  <div className="small text-muted">Doanh thu hiện tại</div>
-                  <div className="revenue-text">
-                    {formatPrice(course.revenue)}
-                  </div>
-                </div>
-              )}
+              
             </div>
 
             <div className="course-price-grid mt-4">
@@ -70,10 +59,7 @@ function CourseDetailHero({
                 <strong>{formatPrice(course.price)}</strong>
               </div>
 
-              <div className="price-box">
-                <span>Phí quyền thi</span>
-                <strong>{formatPrice(course.examPrice)}</strong>
-              </div>
+             
             </div>
 
             {actions && <div className="hero-actions mt-4">{actions}</div>}

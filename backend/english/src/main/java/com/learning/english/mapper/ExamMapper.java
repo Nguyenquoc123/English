@@ -29,10 +29,9 @@ public interface ExamMapper {
 
 		return TeacherExamDetailResponse.builder().examId(toLong(row[0])).courseId(toLong(row[1]))
 				.courseTitle(toStringValue(row[2])).title(toStringValue(row[3])).description(toStringValue(row[4]))
-				.durationMinutes(toInteger(row[5])).maxAttempts(toInteger(row[6])).questionCount(toLong(row[7]))
-				.totalPoint(toBigDecimal(row[8])).status(toStringValue(row[9])).startTime(toLocalDateTime(row[10]))
-				.endTime(toLocalDateTime(row[11])).createdAt(toLocalDateTime(row[12]))
-				.updatedAt(toLocalDateTime(row[13])).build();
+				.durationMinutes(toInteger(row[5])).questionCount(toLong(row[6]))
+				.totalPoint(toBigDecimal(row[7])).status(toStringValue(row[8])).createdAt(toLocalDateTime(row[9]))
+				.updatedAt(toLocalDateTime(row[10])).build();
 	}
 
 	default TeacherExamQuestionResponse toTeacherExamQuestionResponse(Object[] row) {

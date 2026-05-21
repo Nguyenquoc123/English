@@ -303,37 +303,31 @@ function StudentPracticePage() {
   return (
     <div className="student-practice-page">
       <div className="student-practice-container">
-        <button
-          type="button"
-          className="practice-back-link"
-          onClick={() => navigate(`/khoa-hoc/${courseId}/lessons/${lessonId}`)}
-        >
-          <i className="bi bi-arrow-left"></i>
-          Quay lại lesson
-        </button>
+        <div className="practice-breadcrumb">
+          <span
+            className="practice-breadcrumb-item"
+            onClick={() => navigate("/danh-sach-khoa-hoc")}
+          >
+            Khóa học
+          </span>
 
-        <div className="practice-header">
-          <div>
-            <div className="practice-type-pill">
-              <i className={practiceInfo.icon}></i>
-              {practiceInfo.title}
-            </div>
+          <i className="bi bi-chevron-right practice-breadcrumb-separator"></i>
 
-            <h2>{practiceData?.lessonTitle || "Bài ôn tập"}</h2>
-            <p>{practiceInfo.subtitle}</p>
-          </div>
+          <span
+            className="practice-breadcrumb-item"
+            onClick={() => navigate(`/khoa-hoc/${courseId}`)}
+          >
+            Chi tiết khóa học
+          </span>
 
-          <div className="practice-header-card">
-            <span>Tiến độ bài làm</span>
-            <strong>{answeredCount}/{questions.length}</strong>
-            <div className="practice-progress-track">
-              <div
-                className="practice-progress-bar"
-                style={{ width: `${progressPercent}%` }}
-              ></div>
-            </div>
-          </div>
+          <i className="bi bi-chevron-right practice-breadcrumb-separator"></i>
+
+          <span className="practice-breadcrumb-item active">
+            Ôn tập
+          </span>
         </div>
+
+        
 
         {questions.length === 0 ? (
           <div className="practice-empty-state">
@@ -344,10 +338,7 @@ function StudentPracticePage() {
         ) : (
           <div className="practice-layout">
             <div className="practice-main">
-              <div className="practice-instruction">
-                <i className="bi bi-info-circle"></i>
-                {practiceInfo.subtitle}
-              </div>
+              
 
               {questions.map((question, index) => (
                 <PracticeQuestionCard
@@ -379,8 +370,8 @@ function StudentPracticePage() {
                     const answered = Array.isArray(answerValue)
                       ? answerValue.length > 0
                       : typeof answerValue === "string"
-                      ? answerValue.trim() !== ""
-                      : answerValue !== undefined && answerValue !== null;
+                        ? answerValue.trim() !== ""
+                        : answerValue !== undefined && answerValue !== null;
 
                     return (
                       <button
@@ -425,13 +416,7 @@ function StudentPracticePage() {
                 </button>
               </div>
 
-              <div className="practice-warning-card">
-                <i className="bi bi-exclamation-circle"></i>
-                <span>
-                  Hãy trả lời đầy đủ các câu hỏi trước khi nộp bài. Bạn có thể làm
-                  lại bài nếu muốn luyện tập thêm.
-                </span>
-              </div>
+              
             </aside>
           </div>
         )}

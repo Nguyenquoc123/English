@@ -624,3 +624,32 @@
     width: 100%;
   }
 }
+
+.practice-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.practice-breadcrumb-item {
+  color: #6b7280;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.practice-breadcrumb-item:hover {
+  color: #2563eb;
+}
+
+.practice-breadcrumb-item.active {
+  color: #0d47a1;
+  font-weight: 700;
+  cursor: default;
+}
+
+.practice-breadcrumb-separator {
+  color: #9ca3af;
+  font-size: 12px;
+}

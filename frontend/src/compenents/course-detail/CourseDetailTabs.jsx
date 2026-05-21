@@ -24,23 +24,14 @@ function CourseDetailTabs({
         <button
           type="button"
           className="nav-link"
-          onClick={() => navigate(`${basePath}/${courseId}/lessons`)}
+          onClick={() => setActiveTab("lessons")}
         >
           <i className="bi bi-journal-text me-1"></i>
           Lesson
         </button>
       </li>
 
-      <li className="nav-item">
-        <button
-          type="button"
-          className="nav-link"
-          onClick={() => navigate(`${basePath}/${courseId}/exams`)}
-        >
-          <i className="bi bi-clipboard-check me-1"></i>
-          Bài thi
-        </button>
-      </li>
+      
 
       {showApprovalTab && (
         <li className="nav-item">

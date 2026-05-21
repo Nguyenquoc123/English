@@ -23,5 +23,4 @@ public class CourseRequest {
 
     private String courseType;
 
-    private BigDecimal examPrice;
 }

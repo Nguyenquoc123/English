@@ -2,31 +2,52 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFileUrl } from "../../utils/fileurl";
 
-function TeacherLessonVideoDetail() {
+function TeacherLessonVideoDetail({
+  videoId: videoIdProp,
+  embedded = false,
+  onClose,
+}) {
   const navigate = useNavigate();
-  const { courseId, lessonId, videoId } = useParams();
+  const params = useParams();
+
+  const courseId = params.courseId;
+  const lessonId = params.lessonId;
+  const videoId = videoIdProp || params.videoId;
 
   const API_BASE = "http://localhost:8080";
 
   const [video, setVideo] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    loadVideo();
+    if (videoId) {
+      loadVideo();
+    }
   }, [videoId]);
 
   const loadVideo = async () => {
     try {
+      setLoading(true);
+      setError("");
+
       const token = localStorage.getItem("token");
 
       const response = await fetch(`${API_BASE}/video/${videoId}`, {
+        method: "GET",
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
-      const data = await response.json();
-      console.log(data)
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
       if (!response.ok) {
         setError(data?.message || "Không thể tải video");
         return;
@@ -36,41 +57,85 @@ function TeacherLessonVideoDetail() {
     } catch (err) {
       console.error(err);
       setError("Lỗi kết nối server");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (error) return <div className="alert alert-danger">{error}</div>;
-  if (!video) return <div className="text-muted py-5 text-center">Đang tải video...</div>;
+  const formatDate = (value) => {
+    if (!value) return "--";
+
+    try {
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleString("vi-VN");
+    } catch {
+      return value;
+    }
+  };
+
+  const handleBack = () => {
+    if (embedded && onClose) {
+      onClose();
+      return;
+    }
+
+    navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/videos`);
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center text-muted py-5">
+        <div className="spinner-border text-primary mb-3"></div>
+        <div>Đang tải video...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="alert alert-danger mb-0">{error}</div>;
+  }
+
+  if (!video) {
+    return (
+      <div className="text-muted py-5 text-center">
+        Không tìm thấy video.
+      </div>
+    );
+  }
 
   return (
-    <div className="teacher-lesson-detail-page">
-      <button
-        className="lesson-detail-back"
-        onClick={() =>
-          navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/videos`)
-        }
-      >
-        <i className="bi bi-arrow-left"></i>
-        Quay lại danh sách video
-      </button>
-
-      <div className="info-card">
-        <h3>{video.title}</h3>
-
-        <video
-          className="w-100 mt-3"
-          style={{ maxHeight: 520, background: "#111827", borderRadius: 16 }}
-          controls
-          poster={getFileUrl(video.thumbnailUrl)}
+    <div>
+      {!embedded && (
+        <button
+          type="button"
+          className="btn btn-link px-0 text-decoration-none mb-3"
+          onClick={handleBack}
         >
-          <source src={getFileUrl(video.videoUrl)} />
-          Trình duyệt của bạn không hỗ trợ video.
-        </video>
+          <i className="bi bi-arrow-left me-1"></i>
+          Quay lại danh sách video
+        </button>
+      )}
 
-        <div className="mt-3 text-muted">
-          Thứ tự: {video.displayOrder} · Ngày tạo: {video.createdAt || "--"}
-        </div>
-      </div>
+      
+
+      <video
+        className="w-100"
+        style={{
+          maxHeight: 520,
+          background: "#111827",
+          borderRadius: 12,
+        }}
+        controls
+        poster={video.thumbnailUrl ? getFileUrl(video.thumbnailUrl) : undefined}
+      >
+        <source src={getFileUrl(video.videoUrl)} />
+        Trình duyệt của bạn không hỗ trợ video.
+      </video>
     </div>
   );
 }

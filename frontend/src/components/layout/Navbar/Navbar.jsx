@@ -19,10 +19,7 @@ function getUserFromToken() {
 
 const NAV_LINKS = [
   { to: '/', label: 'Trang chủ', end: true },
-  { to: '/danh-sach-khoa-hoc', label: 'Khoá học' },
-  { to: '/free-lessons', label: 'Lesson miễn phí' },
-  { to: '/exams', label: 'Kỳ thi' },
-  { to: '/contact', label: 'Liên hệ' },
+  { to: '/danh-sach-khoa-hoc', label: 'Khoá học' }
 ];
 
 export default function Navbar() {
@@ -56,10 +53,10 @@ export default function Navbar() {
 
   const closeAll = () => { setDropdownOpen(false); setMobileOpen(false); };
 
-  const isTeacher  = user?.role?.includes('teacher');
-  const isAdmin    = user?.role?.includes('admin');
-  const initials   = user?.username?.slice(0, 2).toUpperCase() || 'U';
-  const roleLabel  = isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : 'Học viên';
+  const isTeacher = user?.role?.includes('teacher');
+  const isAdmin = user?.role?.includes('admin');
+  const initials = user?.username?.slice(0, 2).toUpperCase() || 'U';
+  const roleLabel = isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : 'Học viên';
 
   return (
     <header className="nb-header">
@@ -96,6 +93,9 @@ export default function Navbar() {
                       <div className="nb-mobile-role">{roleLabel}</div>
                     </div>
                   </div>
+                  <Link to="/gio-hang" className="nb-mobile-link" onClick={closeAll}>
+                    <i className="bi bi-cart3" /> Giỏ hàng
+                  </Link>
                   <div className="nb-mobile-divider" />
                   <Link to="/student/profile" className="nb-mobile-link" onClick={closeAll}>
                     <i className="bi bi-person" /> Hồ sơ cá nhân
@@ -137,6 +137,10 @@ export default function Navbar() {
           )}
         </nav>
 
+        {/* ── Cart desktop ── */}
+        <Link to="/gio-hang" className="nb-cart" onClick={closeAll} aria-label="Giỏ hàng">
+          <i className="bi bi-cart3" />
+        </Link>
         {/* ── Auth desktop ── */}
         <div className="nb-auth">
           {user ? (
@@ -168,8 +172,21 @@ export default function Navbar() {
                   <Link to="/student/profile" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-person" /> Hồ sơ cá nhân
                   </Link>
+
+                  <Link to="/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Khóa học đã mua
+                  </Link>
+
                   <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-key" /> Đổi mật khẩu
+                  </Link>
+
+                  <Link to="/personal-practices" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Bài ôn tập cá nhân
+                  </Link>
+
+                  <Link to="/lich-su-lam-bai" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Lịch sử làm bài
                   </Link>
 
                   {/* Đăng ký GV (student only) */}

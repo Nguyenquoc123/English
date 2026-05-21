@@ -29,44 +29,46 @@ function useCourseLessons({
   };
 
   const loadLessons = async (filter = {}) => {
+  try {
+    setLoading(true);
+    setError("");
+
+    const token = localStorage.getItem("token");
+    const queryString = buildQueryString(filter);
+
+    const url = endpointBuilder(courseId, queryString);
+
+    const response = await fetch(url, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    let data = null;
+
     try {
-      setLoading(true);
-      setError("");
-
-      const token = localStorage.getItem("token");
-      const queryString = buildQueryString(filter);
-
-      const url = endpointBuilder(courseId, queryString);
-
-      const response = await fetch(url, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data?.message || "Không thể tải danh sách bài học");
-        return;
-      }
-
-      const result = data.result || data.data || data;
-
-      setCourse({
-        courseId: result.courseId,
-        title: result.courseTitle,
-      });
-
-      setLessons(result.lessons || []);
-      setAllLessons(result.lessons || []);
-    } catch (err) {
-      console.error(err);
-      setError("Lỗi kết nối server");
-    } finally {
-      setLoading(false);
+      data = await response.json();
+    } catch {
+      data = null;
     }
-  };
+
+    if (!response.ok) {
+      setError(data?.message || "Không thể tải danh sách nội dung");
+      return;
+    }
+
+    const result = data.result || data.data || data;
+    const lessonList = Array.isArray(result) ? result : result.lessons || [];
+
+    setLessons(lessonList);
+    setAllLessons(lessonList);
+  } catch (err) {
+    console.error(err);
+    setError("Lỗi kết nối server");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     loadLessons();

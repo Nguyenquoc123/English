@@ -1,34 +1,37 @@
 package com.learning.english.service;
 
 import com.learning.english.dto.request.SePayWebhookRequest;
-import com.learning.english.entity.*;
-import com.learning.english.repository.CourseRepository;
+import com.learning.english.entity.Course;
+import com.learning.english.entity.Enrollment;
+import com.learning.english.entity.TeacherEarning;
+import com.learning.english.entity.Transaction;
+import com.learning.english.entity.TransactionItem;
+import com.learning.english.entity.User;
 import com.learning.english.repository.EnrollmentRepository;
 import com.learning.english.repository.TeacherEarningRepository;
+import com.learning.english.repository.TransactionItemRepository;
 import com.learning.english.repository.TransactionRepository;
+
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 public class SePayWebhookService {
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private CourseRepository courseRepository;
-
-    @Autowired
-    private EnrollmentRepository enrollmentRepository;
-
-    @Autowired
-    private TeacherEarningRepository teacherEarningRepository;
+    private final TransactionRepository transactionRepository;
+    private final TransactionItemRepository transactionItemRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final TeacherEarningRepository teacherEarningRepository;
 
     @Transactional
     public void xuLyThanhToanSePay(SePayWebhookRequest request) {
@@ -37,26 +40,21 @@ public class SePayWebhookService {
             return;
         }
 
-        Long transactionId = extractCourseTransactionId(request);
+        Long transactionId = extractTransactionId(request);
 
-        System.out.println("Mã giao dịch: " + transactionId);
         if (transactionId == null) {
             return;
         }
 
         Transaction transaction = transactionRepository
-                .findByTransactionIdAndTargetType(transactionId, "COURSE")
+                .findById(transactionId)
                 .orElse(null);
 
         if (transaction == null) {
             return;
         }
 
-        /*
-            Chống xử lý trùng:
-            Nếu webhook gửi lại mà transaction đã SUCCESS rồi thì bỏ qua.
-        */
-        if (!"PENDING".equals(transaction.getStatus())) {
+        if (!"PENDING".equalsIgnoreCase(transaction.getStatus())) {
             return;
         }
 
@@ -64,19 +62,17 @@ public class SePayWebhookService {
                 request.getTransferAmount() != null ? request.getTransferAmount() : 0
         );
 
-        if (paidAmount.compareTo(transaction.getAmount()) < 0) {
+        if (paidAmount.compareTo(transaction.getTotalAmount()) < 0) {
             transaction.setStatus("FAILED");
             transaction.setUpdatedAt(LocalDateTime.now());
             transactionRepository.save(transaction);
             return;
         }
 
-        Long courseId = transaction.getTargetId();
+        List<TransactionItem> items =
+                transactionItemRepository.findByTransactionTransactionId(transactionId);
 
-        Course course = courseRepository.findById(courseId)
-                .orElse(null);
-
-        if (course == null) {
+        if (items.isEmpty()) {
             transaction.setStatus("FAILED");
             transaction.setUpdatedAt(LocalDateTime.now());
             transactionRepository.save(transaction);
@@ -86,25 +82,24 @@ public class SePayWebhookService {
         LocalDateTime now = LocalDateTime.now();
 
         transaction.setStatus("SUCCESS");
+        transaction.setPaidAt(now);
         transaction.setUpdatedAt(now);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        taoHoacCapNhatEnrollment(savedTransaction, course, now);
-
-        if (!teacherEarningRepository.existsByTransactionTransactionId(
-                savedTransaction.getTransactionId()
-        )) {
-            taoDoanhThuGiaoVien(course, savedTransaction, now);
+        for (TransactionItem item : items) {
+            taoHoacCapNhatEnrollment(savedTransaction, item, now);
+            taoDoanhThuGiaoVien(savedTransaction, item, now);
         }
     }
 
     private void taoHoacCapNhatEnrollment(
             Transaction transaction,
-            Course course,
+            TransactionItem item,
             LocalDateTime now
     ) {
         User student = transaction.getUser();
+        Course course = item.getCourse();
 
         Enrollment enrollment = enrollmentRepository
                 .findByUserUserIdAndCourseCourseId(
@@ -118,20 +113,13 @@ public class SePayWebhookService {
                     .user(student)
                     .course(course)
                     .hasCourseAccess(true)
-                    .hasExamAccess(true)
-                    .courseTransaction(transaction)
-                    .examAccessTransaction(null)
+                    .courseTransactionItem(item)
                     .createdAt(now)
                     .updatedAt(now)
                     .build();
         } else {
             enrollment.setHasCourseAccess(true);
-            enrollment.setCourseTransaction(transaction);
-
-            if (enrollment.getHasExamAccess() == null) {
-                enrollment.setHasExamAccess(false);
-            }
-
+            enrollment.setCourseTransactionItem(item);
             enrollment.setUpdatedAt(now);
         }
 
@@ -139,22 +127,26 @@ public class SePayWebhookService {
     }
 
     private void taoDoanhThuGiaoVien(
-            Course course,
             Transaction transaction,
+            TransactionItem item,
             LocalDateTime now
     ) {
-        User teacher = course.getTeacher();
+        if (teacherEarningRepository.existsByTransactionItemTransactionItemId(
+                item.getTransactionItemId()
+        )) {
+            return;
+        }
+
+        User teacher = item.getTeacher();
 
         if (teacher == null) {
             return;
         }
 
-        BigDecimal grossAmount = transaction.getAmount();
+        BigDecimal grossAmount = item.getPrice() == null
+                ? BigDecimal.ZERO
+                : item.getPrice();
 
-        /*
-            Ví dụ hệ thống giữ 20%.
-            Nếu chưa muốn tính phí nền tảng thì để platformFeeRate = 0.00
-        */
         BigDecimal platformFeeRate = new BigDecimal("0.20");
 
         BigDecimal platformFee = grossAmount.multiply(platformFeeRate);
@@ -162,21 +154,20 @@ public class SePayWebhookService {
 
         TeacherEarning earning = TeacherEarning.builder()
                 .teacher(teacher)
-                .course(course)
-                .sourceType("COURSE")
-                .sourceId(course.getCourseId())
+                .course(item.getCourse())
                 .transaction(transaction)
+                .transactionItem(item)
                 .grossAmount(grossAmount)
                 .platformFee(platformFee)
                 .netAmount(netAmount)
-                .status("Available")
+                .status("AVAILABLE")
                 .createdAt(now)
                 .build();
 
         teacherEarningRepository.save(earning);
     }
 
-    private Long extractCourseTransactionId(SePayWebhookRequest request) {
+    private Long extractTransactionId(SePayWebhookRequest request) {
         Long idFromCode = extractIdFromText(request.getCode());
 
         if (idFromCode != null) {
@@ -205,12 +196,9 @@ public class SePayWebhookService {
         }
 
         try {
-        	System.out.println("Cái gì đó: " + matcher.group(1));
             return Long.parseLong(matcher.group(1));
         } catch (Exception e) {
             return null;
         }
     }
-    
-   
 }

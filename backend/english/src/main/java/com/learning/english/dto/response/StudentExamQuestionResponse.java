@@ -27,8 +27,6 @@ public class StudentExamQuestionResponse {
 
     private Integer durationMinutes;
 
-    private Integer maxAttempts;
-
     private Integer questionCount;
 
     private Long totalPoint;

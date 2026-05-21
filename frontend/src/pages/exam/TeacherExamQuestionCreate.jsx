@@ -344,7 +344,7 @@ function TeacherExamQuestionCreate() {
                 formData.append("mediaFile", mediaFile);
             }
 
-            const response = await fetch(`${API_BASE}/questions/exams/${examId}`, {
+            const response = await fetch(`${API_BASE}/exam-questions/exams/${examId}`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,

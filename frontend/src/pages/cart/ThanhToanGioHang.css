@@ -1,0 +1,505 @@
+/* ===============================
+   CART CHECKOUT PAGE
+================================ */
+
+.student-purchase-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* Breadcrumb */
+.purchase-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.purchase-breadcrumb-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #6366f1;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.purchase-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.purchase-breadcrumb i {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Heading */
+.purchase-heading {
+  margin-bottom: 28px;
+}
+
+.purchase-heading h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.purchase-heading p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* Course list card */
+.purchase-course-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.purchase-course-body {
+  padding: 20px;
+}
+
+.purchase-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+/* Course title button */
+.purchase-course-title-link {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 6px;
+
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+
+  cursor: pointer;
+}
+
+.purchase-course-title-link:hover {
+  color: #6366f1;
+}
+
+/* Course description 2 lines */
+.purchase-course-body .text-muted.small {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  line-height: 1.5;
+}
+
+/* Payment card */
+.payment-card {
+  position: sticky;
+  top: 88px;
+
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 22px;
+
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.payment-card h4 {
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.payment-section {
+  margin-bottom: 22px;
+}
+
+.payment-label {
+  display: block;
+  margin-bottom: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Payment method */
+.payment-method {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  color: #374151;
+  cursor: pointer;
+
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.payment-method > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.payment-method i {
+  color: #6366f1;
+  font-size: 18px;
+}
+
+.payment-method .bi-check-circle-fill {
+  display: none;
+}
+
+.payment-method.active {
+  border-color: #6366f1;
+  background: #f5f6ff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.payment-method.active .bi-check-circle-fill {
+  display: inline-block;
+}
+
+/* Summary */
+.payment-summary {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.payment-summary-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.payment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.payment-row strong {
+  color: #111827;
+}
+
+.payment-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 14px 0;
+}
+
+.total-row {
+  margin-bottom: 0;
+}
+
+.total-row span {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.total-row strong {
+  color: #6366f1;
+  font-size: 22px;
+}
+
+/* Note */
+.payment-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  background: #eff6ff;
+  color: #1e40af;
+
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.payment-note i {
+  font-size: 17px;
+  margin-top: 1px;
+}
+
+.payment-button {
+  height: 44px;
+  font-weight: 600;
+}
+
+/* ===============================
+   PAYMENT MODAL
+================================ */
+
+.payment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+
+  background: rgba(17, 24, 39, 0.55);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.payment-modal-card {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  background: #fff;
+  border-radius: 16px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  animation: paymentModalIn 0.18s ease;
+}
+
+@keyframes paymentModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.payment-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 20px 22px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.payment-modal-header h5 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.payment-modal-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.payment-modal-close {
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #f3f4f6;
+  color: #374151;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.payment-modal-close:hover {
+  background: #e5e7eb;
+}
+
+.payment-modal-body {
+  padding: 22px;
+}
+
+.payment-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+  color: #4b5563;
+}
+
+/* QR */
+.qr-image-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 14px;
+
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.qr-image-box img {
+  width: 260px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* QR info */
+.qr-info-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.qr-info-box > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.qr-info-box > div:last-child {
+  border-bottom: none;
+}
+
+.qr-info-box span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.qr-info-box strong {
+  color: #111827;
+  font-size: 14px;
+  text-align: right;
+}
+
+.payment-code {
+  color: #6366f1 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.3px;
+}
+
+.payment-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  padding: 16px 22px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 991px) {
+  .payment-card {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-purchase-page {
+    padding: 24px 14px;
+  }
+
+  .purchase-heading h2 {
+    font-size: 24px;
+  }
+
+  .purchase-course-body {
+    padding: 16px;
+  }
+
+  .payment-card {
+    padding: 18px;
+  }
+
+  .payment-modal-card {
+    max-height: 94vh;
+  }
+
+  .payment-modal-header,
+  .payment-modal-body,
+  .payment-modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .qr-info-box > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .qr-info-box strong {
+    text-align: left;
+  }
+}
+
+@media (max-width: 576px) {
+  .payment-modal-footer {
+    flex-direction: column;
+  }
+
+  .payment-modal-footer .btn {
+    width: 100%;
+  }
+
+  .purchase-course-title-link {
+    font-size: 15px;
+  }
+
+  .total-row strong {
+    font-size: 20px;
+  }
+}

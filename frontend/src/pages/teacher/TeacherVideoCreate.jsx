@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getFileUrl } from "../../utils/fileurl";
 import "./TeacherVideoCreate.css";
 
 function TeacherVideoCreate() {
@@ -9,6 +10,7 @@ function TeacherVideoCreate() {
   const API_BASE = "http://localhost:8080";
 
   const [title, setTitle] = useState("");
+  const [status, setStatus] = useState("DRAFT");
 
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreviewName, setVideoPreviewName] = useState("");
@@ -34,8 +36,12 @@ function TeacherVideoCreate() {
       return "Vui lòng chọn file video";
     }
 
-    if (durationSeconds && Number(durationSeconds) < 0) {
-      return "Thời lượng video không được âm";
+    if (!status) {
+      return "Vui lòng chọn trạng thái video";
+    }
+
+    if (!["DRAFT", "PUBLISHED", "HIDDEN"].includes(status)) {
+      return "Trạng thái video không hợp lệ";
     }
 
     return "";
@@ -110,6 +116,7 @@ function TeacherVideoCreate() {
 
       const videoData = {
         title: title.trim(),
+        status,
         durationSeconds: durationSeconds ? Number(durationSeconds) : null,
       };
 
@@ -128,17 +135,13 @@ function TeacherVideoCreate() {
         formData.append("thumbnailFile", thumbnailFile);
       }
 
-      const response = await fetch(
-        `${API_BASE}/videos/${lessonId}/lessons`,
-        {
-          method: "POST",
-          headers: {
-            // Không set Content-Type khi dùng FormData
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(`${API_BASE}/video/${lessonId}/lessons`, {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
 
       let data = null;
 
@@ -166,6 +169,7 @@ function TeacherVideoCreate() {
 
   const handleReset = () => {
     setTitle("");
+    setStatus("DRAFT");
 
     setVideoFile(null);
     setVideoPreviewName("");
@@ -190,26 +194,39 @@ function TeacherVideoCreate() {
 
   return (
     <div className="video-create-page">
-      <div className="video-create-heading">
-        <div>
-          <button
-            type="button"
-            className="video-back-link"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)
-            }
+      <div className="lesson-detail-heading">
+        <nav className="teacher-breadcrumb">
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate("/teacher/courses")}
           >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+            Khóa học
+          </span>
 
-          <h2>Đăng video bài học</h2>
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
 
-          <p>
-            Nhập tiêu đề và tải file video bài giảng cho lesson. Thứ tự video sẽ
-            được hệ thống tự động xếp ở cuối danh sách.
-          </p>
-        </div>
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate(`/teacher/courses/${courseId}`)}
+          >
+            Chi tiết khóa học
+          </span>
+
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
+
+          <span
+            className="teacher-breadcrumb-item"
+            onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
+          >
+            Bài học
+          </span>
+
+          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
+
+          <span className="teacher-breadcrumb-item active">
+            Video
+          </span>
+        </nav>
       </div>
 
       {error && (
@@ -241,19 +258,13 @@ function TeacherVideoCreate() {
                     Tiêu đề video <span className="text-danger">*</span>
                   </label>
 
-                  <div className="input-group">
-                    <span className="input-group-text bg-light">
-                      <i className="bi bi-play-btn"></i>
-                    </span>
-
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Nhập tiêu đề video"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Nhập tiêu đề video"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
                 </div>
 
                 <div className="mb-3">
@@ -308,47 +319,25 @@ function TeacherVideoCreate() {
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold">
-                      Trạng thái video
+                      Trạng thái video <span className="text-danger">*</span>
                     </label>
 
-                    <input
-                      className="form-control"
-                      value="Draft"
-                      disabled
-                      readOnly
-                    />
+                    <select
+                      className="form-select"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                    >
+                      <option value="DRAFT">Draft</option>
+                      <option value="PUBLISHED">Published</option>
+                      <option value="HIDDEN">Hidden</option>
+                    </select>
 
                     <small className="text-muted">
-                      Video nên để Draft cho đến khi kiểm tra nội dung hoàn tất.
+                      Nên để Draft cho đến khi kiểm tra nội dung hoàn tất.
                     </small>
                   </div>
 
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">
-                      Thời lượng video
-                    </label>
 
-                    <div className="input-group">
-                      <span className="input-group-text bg-light">
-                        <i className="bi bi-clock"></i>
-                      </span>
-
-                      <input
-                        type="number"
-                        className="form-control"
-                        min="0"
-                        placeholder="Tự động lấy từ file video"
-                        value={durationSeconds}
-                        onChange={(e) => setDurationSeconds(e.target.value)}
-                      />
-
-                      <span className="input-group-text bg-light">giây</span>
-                    </div>
-
-                    <small className="text-muted">
-                      Có thể để hệ thống tự lấy hoặc nhập thủ công.
-                    </small>
-                  </div>
                 </div>
               </div>
             </div>
@@ -457,45 +446,7 @@ function TeacherVideoCreate() {
               </div>
             </div>
 
-            <div className="card border-0 shadow-sm video-side-card">
-              <div className="card-header bg-white border-0 pb-0">
-                <h6 className="fw-bold mb-1">Xem trước</h6>
-                <small className="text-muted">
-                  Thông tin video sẽ được lưu
-                </small>
-              </div>
 
-              <div className="card-body">
-                <div className="video-preview-card">
-                  <div className="preview-video-thumb">
-                    {thumbnailPreviewUrl ? (
-                      <img src={thumbnailPreviewUrl} alt="Preview" />
-                    ) : (
-                      <i className="bi bi-play-fill"></i>
-                    )}
-                  </div>
-
-                  <h6>{title || "Tiêu đề video chưa nhập"}</h6>
-
-                  <p>
-                    File:{" "}
-                    <strong>{videoPreviewName || "Chưa chọn video"}</strong>
-                  </p>
-
-                  <p>
-                    Thời lượng:{" "}
-                    <strong>{formatDuration(durationSeconds)}</strong>
-                  </p>
-
-                  <span className="badge text-bg-secondary">Draft</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="alert alert-info mt-3">
-              <strong>Gợi ý:</strong> Nên dùng video MP4 và thumbnail 16:9 để
-              hiển thị đẹp trên giao diện học viên.
-            </div>
           </div>
         </div>
       </form>

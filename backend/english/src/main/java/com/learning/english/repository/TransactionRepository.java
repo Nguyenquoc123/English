@@ -71,12 +71,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * Ví dụ: findFirst...(userId, "COURSE", courseId, "SUCCESS") →
      *   Nếu có kết quả → user đã mua khóa học này rồi.
      */
-    Optional<Transaction> findFirstByUserUserIdAndTargetTypeAndTargetIdAndStatusOrderByCreatedAtDesc(
-            Long userId,
-            String targetType,
-            Long targetId,
-            String status
-    );
+//    Optional<Transaction> findFirstByUserUserIdAndTargetTypeAndTargetIdAndStatusOrderByCreatedAtDesc(
+//            Long userId,
+//            String targetType,
+//            Long targetId,
+//            String status
+//    );
 
     /**
      * findByTransactionIdAndTargetType — Tìm giao dịch theo ID và loại target.
@@ -99,10 +99,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * Dùng trong: Webhook handler (SePay gửi callback) — tìm giao dịch cần cập nhật
      * trạng thái sau khi nhận thanh toán, đồng thời xác nhận loại giao dịch đúng.
      */
-    Optional<Transaction> findByTransactionIdAndTargetType(
-            Long transactionId,
-            String targetType
-    );
+//    Optional<Transaction> findByTransactionIdAndTargetType(
+//            Long transactionId,
+//            String targetType
+//    );
 
     /**
      * findAllByOrderByCreatedAtDesc — Lấy TẤT CẢ giao dịch, sắp xếp mới nhất lên đầu.
@@ -161,13 +161,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      *
      * Dùng trong Admin Dashboard: Hiển thị tổng doanh thu của toàn hệ thống.
      */
-    @org.springframework.data.jpa.repository.Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.status = 'SUCCESS'")
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(t.totalAmount) FROM Transaction t WHERE t.status = 'SUCCESS'")
     java.math.BigDecimal sumSuccessAmount();
     
     
-    boolean existsByTransactionIdAndTargetTypeAndStatus(
+    boolean existsByTransactionIdAndStatus(
             Long transactionId,
-            String targetType,
             String status
     );
 }
