@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import useCourseLessons from "../../../hooks/useCourseLessons";
 import LessonListHeader from "../../../compenents/lesson-list/LessonListHeader";
+import { adminCourses, adminCourseReview } from "../../../utils/breadcrumbPaths";
 import LessonStatsCards from "../../../compenents/lesson-list/LessonStatsCards";
 import LessonFilterBox from "../../../compenents/lesson-list/LessonFilterBox";
 import LessonTable from "../../../compenents/lesson-list/LessonTable";
@@ -11,7 +12,6 @@ function LessonReviewList() {
   const navigate = useNavigate();
   const { courseId } = useParams();
 
-  // Tải danh sách bài học của khóa học qua custom hook
   const {
     keyword, setKeyword,
     status, setStatus,
@@ -41,7 +41,11 @@ function LessonReviewList() {
         title="Review danh sách bài học"
         description="Admin kiểm tra danh sách lesson thuộc khóa học trước khi duyệt."
         course={course}
-        onBack={() => navigate(`/admin/courses/${courseId}/review`)}
+        breadcrumbItems={[
+          adminCourses,
+          adminCourseReview(courseId),
+          { label: "Danh sách bài học" },
+        ]}
       />
 
       <LessonStatsCards allLessons={allLessons} />
@@ -55,7 +59,6 @@ function LessonReviewList() {
         onReset={handleResetFilter}
       />
 
-      {/* Bảng danh sách bài học với các nút điều hướng review */}
       <LessonTable
         lessons={lessons}
         allLessons={allLessons}

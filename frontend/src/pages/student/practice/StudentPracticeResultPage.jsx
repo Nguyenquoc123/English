@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./StudentPracticeResultPage.css";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  studentHome,
+  studentCourses,
+  studentCourseDetail,
+  studentLesson,
+} from "../../../utils/breadcrumbPaths";
 
 function StudentPracticeResultPage() {
   const navigate = useNavigate();
@@ -146,14 +153,15 @@ function StudentPracticeResultPage() {
     return (
       <div className="practice-result-page">
         <div className="practice-result-container">
-          <button
-            type="button"
-            className="result-back-link"
-            onClick={() => navigate(`/khoa-hoc/${courseId}/lessons/${lessonId}`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại lesson
-          </button>
+          <CourseBreadcrumb
+            items={[
+              studentHome,
+              studentCourses,
+              studentCourseDetail(courseId),
+              studentLesson(courseId, lessonId),
+              { label: "Kết quả ôn tập" },
+            ]}
+          />
 
           <div className="alert alert-danger mt-3">{error}</div>
         </div>
@@ -174,17 +182,18 @@ function StudentPracticeResultPage() {
   return (
     <div className="practice-result-page">
       <div className="practice-result-container">
+        <CourseBreadcrumb
+          items={[
+            studentHome,
+            studentCourses,
+            studentCourseDetail(courseId),
+            studentLesson(courseId, lessonId),
+            { label: "Kết quả ôn tập" },
+          ]}
+        />
+
         <div className="result-topbar">
           <div>
-            <button
-              type="button"
-              className="result-back-link"
-              onClick={() => navigate(`/courses/${courseId}/lessons/${lessonId}`)}
-            >
-              <i className="bi bi-arrow-left"></i>
-              Quay lại lesson
-            </button>
-
             <h2>Kết quả ôn tập</h2>
             <p>Xem tổng quan kết quả và chi tiết câu trả lời của bạn.</p>
           </div>
@@ -208,8 +217,7 @@ function StudentPracticeResultPage() {
               className="btn btn-primary result-action-btn"
               onClick={() => navigate(`/khoa-hoc/${courseId}/lessons/${lessonId}`)}
             >
-              <i className="bi bi-arrow-left me-2"></i>
-              Quay lại lesson
+              Về bài học
             </button>
           </div>
         </div>

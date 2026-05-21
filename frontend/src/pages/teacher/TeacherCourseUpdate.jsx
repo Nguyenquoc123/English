@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import JoditEditor from "jodit-react";
 import "./TeacherCourseUpdate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherCourses, teacherCourseDetail } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
 
 function TeacherCourseUpdate() {
@@ -251,12 +253,10 @@ function TeacherCourseUpdate() {
         title: title.trim(),
         shortDescription: shortDescription.trim(),
 
-        // Jodit lưu HTML
         description: description.trim(),
 
         levelId: Number(levelId),
 
-        // Nếu backend của bạn dùng courseType thì đổi accessType thành courseType
         accessType: accessType,
 
         price: accessType === "PAID" ? Number(price) : 0,
@@ -280,7 +280,6 @@ function TeacherCourseUpdate() {
       const response = await fetch(`${API_BASE}/teacher/khoa-hoc/${courseId}`, {
         method: "PUT",
         headers: {
-          // Không set Content-Type khi dùng FormData
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,
@@ -334,14 +333,13 @@ function TeacherCourseUpdate() {
     <div className="update-course-page">
       <div className="update-page-heading">
         <div>
-          <button
-            type="button"
-            className="update-back-link"
-            onClick={() => navigate(`/teacher/courses/${courseId}`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết
-          </button>
+          <CourseBreadcrumb
+            items={[
+              teacherCourses,
+              teacherCourseDetail(courseId),
+              { label: "Cập nhật khóa học" },
+            ]}
+          />
 
           <h2>Cập nhật khóa học</h2>
 
@@ -624,8 +622,7 @@ function TeacherCourseUpdate() {
                 onClick={() => navigate(`/teacher/courses/${courseId}`)}
                 disabled={saving}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

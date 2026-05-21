@@ -49,13 +49,7 @@ function StudentExamListSection({ courseId = null, compact = false }) {
         params.append("courseId", courseId);
       }
 
-      /*
-        API gợi ý:
-        GET /student/exams?keyword=&status=&courseId=
-
-        Nếu hiển thị ở trang riêng thì courseId null.
-        Nếu hiển thị trong chi tiết khóa học thì truyền courseId.
-      */
+      
       const response = await fetch(`${API_BASE}/exams/all-bai-thi?${params.toString()}`, {
         method: "GET",
         headers: {

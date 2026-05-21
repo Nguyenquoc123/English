@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherExamDetail.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherExams } from "../../utils/breadcrumbPaths";
 
 function TeacherExamDetail() {
   const navigate = useNavigate();
@@ -304,14 +306,9 @@ function TeacherExamDetail() {
     return (
       <div className="teacher-exam-detail-page">
         <div className="teacher-exam-detail-container">
-          <button
-            type="button"
-            className="teacher-exam-back"
-            onClick={() => navigate("/teacher/exams")}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại
-          </button>
+          <CourseBreadcrumb
+            items={[teacherExams, { label: "Chi tiết kỳ thi" }]}
+          />
 
           <div className="alert alert-danger mt-3">{error}</div>
         </div>
@@ -332,16 +329,11 @@ function TeacherExamDetail() {
   return (
     <div className="teacher-exam-detail-page">
       <div className="teacher-exam-detail-container">
-        <div className="teacher-exam-page-top">
-          <button
-            type="button"
-            className="teacher-exam-back"
-            onClick={() => navigate("/teacher/exams")}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại
-          </button>
+        <CourseBreadcrumb
+          items={[teacherExams, { label: exam.title || "Chi tiết kỳ thi" }]}
+        />
 
+        <div className="teacher-exam-page-top">
           <div className="teacher-exam-top-actions">
             <button
               type="button"

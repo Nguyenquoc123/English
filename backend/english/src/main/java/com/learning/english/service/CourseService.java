@@ -100,6 +100,13 @@ public class CourseService {
 				.map(courseMapper::toCourseResponse);
 	}
 
+	public List<CourseResponse> dsKhoaHocDaMua() {
+		User user = getCurrentUser();
+		return enrollmentRepository.findPurchasedByUserId(user.getUserId()).stream()
+				.map(enrollment -> courseMapper.toCourseResponse(enrollment.getCourse()))
+				.toList();
+	}
+
 	private String normalize(String value) {
 		if (value == null || value.trim().isEmpty()) {
 			return null;
@@ -204,7 +211,6 @@ public class CourseService {
 		course.setStatus("Pending");
 		course.setSubmittedAt(LocalDateTime.now());
 
-		// Nếu khóa học từng bị từ chối thì khi gửi duyệt lại nên xóa lý do từ chối cũ
 		course.setRejectReason(null);
 
 		course.setUpdatedAt(LocalDateTime.now());
@@ -315,7 +321,6 @@ public class CourseService {
 				.teacherBio(null).teacherCourseCount(teacherCourseCount).lessonCount(lessonCount)
 				.studentCount(studentCount).rating(roundRating(rating)).reviewCount(reviewCount)
 				.isEnrolled(isEnrolled || "FREE".equals(course.getCourseType())).build();
-//				.isEnrolled(true).build();
 	}
 
 	private Double roundRating(Double rating) {

@@ -52,10 +52,7 @@ public class SePayWebhookService {
             return;
         }
 
-        /*
-            Chống xử lý trùng:
-            Nếu webhook gửi lại mà transaction đã SUCCESS rồi thì bỏ qua.
-        */
+        
         if (!"PENDING".equals(transaction.getStatus())) {
             return;
         }
@@ -151,10 +148,7 @@ public class SePayWebhookService {
 
         BigDecimal grossAmount = transaction.getAmount();
 
-        /*
-            Ví dụ hệ thống giữ 20%.
-            Nếu chưa muốn tính phí nền tảng thì để platformFeeRate = 0.00
-        */
+        
         BigDecimal platformFeeRate = new BigDecimal("0.20");
 
         BigDecimal platformFee = grossAmount.multiply(platformFeeRate);

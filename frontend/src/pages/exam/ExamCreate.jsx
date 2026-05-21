@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import JoditEditor from "jodit-react";
 import "./ExamCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherExams } from "../../utils/breadcrumbPaths";
 
 function TeacherExamCreate() {
   const navigate = useNavigate();
@@ -268,10 +270,9 @@ function TeacherExamCreate() {
   return (
     <div className="teacher-exam-create-page">
       <div className="teacher-exam-create-container">
-        <button type="button" className="exam-create-back" onClick={handleBack}>
-          <i className="bi bi-arrow-left"></i>
-          Quay lại
-        </button>
+        <CourseBreadcrumb
+          items={[teacherExams, { label: "Tạo kỳ thi" }]}
+        />
 
         <div className="exam-create-heading">
           <div>
@@ -448,8 +449,7 @@ function TeacherExamCreate() {
                     onClick={handleBack}
                     disabled={submitting}
                   >
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Quay lại
+                    Hủy
                   </button>
 
                   <button

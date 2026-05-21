@@ -68,6 +68,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/gui-duyet").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-da-mua").hasAuthority("SCOPE_student")
 
                 // Lessons
                 .requestMatchers(HttpMethod.GET, "/lesson/course/*", "/lesson/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")

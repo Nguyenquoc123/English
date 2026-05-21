@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CourseDetailHero from "../../../compenents/course-detail/CourseDetailHero";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { adminCourses } from "../../../utils/breadcrumbPaths";
 import AdminCourseReviewActions from "../../../compenents/course-detail/AdminCourseReviewActions";
 import CourseMetricCards from "../../../compenents/course-detail/CourseMetricCards";
 import CourseDetailTabs from "../../../compenents/course-detail/CourseDetailTabs";
@@ -21,7 +23,6 @@ function CourseReviewDetail() {
     loadCourseDetail();
   }, [courseId]);
 
-  // Tải chi tiết khóa học theo courseId
   const loadCourseDetail = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -64,7 +65,6 @@ function CourseReviewDetail() {
     return map[status] || "badge rounded-pill text-bg-light";
   };
 
-  // Duyệt khóa học
   const handleApprove = async () => {
     if (!window.confirm("Duyệt khóa học này?")) return;
     try {
@@ -82,7 +82,6 @@ function CourseReviewDetail() {
     }
   };
 
-  // Từ chối khóa học với lý do
   const handleReject = async (rejectReason) => {
     if (!rejectReason?.trim()) { alert("Vui lòng nhập lý do từ chối"); return; }
     try {
@@ -128,15 +127,10 @@ function CourseReviewDetail() {
 
   return (
     <div className="course-review-detail-page">
-      {/* Header quay lại */}
       <div className="mb-4">
-        <button
-          className="btn btn-light btn-sm mb-2"
-          onClick={() => navigate("/admin/courses")}
-        >
-          <i className="bi bi-arrow-left me-1"></i>
-          Quay lại danh sách khóa học
-        </button>
+        <CourseBreadcrumb
+          items={[adminCourses, { label: "Review khóa học" }]}
+        />
         <h4 className="fw-bold mb-1" style={{ color: "#0f3c9c" }}>Review khóa học</h4>
         <p className="text-muted mb-0">
           Admin kiểm tra nội dung khóa học trước khi duyệt hoặc từ chối.

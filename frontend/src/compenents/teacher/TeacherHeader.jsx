@@ -1,6 +1,6 @@
 function TeacherHeader({ onOpenSidebar }) {
   return (
-    <header className="bg-white border-bottom shadow-sm px-4 py-3 d-flex justify-content-between align-items-center sticky-top">
+    <header className="teacher-layout-header bg-white px-4 py-3 d-flex justify-content-between align-items-center">
       <div className="d-flex align-items-center gap-3">
         <button className="btn btn-light" onClick={onOpenSidebar}>
           <i className="bi bi-list fs-5"></i>

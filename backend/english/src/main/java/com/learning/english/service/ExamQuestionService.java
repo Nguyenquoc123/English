@@ -352,16 +352,12 @@ public class ExamQuestionService {
 
 		Long courseId = exam.getCourse().getCourseId();
 
-		/*
-		 * Check học viên đã mua khóa học chưa
-		 */
+		
 		if (!enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasExamAccessTrue(user.getUserId(), courseId)) {
 			throw new RuntimeException("Bạn cần thanh toán để làm bài thi này");
 		}
 
-		/*
-		 * Check thời gian mở bài thi
-		 */
+		
 		LocalDateTime now = LocalDateTime.now();
 
 		if (exam.getStartTime() != null && now.isBefore(exam.getStartTime())) {
@@ -372,9 +368,7 @@ public class ExamQuestionService {
 			throw new RuntimeException("Bài thi đã kết thúc");
 		}
 
-		/*
-		 * Check số lần làm bài
-		 */
+		
 		Long attemptCount = attemptRepository.countByExamExamIdAndUserUserId(examId, user.getUserId());
 
 		if (exam.getMaxAttempts() != null && exam.getMaxAttempts() > 0 && attemptCount >= exam.getMaxAttempts()) {
@@ -384,9 +378,6 @@ public class ExamQuestionService {
 		List<ExamQuestion> examQuestions = examQuestionRepository.findStudentQuestionsByExamId(examId);
 
 		List<PracticeQuestionResponse> questions = practiceConfigMapper.toExamQuestionResponses(examQuestions);
-
-//		Long totalPoint = examQuestions.stream().map(ExamQuestion::getPoint).filter(Objects::nonNull).reduce(0L,
-//				Long::sum);
 
 		return StudentExamQuestionResponse.builder()
 
@@ -405,8 +396,6 @@ public class ExamQuestionService {
 				.maxAttempts(exam.getMaxAttempts())
 
 				.questionCount(questions.size())
-
-//				.totalPoint(totalPoint)
 
 				.questions(questions)
 

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentChangePassword.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 
 function StudentChangePassword() {
   const navigate = useNavigate();
@@ -138,17 +140,7 @@ function StudentChangePassword() {
         return;
       }
 
-      /*
-        API gợi ý:
-        PUT /doi-mat-khau
-
-        Body:
-        {
-          "currentPassword": "...",
-          "newPassword": "...",
-          "confirmPassword": "..."
-        }
-      */
+      
 
       const response = await fetch(`${API_BASE}/doi-mat-khau`, {
         method: "PUT",
@@ -194,20 +186,15 @@ function StudentChangePassword() {
   return (
     <div className="student-change-password-page">
       <div className="change-password-container">
+        <CourseBreadcrumb
+          items={[studentHome, studentProfile, { label: "Đổi mật khẩu" }]}
+        />
+
         <div className="change-password-heading">
           <div>
             <h2>Đổi mật khẩu</h2>
             <p>Cập nhật mật khẩu mới để bảo vệ tài khoản học viên của bạn.</p>
           </div>
-
-          <button
-            type="button"
-            className="btn btn-light change-back-btn"
-            onClick={() => navigate("/student/profile")}
-          >
-            <i className="bi bi-arrow-left me-1"></i>
-            Quay lại
-          </button>
         </div>
 
         <div className="row g-4">
@@ -354,8 +341,7 @@ function StudentChangePassword() {
                   onClick={() => navigate("/student/profile")}
                   disabled={saving}
                 >
-                  <i className="bi bi-arrow-left me-2"></i>
-                  Quay lại
+                  Hủy
                 </button>
 
                 <button

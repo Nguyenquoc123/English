@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  adminCourses,
+  adminCourseReview,
+  adminLessonReview,
+  adminLessonPractice,
+} from "../../../utils/breadcrumbPaths";
 import "./LessonPracticeList.css";
 
 function LessonPracticeList() {
@@ -13,7 +20,6 @@ function LessonPracticeList() {
     loadQuestions();
   }, [lessonId, practiceType]);
 
-  // Tải câu hỏi theo loại ôn tập cụ thể
   const loadQuestions = async () => {
     try {
       setLoading(true);
@@ -51,15 +57,16 @@ function LessonPracticeList() {
 
   return (
     <div className="lesson-practice-list-page">
-      {/* Header */}
       <div className="mb-4">
-        <button
-          className="btn btn-light btn-sm mb-2"
-          onClick={() => navigate(`/admin/courses/${courseId}/lessons/${lessonId}/practice`)}
-        >
-          <i className="bi bi-arrow-left me-1"></i>
-          Quay lại quản lý ôn tập
-        </button>
+        <CourseBreadcrumb
+          items={[
+            adminCourses,
+            adminCourseReview(courseId),
+            adminLessonReview(courseId, lessonId),
+            adminLessonPractice(courseId, lessonId),
+            { label: `Câu hỏi: ${getPracticeLabel(practiceType)}` },
+          ]}
+        />
         <h4 className="fw-bold mb-1" style={{ color: "#0f3c9c" }}>
           Danh sách câu hỏi: {getPracticeLabel(practiceType)}
         </h4>
@@ -68,7 +75,6 @@ function LessonPracticeList() {
         </p>
       </div>
 
-      {/* Danh sách câu hỏi */}
       <div className="card border-0 shadow-sm rounded-4 p-3">
         {loading && (
           <div className="text-center py-5">

@@ -15,10 +15,7 @@ function LessonGrammarTab({ API_BASE, lessonId, getToken }) {
 
       const token = getToken();
 
-      /*
-        API gợi ý:
-        GET /grammars/{lessonId}/grammars
-      */
+      
 
       const response = await fetch(`${API_BASE}/grammar/${lessonId}/grammars`, {
         headers: {

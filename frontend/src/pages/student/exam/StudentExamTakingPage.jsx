@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./StudentExamTakingPage.css";
 
 import QuestionRenderer from "../../../compenents/exam-taking/QuestionRenderer";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentExams } from "../../../utils/breadcrumbPaths";
 
 const API_BASE = "http://localhost:8080";
 
@@ -23,16 +25,7 @@ const StudentExamTakingPage = () => {
 
     const [questions, setQuestions] = useState([]);
 
-    /*
-      answers:
-      {
-        1: {
-          questionId: 1,
-          selectedOptionId: 5,
-          answerText: null
-        }
-      }
-    */
+    
     const [answers, setAnswers] = useState({});
 
     const [remainingSeconds, setRemainingSeconds] =
@@ -42,9 +35,7 @@ const StudentExamTakingPage = () => {
         loadExam();
     }, [examId]);
 
-    /*
-      Countdown
-    */
+    
     useEffect(() => {
 
         if (
@@ -76,9 +67,7 @@ const StudentExamTakingPage = () => {
 
     }, [remainingSeconds, loading]);
 
-    /*
-      Auto save local
-    */
+    
     useEffect(() => {
 
         if (!examId) {
@@ -143,17 +132,13 @@ const StudentExamTakingPage = () => {
 
             setQuestions(result.questions || []);
 
-            /*
-              Time
-            */
+            
             const seconds =
                 (result.durationMinutes || 0) * 60;
 
             setRemainingSeconds(seconds);
 
-            /*
-              Restore local answers
-            */
+            
             const savedAnswers =
                 localStorage.getItem(
                     `exam_answers_${examId}`
@@ -178,9 +163,7 @@ const StudentExamTakingPage = () => {
         }
     };
 
-    /*
-      Handle answer
-    */
+    
     const handleAnswerChange = (
         question,
         value
@@ -194,9 +177,7 @@ const StudentExamTakingPage = () => {
 
         switch (question.questionType) {
 
-            /*
-              Trắc nghiệm
-            */
+            
             case "MULTIPLE_CHOICE":
 
             case "LISTENING_CHOICE":
@@ -208,9 +189,7 @@ const StudentExamTakingPage = () => {
 
                 break;
 
-            /*
-              Điền
-            */
+            
             case "LISTENING_FILL_BLANK":
 
             case "WRITING_SHORT":
@@ -220,9 +199,7 @@ const StudentExamTakingPage = () => {
 
                 break;
 
-            /*
-              Sắp xếp
-            */
+            
             case "ARRANGE_SENTENCE":
 
                 answerData.answerText =
@@ -246,9 +223,7 @@ const StudentExamTakingPage = () => {
         }));
     };
 
-    /*
-      Count answered
-    */
+    
     const answeredCount = useMemo(() => {
 
         return questions.filter((q) => {
@@ -291,9 +266,7 @@ const StudentExamTakingPage = () => {
 
     }, [answeredCount, questions]);
 
-    /*
-      Time format
-    */
+    
     const formatTime = (seconds) => {
 
         const h =
@@ -313,9 +286,7 @@ const StudentExamTakingPage = () => {
         ].join(":");
     };
 
-    /*
-      Scroll
-    */
+    
     const scrollToQuestion = (
         questionId
     ) => {
@@ -334,9 +305,7 @@ const StudentExamTakingPage = () => {
         }
     };
 
-    /*
-      Build payload
-    */
+    
     const buildSubmitPayload = () => {
 
         return {
@@ -380,9 +349,7 @@ const StudentExamTakingPage = () => {
         };
     };
 
-    /*
-      Submit
-    */
+    
     const submitExam = async () => {
 
         if (submitting) {
@@ -407,9 +374,7 @@ const StudentExamTakingPage = () => {
         await doSubmit();
     };
 
-    /*
-      Auto submit
-    */
+    
     const autoSubmitExam =
         async () => {
 
@@ -424,9 +389,7 @@ const StudentExamTakingPage = () => {
             await doSubmit();
         };
 
-    /*
-      Submit API
-    */
+    
     const doSubmit = async () => {
 
         try {
@@ -483,16 +446,12 @@ const StudentExamTakingPage = () => {
             }
 
             console.log(result)
-            /*
-              Clear local
-            */
+            
             localStorage.removeItem(
                 `exam_answers_${examId}`
             );
 
-            /*
-              Go result
-            */
+            
             navigate(
                 `/student-exams/result/${result.attemptId}`
             );
@@ -519,7 +478,6 @@ const StudentExamTakingPage = () => {
 
     return (
 
-
         <div className="student-exam-taking-page">
 
             <div className="student-exam-layout">
@@ -528,20 +486,17 @@ const StudentExamTakingPage = () => {
 
                     <div className="student-exam-header-card">
 
-                        <div className="student-exam-header-top">
-                            <button
-                                className="student-exam-back-btn"
-                                onClick={() => navigate(-1)}
-                            >
-                                ← Quay lại
-                            </button>
-                        </div>
+                        <CourseBreadcrumb
+                            items={[
+                                studentHome,
+                                studentExams,
+                                { label: exam?.title || "Làm bài thi" },
+                            ]}
+                        />
 
                         <h1 className="student-exam-title">
                             {exam?.title}
                         </h1>
-
-
 
                         <div className="student-exam-meta">
 

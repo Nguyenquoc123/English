@@ -20,7 +20,6 @@ function DSKhoaHoc() {
   const [size, setSize] = useState(6);
   const [totalPages, setTotalPages] = useState(0);
 
-  // Dữ liệu mẫu để test giao diện khi chưa có backend
   const sampleCourses = [
     {
       courseId: 1,
@@ -124,14 +123,12 @@ function DSKhoaHoc() {
   ];
 
   useEffect(() => {
-    // Load cấp độ và danh sách khóa học khi mở trang
     loadLevels();
     loadCourses(0);
   }, []);
 
   const loadLevels = async () => {
     try {
-      // Nếu bạn đã có API levels thì mở đoạn này ra dùng
 
       const response = await fetch("http://localhost:8080/level/all-level");
       const data = await response.json();
@@ -140,8 +137,6 @@ function DSKhoaHoc() {
         setLevels(data);
       }
 
-
-      // setLevels(sampleLevels);
     } catch (err) {
       console.error(err);
       setLevels(sampleLevels);
@@ -226,7 +221,6 @@ function DSKhoaHoc() {
   return (
     <div className="course-page">
 
-
       <main className="course-container">
         <section className="filter-box">
           
@@ -263,11 +257,6 @@ function DSKhoaHoc() {
             </button>
           </form>
         </section>
-
-        {/* <section className="course-title-section">
-          <h1>Danh sách khóa học</h1>
-          <p>Các khóa học đang được mở trên hệ thống</p>
-        </section> */}
 
         {loading && <p className="status-text">Đang tải khóa học...</p>}
 
@@ -330,7 +319,6 @@ function DSKhoaHoc() {
           ))}
 
         </section>
-
 
       </main>
       {courses && <Page

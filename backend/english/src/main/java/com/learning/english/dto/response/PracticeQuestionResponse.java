@@ -20,10 +20,7 @@ public class PracticeQuestionResponse {
 
     private String mediaUrl;
 
-    /*
-        Dùng cho ARRANGE_SENTENCE.
-        Không trả correctText trực tiếp để tránh học viên xem đáp án.
-    */
+    
     private List<String> words;
 
     private BigDecimal defaultPoint;

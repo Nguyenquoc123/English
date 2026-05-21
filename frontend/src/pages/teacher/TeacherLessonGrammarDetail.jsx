@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  teacherCourses,
+  teacherCourseDetail,
+  teacherLessonDetail,
+  teacherLessonGrammars,
+} from "../../utils/breadcrumbPaths";
 
 function TeacherLessonGrammarDetail() {
   const navigate = useNavigate();
@@ -30,15 +37,15 @@ function TeacherLessonGrammarDetail() {
 
   return (
     <div className="teacher-lesson-detail-page">
-      <button
-        className="lesson-detail-back"
-        onClick={() =>
-          navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/grammars`)
-        }
-      >
-        <i className="bi bi-arrow-left"></i>
-        Quay lại danh sách ngữ pháp
-      </button>
+      <CourseBreadcrumb
+        items={[
+          teacherCourses,
+          teacherCourseDetail(courseId),
+          teacherLessonDetail(courseId, lessonId),
+          teacherLessonGrammars(courseId, lessonId),
+          { label: "Chi tiết ngữ pháp" },
+        ]}
+      />
 
       <div className="info-card">
         <h2>{grammar.title}</h2>

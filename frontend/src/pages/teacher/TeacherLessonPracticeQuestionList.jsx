@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  teacherCourses,
+  teacherCourseDetail,
+  teacherLessonDetail,
+  teacherLessonPractice,
+} from "../../utils/breadcrumbPaths";
 
 function TeacherLessonPracticeQuestionList() {
   const navigate = useNavigate();
@@ -37,15 +44,15 @@ function TeacherLessonPracticeQuestionList() {
     <div className="teacher-lesson-detail-page">
       <div className="lesson-detail-heading">
         <div>
-          <button
-            className="lesson-detail-back"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/practice`)
-            }
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại quản lý ôn tập
-          </button>
+          <CourseBreadcrumb
+            items={[
+              teacherCourses,
+              teacherCourseDetail(courseId),
+              teacherLessonDetail(courseId, lessonId),
+              teacherLessonPractice(courseId, lessonId),
+              { label: `Câu hỏi: ${practiceType}` },
+            ]}
+          />
 
           <h2>Danh sách câu hỏi: {practiceType}</h2>
           <p>Hiển thị các câu hỏi thuộc dạng ôn tập đã chọn.</p>

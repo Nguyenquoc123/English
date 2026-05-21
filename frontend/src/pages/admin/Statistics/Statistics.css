@@ -1,8 +1,7 @@
 .admin-statistics-page {
-  /* inherits AdminLayout container */
+
 }
 
-/* Stat icon shared with TransactionManagement */
 .stats-icon {
   width: 52px;
   height: 52px;
@@ -14,7 +13,6 @@
   flex-shrink: 0;
 }
 
-/* Bar chart */
 .stats-bar-chart {
   display: flex;
   align-items: flex-end;

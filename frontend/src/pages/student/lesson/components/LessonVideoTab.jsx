@@ -18,10 +18,7 @@ function LessonVideoTab({ API_BASE, lessonId, getToken }) {
 
       const token = getToken();
 
-      /*
-        API gợi ý:
-        GET /videos/{lessonId}/lessons
-      */
+      
 
       const response = await fetch(`${API_BASE}/video/${lessonId}/lessons`, {
         headers: {

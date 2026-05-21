@@ -20,9 +20,6 @@ function getUserFromToken() {
 const NAV_LINKS = [
   { to: '/', label: 'Trang chủ', end: true },
   { to: '/danh-sach-khoa-hoc', label: 'Khoá học' },
-  { to: '/free-lessons', label: 'Lesson miễn phí' },
-  { to: '/exams', label: 'Kỳ thi' },
-  { to: '/contact', label: 'Liên hệ' },
 ];
 
 export default function Navbar() {
@@ -34,7 +31,6 @@ export default function Navbar() {
 
   useEffect(() => { setUser(getUserFromToken()); }, []);
 
-  // Đóng dropdown khi click ngoài
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target))
@@ -58,6 +54,7 @@ export default function Navbar() {
 
   const isTeacher  = user?.role?.includes('teacher');
   const isAdmin    = user?.role?.includes('admin');
+  const isStudent  = user && !isTeacher && !isAdmin;
   const initials   = user?.username?.slice(0, 2).toUpperCase() || 'U';
   const roleLabel  = isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : 'Học viên';
 
@@ -65,13 +62,11 @@ export default function Navbar() {
     <header className="nb-header">
       <div className="nb-container">
 
-        {/* ── Logo ── */}
         <Link to="/" className="nb-logo" onClick={closeAll}>
           <span className="nb-logo-icon"><i className="bi bi-mortarboard-fill" /></span>
           <span className="nb-logo-text">English<span>LMS</span></span>
         </Link>
 
-        {/* ── Nav (desktop + mobile dropdown) ── */}
         <nav className={`nb-nav ${mobileOpen ? 'nb-nav-open' : ''}`}>
           {NAV_LINKS.map(({ to, label, end }) => (
             <NavLink
@@ -83,8 +78,6 @@ export default function Navbar() {
             </NavLink>
           ))}
 
-
-          {/* ── Mobile-only auth section ── */}
           {mobileOpen && (
             <div className="nb-mobile-auth">
               {user ? (
@@ -103,6 +96,11 @@ export default function Navbar() {
                   <Link to="/student/change-password" className="nb-mobile-link" onClick={closeAll}>
                     <i className="bi bi-key" /> Đổi mật khẩu
                   </Link>
+                  {isStudent && (
+                    <Link to="/student/khoa-hoc-da-mua" className="nb-mobile-link" onClick={closeAll}>
+                      <i className="bi bi-journal-bookmark" /> Khóa học đã mua
+                    </Link>
+                  )}
                   {!isTeacher && !isAdmin && (
                     <Link to="/student/teacher-register" className="nb-mobile-link" onClick={closeAll}>
                       <i className="bi bi-pencil-square" /> Đăng ký làm giáo viên
@@ -137,7 +135,6 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* ── Auth desktop ── */}
         <div className="nb-auth">
           {user ? (
             <div className="nb-avatar-wrap" ref={dropdownRef}>
@@ -153,7 +150,6 @@ export default function Navbar() {
 
               {dropdownOpen && (
                 <div className="nb-dropdown">
-                  {/* Header */}
                   <div className="nb-dropdown-header">
                     <span className="nb-avatar nb-avatar-lg">{initials}</span>
                     <div>
@@ -163,7 +159,6 @@ export default function Navbar() {
                   </div>
                   <div className="nb-dropdown-divider" />
 
-                  {/* Tài khoản */}
                   <p className="nb-dropdown-section">Tài khoản</p>
                   <Link to="/student/profile" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-person" /> Hồ sơ cá nhân
@@ -171,8 +166,12 @@ export default function Navbar() {
                   <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-key" /> Đổi mật khẩu
                   </Link>
+                  {isStudent && (
+                    <Link to="/student/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
+                      <i className="bi bi-journal-bookmark" /> Khóa học đã mua
+                    </Link>
+                  )}
 
-                  {/* Đăng ký GV (student only) */}
                   {!isTeacher && !isAdmin && (
                     <>
                       <div className="nb-dropdown-divider" />
@@ -183,7 +182,6 @@ export default function Navbar() {
                     </>
                   )}
 
-                  {/* Teacher */}
                   {isTeacher && (
                     <>
                       <div className="nb-dropdown-divider" />
@@ -197,7 +195,6 @@ export default function Navbar() {
                     </>
                   )}
 
-                  {/* Admin */}
                   {isAdmin && (
                     <>
                       <div className="nb-dropdown-divider" />
@@ -223,7 +220,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* ── Hamburger ── */}
         <button
           className={`nb-hamburger ${mobileOpen ? 'nb-hamburger-open' : ''}`}
           onClick={() => setMobileOpen(o => !o)}
@@ -233,6 +229,7 @@ export default function Navbar() {
         </button>
 
       </div>
+
     </header>
   );
 }

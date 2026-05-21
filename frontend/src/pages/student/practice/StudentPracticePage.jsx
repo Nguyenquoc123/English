@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  studentHome,
+  studentCourses,
+  studentCourseDetail,
+  studentLesson,
+} from "../../../utils/breadcrumbPaths";
 import PracticeQuestionCard from "./components/PracticeQuestionCard";
 import FlashcardPractice from "./components/FlashcardPractice";
 import "./StudentPracticePage.css";
@@ -95,30 +102,7 @@ function StudentPracticePage() {
         return;
       }
 
-      /*
-        API gợi ý:
-        GET /lessons/{lessonId}/practice/{practiceType}/student
-
-        Response mẫu:
-        {
-          "lessonId": 2,
-          "lessonTitle": "Daily Activities",
-          "practiceType": "MULTIPLE_CHOICE",
-          "questions": [
-            {
-              "questionId": 1,
-              "questionType": "MULTIPLE_CHOICE",
-              "content": "Choose the correct answer...",
-              "mediaUrl": null,
-              "correctText": null,
-              "options": [
-                { "optionId": 1, "optionText": "have" },
-                { "optionId": 2, "optionText": "has" }
-              ]
-            }
-          ]
-        }
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/practice-configs/${lessonId}/practice/${practiceType}/student`,
@@ -303,14 +287,15 @@ function StudentPracticePage() {
   return (
     <div className="student-practice-page">
       <div className="student-practice-container">
-        <button
-          type="button"
-          className="practice-back-link"
-          onClick={() => navigate(`/khoa-hoc/${courseId}/lessons/${lessonId}`)}
-        >
-          <i className="bi bi-arrow-left"></i>
-          Quay lại lesson
-        </button>
+        <CourseBreadcrumb
+          items={[
+            studentHome,
+            studentCourses,
+            studentCourseDetail(courseId),
+            studentLesson(courseId, lessonId),
+            { label: "Ôn tập" },
+          ]}
+        />
 
         <div className="practice-header">
           <div>

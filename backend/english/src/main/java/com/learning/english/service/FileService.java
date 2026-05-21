@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileService {
 
-    // uploads nằm cùng cấp với src, pom.xml
     private final String ROOT_DIR = System.getProperty("user.dir") + "/uploads/";
 
     public String saveFile(MultipartFile file, String subFolder) throws IOException {

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherVideoCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherVideoCreate() {
   const navigate = useNavigate();
@@ -133,7 +135,6 @@ function TeacherVideoCreate() {
         {
           method: "POST",
           headers: {
-            // Không set Content-Type khi dùng FormData
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: formData,
@@ -192,16 +193,9 @@ function TeacherVideoCreate() {
     <div className="video-create-page">
       <div className="video-create-heading">
         <div>
-          <button
-            type="button"
-            className="video-back-link"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)
-            }
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonTrail(courseId, lessonId, "Đăng video")}
+          />
 
           <h2>Đăng video bài học</h2>
 
@@ -390,8 +384,7 @@ function TeacherVideoCreate() {
                 }
                 disabled={loading}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

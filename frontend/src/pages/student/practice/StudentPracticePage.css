@@ -445,7 +445,6 @@
 	color: #6b7280;
 }
 
-/* Flashcard */
 .flashcard-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 310px;

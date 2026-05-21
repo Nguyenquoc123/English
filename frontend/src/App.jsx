@@ -14,7 +14,7 @@ import TeacherCourseUpdate from "./pages/teacher/TeacherCourseUpdate.jsx";
 import TeacherLessonList from "./pages/teacher/TeacherLessonList.jsx";
 import TeacherLessonCreate from "./pages/teacher/TeacherLessonCreate.jsx";
 import TeacherLessonDetail from "./pages/teacher/TeacherLessonDetail.jsx";
-import Navbar from "./components/layout/Navbar/Navbar.jsx";
+import AppShell from "./components/layout/AppShell/AppShell.jsx";
 import TeacherVocabularyCreate from "./pages/teacher/TeacherVocabularyCreate.jsx";
 import TeacherGrammarCreate from "./pages/teacher/TeacherGrammarCreate.jsx";
 import TeacherVideoCreate from "./pages/teacher/TeacherVideoCreate.jsx";
@@ -27,7 +27,6 @@ import TeacherLessonPracticeOverview from "./pages/teacher/TeacherLessonPractice
 import TeacherLessonPracticeQuestionList from "./pages/teacher/TeacherLessonPracticeQuestionList.jsx";
 import TeacherLessonGrammarList from "./pages/teacher/TeacherLessonGrammarList.jsx";
 
-// Import các trang course review đã refactor
 import CourseManagement from "./pages/admin/CourseManagement/CourseManagement";
 import CourseReviewDetail from "./pages/admin/CourseReviewDetail/CourseReviewDetail";
 import LessonReviewList from "./pages/admin/LessonReviewList/LessonReviewList";
@@ -42,6 +41,7 @@ import LessonPracticeList from "./pages/admin/LessonPracticeList/LessonPracticeL
 import StudentCourseDetail from "./pages/student/StudentCourseDetail.jsx";
 import StudentCoursePurchase from "./pages/student/StudentCoursePurchase.jsx";
 import StudentProfile from "./pages/student/StudentProfile.jsx";
+import KhoaHocDaMua from "./pages/student/KhoaHocDaMua.jsx";
 import StudentProfileUpdate from "./pages/student/StudentProfileUpdate.jsx";
 import StudentChangePassword from "./pages/student/StudentChangePassword.jsx";
 import StudentTeacherRegister from "./pages/student/StudentTeacherRegister.jsx";
@@ -94,83 +94,82 @@ function App() {
         <Route
           path="/danh-sach-khoa-hoc"
           element={
-            <>
-              <Navbar />
+            <AppShell>
               <DSKhoaHoc />
-            </>
+            </AppShell>
           }
         />
 
         <Route path="/khoa-hoc/:courseId" element={
-          <>
-            <Navbar />
+          <AppShell>
             <StudentCourseDetail />
-          </>
+          </AppShell>
         } />
 
         <Route path="/courses/:courseId/purchase" element={
-          <>
-            <Navbar />
+          <AppShell>
             <StudentCoursePurchase />
-          </>
+          </AppShell>
         } />
 
-        {/* Student lesson & practice routes */}
         <Route path="/khoa-hoc/:courseId/lessons/:lessonId" element={
-          <><Navbar /><StudentLessonDetail /></>
+          <AppShell><StudentLessonDetail /></AppShell>
         } />
         <Route path="/khoa-hoc/:courseId/lessons/:lessonId/practice/:practiceType" element={
-          <><Navbar /><StudentPracticePage /></>
+          <AppShell><StudentPracticePage /></AppShell>
         } />
         <Route path="/khoa-hoc/:courseId/lessons/:lessonId/practice-result/:attemptId" element={
-          <><Navbar /><StudentPracticeResultPage /></>
+          <AppShell><StudentPracticeResultPage /></AppShell>
         } />
 
-        {/* Student exam */}
-        <Route path="/exams" element={<><Navbar /><StudentExamListPage /></>} />
+        <Route path="/exams" element={<AppShell><StudentExamListPage /></AppShell>} />
 
         <Route path="/student/profile" element={
-          <>
-            <Navbar />
+          <AppShell>
             <StudentProfile />
-          </>
+          </AppShell>
         } />
         <Route path="/student/profile/update" element={
-          <>
-            <Navbar />
+          <AppShell>
             <StudentProfileUpdate />
-          </>
+          </AppShell>
         } />
 
-        <Route path="/student/change-password" element={<>
-          <Navbar />
-          <StudentChangePassword />
-        </>} />
+        <Route path="/student/change-password" element={
+          <AppShell>
+            <StudentChangePassword />
+          </AppShell>
+        } />
 
-        <Route path="/student/teacher-register" element={<>
-          <Navbar />
-          <StudentTeacherRegister />
-        </>} />
+        <Route path="/student/khoa-hoc-da-mua" element={
+          <AppShell>
+            <KhoaHocDaMua />
+          </AppShell>
+        } />
+
+        <Route path="/student/teacher-register" element={
+          <AppShell>
+            <StudentTeacherRegister />
+          </AppShell>
+        } />
 
         <Route
           path="/student/teacher-register/result"
-          element={<>
-            <Navbar />
-            <StudentTeacherRegisterResult />
-          </>}
+          element={
+            <AppShell>
+              <StudentTeacherRegisterResult />
+            </AppShell>
+          }
         />
 
         <Route
           path="exams/:examId/"
           element={
-            <>
-              <Navbar />
+            <AppShell>
               <StudentExamTakingPage />
-            </>
+            </AppShell>
           }
         />
-
-
 
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
 
@@ -236,7 +235,6 @@ function App() {
             element={<TeacherExamQuestionCreate />}
           />
 
-
           <Route path="profile" element={<h1>Hồ sơ giáo viên</h1>} />
           <Route path="bank" element={<h1>Tài khoản ngân hàng</h1>} />
           <Route path="lessons" element={<h1>Quản lý lesson</h1>} />
@@ -264,7 +262,6 @@ function App() {
           <Route path="users" element={<UserManagement />} />
           <Route path="teachers" element={<TeacherApproval />} />
 
-          {/* Danh sách và review khóa học */}
           <Route path="courses" element={<CourseManagement />} />
           <Route path="courses/:courseId/review" element={<CourseReviewDetail />} />
           <Route path="courses/:courseId/lessons" element={<LessonReviewList />} />
@@ -276,7 +273,6 @@ function App() {
           <Route path="courses/:courseId/lessons/:lessonId/practice" element={<LessonPracticeOverview />} />
           <Route path="courses/:courseId/lessons/:lessonId/practice/:practiceType" element={<LessonPracticeList />} />
 
-          {/* Duyệt khóa học (chờ duyệt) */}
           <Route path="course-approval" element={<CourseApproval />} />
 
           <Route path="withdrawals" element={<Withdrawal />} />

@@ -102,10 +102,7 @@ public interface PracticeConfigMapper {
 	List<PracticeQuestionResponse> toPracticeQuestionResponses(List<LessonQuestion> lessonQuestions);
 	List<PracticeQuestionResponse> toExamQuestionResponses(List<ExamQuestion> examQuestions);
 
-	/*
-	 * Sau khi map xong, nếu là ARRANGE_SENTENCE thì tạo danh sách từ từ
-	 * correctText. Không trả correctText về frontend để tránh lộ đáp án.
-	 */
+	
 	@AfterMapping
 	default void afterMapQuestion(LessonQuestion lessonQuestion, @MappingTarget PracticeQuestionResponse response) {
 		if (lessonQuestion == null || lessonQuestion.getQuestion() == null) {
@@ -118,9 +115,7 @@ public interface PracticeConfigMapper {
 			response.setWords(buildShuffledWords(question.getCorrectText()));
 		}
 
-		/*
-		 * Với các dạng không cần option thì trả options rỗng cho frontend dễ xử lý.
-		 */
+		
 		if (response.getOptions() == null) {
 			response.setOptions(List.of());
 		}

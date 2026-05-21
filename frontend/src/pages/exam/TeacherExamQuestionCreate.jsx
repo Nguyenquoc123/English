@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherExamQuestionCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherExams, teacherExamDetail } from "../../utils/breadcrumbPaths";
 
 function TeacherExamQuestionCreate() {
     const navigate = useNavigate();
@@ -50,7 +52,6 @@ function TeacherExamQuestionCreate() {
     const [defaultPoint, setDefaultPoint] = useState(1);
 
     const [point, setPoint] = useState(1);
-
 
     const [mediaFile, setMediaFile] = useState(null);
     const [mediaFileName, setMediaFileName] = useState("");
@@ -480,14 +481,13 @@ function TeacherExamQuestionCreate() {
             <div className="exam-question-create-container">
                 <div className="exam-question-create-heading">
                     <div>
-                        <button
-                            type="button"
-                            className="question-back-link"
-                            onClick={() => navigate(`/teacher/exams/${examId}`)}
-                        >
-                            <i className="bi bi-arrow-left"></i>
-                            Quay lại chi tiết kỳ thi
-                        </button>
+                        <CourseBreadcrumb
+                            items={[
+                                teacherExams,
+                                teacherExamDetail(examId),
+                                { label: "Thêm câu hỏi" },
+                            ]}
+                        />
 
                         <h2>Thêm câu hỏi vào kỳ thi</h2>
 
@@ -879,8 +879,7 @@ function TeacherExamQuestionCreate() {
                                     onClick={() => navigate(`/teacher/exams/${examId}`)}
                                     disabled={saving}
                                 >
-                                    <i className="bi bi-arrow-left me-1"></i>
-                                    Quay lại
+                                    Hủy
                                 </button>
                             </div>
                         </div>

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherCourseDetail.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherCourses } from "../../utils/breadcrumbPaths";
 import CourseDetailHero from "../../compenents/course-detail/CourseDetailHero";
 import TeacherCourseActions from "../../compenents/course-detail/TeacherCourseActions";
 import CourseMetricCards from "../../compenents/course-detail/CourseMetricCards";
 import CourseDetailTabs from "../../compenents/course-detail/CourseDetailTabs";
 import CourseOverviewPanel from "../../compenents/course-detail/CourseOverviewPanel";
 import TeacherCourseApprovalPanel from "../../compenents/course-detail/TeacherCourseApprovalPanel";
-
 
 function TeacherCourseDetail() {
   const navigate = useNavigate();
@@ -186,10 +187,9 @@ function TeacherCourseDetail() {
     <div className="course-detail-page">
       <div className="detail-page-header">
         <div>
-          <button className="back-link" onClick={() => navigate(-1)}>
-            <i className="bi bi-arrow-left"></i>
-            Quay lại
-          </button>
+          <CourseBreadcrumb
+            items={[teacherCourses, { label: "Chi tiết khóa học" }]}
+          />
 
           <h2>Xem chi tiết khóa học</h2>
           <p>Theo dõi thông tin khóa học và trạng thái duyệt.</p>

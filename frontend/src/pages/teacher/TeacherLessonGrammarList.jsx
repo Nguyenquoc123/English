@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherLessonGrammarList() {
   const navigate = useNavigate();
@@ -30,13 +32,9 @@ function TeacherLessonGrammarList() {
     <div className="teacher-lesson-detail-page">
       <div className="lesson-detail-heading">
         <div>
-          <button
-            className="lesson-detail-back"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonTrail(courseId, lessonId, "Quản lý ngữ pháp")}
+          />
 
           <h2>Quản lý ngữ pháp</h2>
           <p>Danh sách nội dung ngữ pháp. Nội dung HTML dài sẽ được xem ở trang chi tiết riêng.</p>

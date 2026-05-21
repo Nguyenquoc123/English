@@ -38,23 +38,19 @@ function Login() {
   };
 
   return (
-    <div className="dn-page">
+    <div className="dn-page auth-split-page">
 
-      {/* ══ BÊN TRÁI ══ */}
-      <div className="dn-left">
-        <img src={anhNen} alt="English LMS" className="dn-left-img" />
+      <div className="dn-left auth-split-left">
+        <img src={anhNen} alt="English LMS" className="dn-left-img auth-split-img" />
       </div>
 
-      {/* ══ BÊN PHẢI ══ */}
-      <div className="dn-right">
+      <div className="dn-right auth-split-right">
         <div className="dn-card">
 
-          {/* Back button */}
           <Link to="/" className="dn-back">
             <i className="bi bi-arrow-left" /> Trang chủ
           </Link>
 
-          {/* Card logo */}
           <div className="dn-card-logo">
             <span className="dn-logo-icon-sm">
               <i className="bi bi-mortarboard-fill" />
@@ -67,7 +63,6 @@ function Login() {
 
           <form onSubmit={handleLogin} noValidate>
 
-            {/* Username */}
             <div className="dn-field">
               <label className="dn-label">Tên đăng nhập</label>
               <div className={`dn-input-wrap ${error && !taiKhoan ? 'dn-input-err' : ''}`}>
@@ -84,7 +79,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Password */}
             <div className="dn-field">
               <div className="dn-label-row">
                 <label className="dn-label">Mật khẩu</label>
@@ -111,7 +105,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Remember */}
             <label className="dn-remember">
               <input
                 type="checkbox"
@@ -121,7 +114,6 @@ function Login() {
               <span>Ghi nhớ đăng nhập</span>
             </label>
 
-            {/* Error */}
             {error && (
               <div className="dn-error">
                 <i className="bi bi-exclamation-circle-fill" />
@@ -129,7 +121,6 @@ function Login() {
               </div>
             )}
 
-            {/* Submit */}
             <button type="submit" className="dn-btn-submit" disabled={loading}>
               {loading
                 ? <><span className="dn-spinner" /> Đang đăng nhập...</>
@@ -138,21 +129,6 @@ function Login() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="dn-divider"><span>Hoặc</span></div>
-
-          {/* Google */}
-          <button type="button" className="dn-btn-google" disabled>
-            <svg width="18" height="18" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.85l6.08-6.08C34.46 3.1 29.53 1 24 1 14.82 1 6.97 6.48 3.32 14.36l7.1 5.52C12.18 13.5 17.6 9.5 24 9.5z" />
-              <path fill="#4285F4" d="M46.52 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.7c-.55 2.97-2.2 5.48-4.67 7.17l7.18 5.57C43.44 37.3 46.52 31.36 46.52 24.5z" />
-              <path fill="#FBBC05" d="M10.42 28.12A14.6 14.6 0 0 1 9.5 24c0-1.43.2-2.82.55-4.12l-7.1-5.52A23.94 23.94 0 0 0 0 24c0 3.86.93 7.5 2.58 10.72l7.84-6.6z" />
-              <path fill="#34A853" d="M24 47c5.53 0 10.17-1.83 13.56-4.97l-7.18-5.57C28.56 37.9 26.4 38.5 24 38.5c-6.4 0-11.82-4-13.58-9.88l-7.84 6.6C6.97 43.52 14.82 47 24 47z" />
-            </svg>
-            Đăng nhập với Google
-          </button>
-
-          {/* Register */}
           <p className="dn-register">
             Chưa có tài khoản?{' '}
             <Link to="/dang-ky">Đăng ký</Link>

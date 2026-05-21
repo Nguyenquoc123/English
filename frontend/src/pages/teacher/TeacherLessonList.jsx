@@ -1,12 +1,15 @@
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherLessonList.css";
 import LessonListHeader from "../../compenents/lesson-list/LessonListHeader";
+import {
+  teacherCourses,
+  teacherCourseDetail,
+} from "../../utils/breadcrumbPaths";
 import LessonStatsCards from "../../compenents/lesson-list/LessonStatsCards";
 import LessonFilterBox from "../../compenents/lesson-list/LessonFilterBox";
 import LessonTable from "../../compenents/lesson-list/LessonTable";
 import TeacherLessonActions from "../../compenents/lesson-list/TeacherLessonActions";
 import useCourseLessons from "../../hooks/useCourseLessons";
-
 
 function TeacherLessonList() {
   const navigate = useNavigate();
@@ -56,11 +59,7 @@ function TeacherLessonList() {
     if (!ok) return;
 
     try {
-      /*
-        Gợi ý API:
-        DELETE /teacher/courses/{courseId}/lessons/{lessonId}
-        hoặc PUT status Hidden
-      */
+      
 
       setLessons((prev) =>
         prev.map((lesson) =>
@@ -91,7 +90,11 @@ function TeacherLessonList() {
         title="Danh sách bài học của khóa học"
         description="Quản lý các bài học thuộc khóa học, theo dõi trạng thái và cập nhật nội dung lesson."
         course={course}
-        onBack={() => navigate(`/teacher/courses/${courseId}`)}
+        breadcrumbItems={[
+          teacherCourses,
+          teacherCourseDetail(courseId),
+          { label: "Danh sách bài học" },
+        ]}
         rightActions={
           <button
             type="button"

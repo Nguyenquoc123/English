@@ -1,8 +1,6 @@
 package com.learning.english.dto.response;
 
-
 import lombok.*;
-
 
 @Getter
 @Setter

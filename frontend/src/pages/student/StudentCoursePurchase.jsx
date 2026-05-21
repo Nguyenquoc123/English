@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./StudentCoursePurchase.css";
 import { getFileUrl } from "../../utils/fileurl";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+    studentCourses,
+    studentCourseDetail,
+} from "../../utils/breadcrumbPaths";
 
 function StudentCoursePurchase() {
     const navigate = useNavigate();
@@ -68,7 +73,6 @@ function StudentCoursePurchase() {
             const result = data.result || data.data || data;
 
             if (result.isEnrolled) {
-                // alert("Bạn đã sở hữu khóa học này");
                 navigate(`/khoa-hoc/${courseId}`);
                 return;
             }
@@ -81,8 +85,6 @@ function StudentCoursePurchase() {
             setLoading(false);
         }
     };
-
-
 
     const handleCreatePayment = async () => {
         try {
@@ -216,13 +218,13 @@ function StudentCoursePurchase() {
 
     return (
         <div className="student-purchase-page">
-            <div className="purchase-breadcrumb">
-                <span>Khóa học</span>
-                <i className="bi bi-chevron-right"></i>
-                <span>Chi tiết khóa học</span>
-                <i className="bi bi-chevron-right"></i>
-                <strong>Mua khóa học</strong>
-            </div>
+            <CourseBreadcrumb
+                items={[
+                    studentCourses,
+                    studentCourseDetail(courseId),
+                    { label: "Mua khóa học" },
+                ]}
+            />
 
             <div className="purchase-heading">
                 <h2>Mua khóa học</h2>
@@ -341,7 +343,6 @@ function StudentCoursePurchase() {
                                 <i className="bi bi-check-circle-fill"></i>
                             </button>
 
-
                         </div>
 
                         <div className="payment-summary">
@@ -393,15 +394,13 @@ function StudentCoursePurchase() {
                             )}
                         </button>
 
-
                         <button
                             type="button"
                             className="btn btn-outline-primary w-100 mt-2"
-                            onClick={() => navigate(`/courses/${courseId}`)}
+                            onClick={() => navigate(`/khoa-hoc/${courseId}`)}
                             disabled={paying}
                         >
-                            <i className="bi bi-arrow-left me-1"></i>
-                            Quay lại
+                            Về chi tiết khóa học
                         </button>
                     </div>
                 </div>
@@ -489,14 +488,6 @@ function StudentCoursePurchase() {
                                 Đóng
                             </button>
 
-                            {/* <button
-                                type="button"
-                                className="btn btn-outline-primary"
-                                onClick={() => window.open(paymentInfo.qrUrl, "_blank")}
-                            >
-                                <i className="bi bi-box-arrow-up-right me-1"></i>
-                                Mở QR
-                            </button> */}
                         </div>
                     </div>
                 </div>

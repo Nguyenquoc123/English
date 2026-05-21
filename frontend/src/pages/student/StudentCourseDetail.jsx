@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./StudentCourseDetail.css";
 import { getFileUrl } from "../../utils/fileurl";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentCourses } from "../../utils/breadcrumbPaths";
 import StudentExamListSection from "./exam/components/StudentExamListSection";
 
 function StudentCourseDetail() {
@@ -71,9 +73,6 @@ function StudentCourseDetail() {
             }
 
             if (!response.ok) {
-                // setError(data?.message || "Không thể tải chi tiết khóa học");
-                // if(response.status === 401)
-                //     navigate("/dang-nhap")
                 return;
             }
             console.log(data)
@@ -261,13 +260,13 @@ function StudentCourseDetail() {
 
     return (
         <div className="student-course-detail-page">
-            <div className="course-breadcrumb">
-                <span>Trang chủ</span>
-                <i className="bi bi-chevron-right"></i>
-                <span>Khóa học</span>
-                <i className="bi bi-chevron-right"></i>
-                <strong>Chi tiết khóa học</strong>
-            </div>
+            <CourseBreadcrumb
+                items={[
+                    studentHome,
+                    studentCourses,
+                    { label: "Chi tiết khóa học" },
+                ]}
+            />
 
             <div className="course-hero-section">
                 <div className="row g-4 align-items-stretch">
@@ -348,26 +347,6 @@ function StudentCourseDetail() {
                                     </button>
                                 )}
 
-                                {/* <button
-                                    className="btn btn-outline-primary px-4"
-                                    onClick={() => setActiveTab("lessons")}
-                                >
-                                    <i className="bi bi-list-task me-1"></i>
-                                    Xem bài học
-                                </button> */}
-
-                                {/* <button
-                                    className="btn btn-outline-primary px-4"
-                                    onClick={() => setActiveTab("exams")}
-                                >
-                                    <i className="bi bi-clipboard-check me-1"></i>
-                                    Xem kỳ thi
-                                </button> */}
-
-                                {/* <button className="btn btn-light" onClick={() => navigate(-1)}>
-                                    <i className="bi bi-arrow-left me-1"></i>
-                                    Quay lại
-                                </button> */}
                             </div>
 
                             <div className="course-quick-stats mt-4">

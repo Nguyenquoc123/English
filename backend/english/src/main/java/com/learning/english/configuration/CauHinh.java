@@ -13,25 +13,4 @@ public class CauHinh implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "images/");
-
-        registry.addResourceHandler("/videos/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "videos/");
-
-        registry.addResourceHandler("/audios/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "audios/");
-
-        registry.addResourceHandler("/thumbnails/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "thumbnails/")
-                .setCachePeriod(3600);
-
-        registry.addResourceHandler("/certificates/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT + "certificates/")
-                .setCachePeriod(3600);
-
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + UPLOAD_ROOT)
-                .setCachePeriod(3600);
-    }
-}
+        registry.addResourceHandler("/images
