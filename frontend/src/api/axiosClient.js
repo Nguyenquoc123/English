@@ -18,6 +18,7 @@ axiosClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
+      localStorage.removeItem("english_token");
       window.location.href = "/dang-nhap";
     }
     return Promise.reject(error);

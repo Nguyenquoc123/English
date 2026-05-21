@@ -17,7 +17,8 @@ function KhoaHocDaMua() {
   }, []);
 
   const loadCourses = async () => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("english_token") || localStorage.getItem("token");
     if (!token) {
       navigate("/dang-nhap");
       return;

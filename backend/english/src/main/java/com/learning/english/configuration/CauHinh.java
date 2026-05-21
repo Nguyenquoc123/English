@@ -8,9 +8,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CauHinh implements WebMvcConfigurer {
 
     private static final String UPLOAD_ROOT =
-            System.getProperty("user.dir") + "/uploads/";
+            "file:" + System.getProperty("user.dir").replace("\\", "/") + "/uploads/";
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
-        registry.addResourceHandler("/images
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations(UPLOAD_ROOT + "images/");
+        registry.addResourceHandler("/videos/**")
+                .addResourceLocations(UPLOAD_ROOT + "videos/");
+        registry.addResourceHandler("/audios/**")
+                .addResourceLocations(UPLOAD_ROOT + "audios/");
+        registry.addResourceHandler("/thumbnails/**")
+                .addResourceLocations(UPLOAD_ROOT + "thumbnails/")
+                .setCachePeriod(3600);
+        registry.addResourceHandler("/certificates/**")
+                .addResourceLocations(UPLOAD_ROOT + "certificates/")
+                .setCachePeriod(3600);
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(UPLOAD_ROOT)
+                .setCachePeriod(3600);
+    }
+}
