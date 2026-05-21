@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "./CourseCard.css";
+import { getFileUrl } from "../../utils/fileurl";
 
 const LEVEL = {
   1: { label: "Sơ cấp", bg: "#dbeafe", color: "#1d4ed8" },
@@ -18,7 +19,7 @@ export default function CourseCard({ course }) {
     <Link to={`/khoa-hoc/${course.courseId}`} className="course-card">
       <div className="course-card-thumb">
         <img
-          src={course.thumbnailUrl || "/placeholder-course.jpg"}
+          src={getFileUrl(course.thumbnailUrl) || "/placeholder-course.jpg"}
           alt={course.title}
         />
         <span
@@ -32,14 +33,14 @@ export default function CourseCard({ course }) {
       <div className="course-card-body">
         <h3 className="course-card-title">{course.title}</h3>
         <p className="course-card-teacher">👨‍🏫 {course.teacherName}</p>
-        <p className="course-card-desc">{course.description}</p>
+        <p className="course-card-desc">{course.shortDescription}</p>
 
         <div className="course-card-footer">
           {course.courseType === "Free" ? (
             <span className="course-card-free">Miễn phí</span>
           ) : (
             <span className="course-card-price">
-              {Number(course.price).toLocaleString("vi-VN")}đ
+              {Number(course.price).toLocaleString("vi-VN")} đ
             </span>
           )}
         </div>

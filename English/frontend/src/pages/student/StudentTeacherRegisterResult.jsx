@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentTeacherRegisterResult.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 
 function StudentTeacherRegisterResult() {
   const navigate = useNavigate();
@@ -185,14 +187,9 @@ function StudentTeacherRegisterResult() {
     return (
       <div className="teacher-register-result-page">
         <div className="result-container">
-          <button
-            type="button"
-            className="result-back-link"
-            onClick={() => navigate("/student/profile")}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại
-          </button>
+          <CourseBreadcrumb
+            items={[studentHome, studentProfile, { label: "Kết quả đăng ký" }]}
+          />
 
           <div className="alert alert-danger">{error}</div>
 
@@ -227,16 +224,11 @@ function StudentTeacherRegisterResult() {
   return (
     <div className="teacher-register-result-page">
       <div className="result-container">
-        <div className="result-heading">
-          <button
-            type="button"
-            className="result-back-link"
-            onClick={() => navigate("/student/profile")}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại
-          </button>
+        <CourseBreadcrumb
+          items={[studentHome, studentProfile, { label: "Kết quả đăng ký" }]}
+        />
 
+        <div className="result-heading">
           <div className="result-heading-row">
             <div>
               <h2>Kết quả đăng ký trở thành giáo viên</h2>
@@ -380,6 +372,11 @@ function StudentTeacherRegisterResult() {
                 <div>
                   <span>Email</span>
                   <strong>{result.email || "--"}</strong>
+                </div>
+
+                <div>
+                  <span>Số điện thoại</span>
+                  <strong>{result.phone || "--"}</strong>
                 </div>
 
                 <div>

@@ -1,7 +1,5 @@
 package com.learning.english.entity;
 
-
-
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

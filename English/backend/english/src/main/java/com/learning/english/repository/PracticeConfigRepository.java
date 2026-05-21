@@ -12,10 +12,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PracticeConfigRepository extends JpaRepository<LessonPracticeConfig, Long> {
 
-    boolean existsByLesson_LessonIdAndPracticeType(
-            Long lessonId,
-            String practiceType
-    );
+	boolean existsByLesson_LessonIdAndPracticeType(Long lessonId, String practiceType);
+
+//	
 
     @Query("""
 			    SELECT

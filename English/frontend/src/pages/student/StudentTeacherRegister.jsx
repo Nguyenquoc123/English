@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import JoditEditor from "jodit-react";
 import "./StudentTeacherRegister.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
 
 function StudentTeacherRegister() {
@@ -13,6 +15,7 @@ function StudentTeacherRegister() {
   const [profile, setProfile] = useState(null);
 
   const [formData, setFormData] = useState({
+    phone: "",
     bio: "",
     experience: "",
   });
@@ -90,11 +93,38 @@ function StudentTeacherRegister() {
       }
 
       setProfile(result);
+      await loadTeacherDraft(token);
     } catch (error) {
       console.error(error);
       alert("Lỗi kết nối server");
     } finally {
       setLoadingProfile(false);
+    }
+  };
+
+  const loadTeacherDraft = async (token) => {
+    try {
+      const response = await fetch(`${API_BASE}/teacher-profile/profile-register`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const body = data?.result || data?.data || data;
+      const status = String(body?.approvalStatus || "").toUpperCase();
+
+      if (status === "REJECTED") {
+        setFormData((prev) => ({
+          ...prev,
+          phone: body.phone || "",
+          bio: body.bio || "",
+          experience: body.experience || "",
+        }));
+      }
+    } catch {
+      /* bỏ qua nếu chưa có hồ sơ */
     }
   };
 
@@ -123,6 +153,13 @@ function StudentTeacherRegister() {
     if (value === "admin") return "Quản trị viên";
 
     return role || "Học viên";
+  };
+
+  const handlePhoneChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      phone: e.target.value,
+    }));
   };
 
   const handleBioChange = (e) => {
@@ -215,7 +252,21 @@ function StudentTeacherRegister() {
     return div.textContent || div.innerText || "";
   };
 
+  const normalizePhone = (value) => value.trim().replace(/[\s.\-]/g, "");
+
   const validateForm = () => {
+    const phone = normalizePhone(formData.phone);
+
+    if (!phone) {
+      alert("Vui lòng nhập số điện thoại");
+      return false;
+    }
+
+    if (!/^(\+84|84|0)[0-9]{9,10}$/.test(phone)) {
+      alert("Số điện thoại không hợp lệ (VD: 0912345678)");
+      return false;
+    }
+
     if (!formData.bio.trim()) {
       alert("Vui lòng nhập giới thiệu bản thân");
       return false;
@@ -267,6 +318,7 @@ function StudentTeacherRegister() {
       const submitData = new FormData();
 
       const requestData = {
+        phone: normalizePhone(formData.phone),
         bio: formData.bio.trim(),
         experience: formData.experience,
       };
@@ -282,13 +334,7 @@ function StudentTeacherRegister() {
         submitData.append("certificateFiles", file);
       });
 
-      /*
-        API gợi ý:
-        POST /teacher-profiles/register
-        multipart/form-data:
-        - data: JSON { bio, experience }
-        - certificateFiles: nhiều ảnh chứng chỉ
-      */
+      
 
       const response = await fetch(`${API_BASE}/teacher-profile/register`, {
         method: "POST",
@@ -336,17 +382,12 @@ function StudentTeacherRegister() {
   return (
     <div className="teacher-register-page">
       <div className="teacher-register-container">
+        <CourseBreadcrumb
+          items={[studentHome, studentProfile, { label: "Đăng ký giáo viên" }]}
+        />
+
         <div className="teacher-register-heading">
           <div>
-            <button
-              type="button"
-              className="teacher-register-back-link"
-              onClick={() => navigate("/student/profile")}
-            >
-              <i className="bi bi-arrow-left"></i>
-              Quay lại
-            </button>
-
             <h2>Đăng ký trở thành giáo viên</h2>
             <p>
               Hoàn thiện hồ sơ giảng dạy để gửi yêu cầu xét duyệt trở thành giáo viên
@@ -441,6 +482,24 @@ function StudentTeacherRegister() {
                 </div>
 
                 <div className="form-section">
+                  <label className="form-label">
+                    Số điện thoại liên hệ <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    value={formData.phone}
+                    onChange={handlePhoneChange}
+                    placeholder="VD: 0912345678 hoặc +84912345678"
+                    maxLength={15}
+                    autoComplete="tel"
+                  />
+                  <div className="form-text text-muted">
+                    Admin sẽ liên hệ qua số này khi cần xác minh hồ sơ.
+                  </div>
+                </div>
+
+                <div className="form-section">
                   <label className="form-label">Giới thiệu bản thân</label>
 
                   <textarea
@@ -530,8 +589,7 @@ function StudentTeacherRegister() {
                     onClick={() => navigate("/student/profile")}
                     disabled={submitting}
                   >
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Quay lại
+                    Hủy
                   </button>
 
                   <button

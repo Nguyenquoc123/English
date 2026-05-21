@@ -10,8 +10,8 @@ export default function FeaturedCourses() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getAllCourses({ status: "APPROVED" })
-      .then((res) => setCourses(res.data.slice(0, 8)))
+    getAllCourses({ page: 0, size: 8 })
+      .then((res) => setCourses((res.data?.content || []).slice(0, 8)))
       .catch(() => setError("Không thể tải khoá học. Vui lòng thử lại."))
       .finally(() => setLoading(false));
   }, []);
@@ -20,7 +20,7 @@ export default function FeaturedCourses() {
     <section className="featured">
       <div className="featured-header">
         <h2 className="featured-title">🔥 Khoá học nổi bật</h2>
-        <Link to="/courses" className="featured-view-all">
+        <Link to="/danh-sach-khoa-hoc" className="featured-view-all">
           Xem tất cả →
         </Link>
       </div>

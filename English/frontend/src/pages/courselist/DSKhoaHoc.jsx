@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
-import {getFileUrl} from "../../utils/fileurl.js"
+import { getFileUrl } from "../../utils/fileurl.js"
+import Page from "../../compenents/phantrang/page.jsx";
 
 function DSKhoaHoc() {
   const navigate = useNavigate();
@@ -15,7 +16,10 @@ function DSKhoaHoc() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Dữ liệu mẫu để test giao diện khi chưa có backend
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(6);
+  const [totalPages, setTotalPages] = useState(0);
+
   const sampleCourses = [
     {
       courseId: 1,
@@ -119,96 +123,87 @@ function DSKhoaHoc() {
   ];
 
   useEffect(() => {
-    // Load cấp độ và danh sách khóa học khi mở trang
     loadLevels();
-    loadCourses();
+    loadCourses(0);
   }, []);
 
   const loadLevels = async () => {
     try {
-      // Nếu bạn đã có API levels thì mở đoạn này ra dùng
-      
+
       const response = await fetch("http://localhost:8080/level/all-level");
       const data = await response.json();
 
       if (response.ok) {
         setLevels(data);
       }
-      
 
-      // setLevels(sampleLevels);
     } catch (err) {
       console.error(err);
       setLevels(sampleLevels);
     }
   };
 
-  const loadCourses = async () => {
+  const loadCourses = async (pageValue = page) => {
     try {
       setLoading(true);
       setError("");
 
-      // Nếu bạn đã có API khóa học thì dùng đoạn này
-      
       const params = new URLSearchParams();
 
       if (keyword.trim()) {
-        params.append("keyword", keyword);
+        params.append("keyword", keyword.trim());
       }
 
       if (levelId) {
         params.append("levelId", levelId);
       }
 
-      const response = await fetch(
-        `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public`
-      );
+      params.append("page", pageValue);
+      params.append("size", size);
 
-      const data = await response.json();
+      const url = `http://localhost:8080/khoa-hoc/danh-sach-khoa-hoc-public?${params.toString()}`;
+
+      const response = await fetch(url, {
+        method: "GET",
+      });
+
+      console.log(response)
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
 
       if (!response.ok) {
-        setError(data.message || "Không thể tải danh sách khóa học");
+        setError(data?.message || "Không thể tải danh sách khóa học");
         return;
       }
 
-      console.log(data)
-      setCourses(data);
-      
+      console.log(data);
 
-    //   // Dữ liệu mẫu để test trước
-    //   let result = sampleCourses;
-
-    //   if (keyword.trim()) {
-    //     result = result.filter((course) => {
-    //       const text = `${course.title} ${course.description}`.toLowerCase();
-    //       return text.includes(keyword.toLowerCase());
-    //     });
-    //   }
-
-    //   if (levelId) {
-    //     const selectedLevel = sampleLevels.find(
-    //       (level) => String(level.levelId) === String(levelId)
-    //     );
-
-    //     if (selectedLevel) {
-    //       result = result.filter(
-    //         (course) => course.levelName === selectedLevel.levelName
-    //       );
-    //     }
-    //   }
-
-      // setCourses(result);
+      setCourses(data.content || []);
+      setPage(data.number || 0);
+      setTotalPages(data.totalPages || 0);
     } catch (err) {
       console.error(err);
-      setError("Lỗi r.");
+      setError("Lỗi kết nối server.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    loadCourses(newPage);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    loadCourses();
+
+    setPage(0);
+    loadCourses(0);
   };
 
   const formatPrice = (price) => {
@@ -225,11 +220,10 @@ function DSKhoaHoc() {
 
   return (
     <div className="course-page">
-      
 
       <main className="course-container">
         <section className="filter-box">
-          <h3>☰ Bộ lọc khóa học</h3>
+          
 
           <form className="filter-form" onSubmit={handleSearch}>
             <div className="filter-group">
@@ -262,11 +256,6 @@ function DSKhoaHoc() {
               🔍 Tìm kiếm
             </button>
           </form>
-        </section>
-
-        <section className="course-title-section">
-          <h1>Danh sách khóa học</h1>
-          <p>Các khóa học đang được mở trên hệ thống</p>
         </section>
 
         {loading && <p className="status-text">Đang tải khóa học...</p>}
@@ -328,8 +317,15 @@ function DSKhoaHoc() {
               </div>
             </div>
           ))}
+
         </section>
+
       </main>
+      {courses && <Page
+        page={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />}
     </div>
   );
 }

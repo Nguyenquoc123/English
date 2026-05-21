@@ -112,7 +112,7 @@ public class CoursePaymentService {
     }
 
     private String buildPaymentCode(Long transactionId) {
-        return "SEVQR COURSE" + transactionId;
+        return "SEVQR" + transactionId;
     }
 
     private String buildSePayQrUrl(String paymentCode, BigDecimal amount) {

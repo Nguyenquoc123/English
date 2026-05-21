@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFileUrl } from "../../utils/fileurl";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  teacherCourses,
+  teacherCourseDetail,
+  teacherLessonDetail,
+  teacherLessonVideos,
+} from "../../utils/breadcrumbPaths";
 
 function TeacherLessonVideoDetail() {
   const navigate = useNavigate();
@@ -44,15 +51,15 @@ function TeacherLessonVideoDetail() {
 
   return (
     <div className="teacher-lesson-detail-page">
-      <button
-        className="lesson-detail-back"
-        onClick={() =>
-          navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/videos`)
-        }
-      >
-        <i className="bi bi-arrow-left"></i>
-        Quay lại danh sách video
-      </button>
+      <CourseBreadcrumb
+        items={[
+          teacherCourses,
+          teacherCourseDetail(courseId),
+          teacherLessonDetail(courseId, lessonId),
+          teacherLessonVideos(courseId, lessonId),
+          { label: "Chi tiết video" },
+        ]}
+      />
 
       <div className="info-card">
         <h3>{video.title}</h3>

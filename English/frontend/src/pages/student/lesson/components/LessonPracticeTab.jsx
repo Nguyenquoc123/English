@@ -17,20 +17,7 @@ function LessonPracticeTab({ API_BASE, lessonId, courseId, getToken }) {
 
       const token = getToken();
 
-      /*
-        API gợi ý:
-        GET /lessons/{lessonId}/practice-configs/student
-        Response:
-        [
-          {
-            configId,
-            lessonId,
-            practiceType,
-            isEnabled,
-            questionCount
-          }
-        ]
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/practice-configs/${lessonId}`,

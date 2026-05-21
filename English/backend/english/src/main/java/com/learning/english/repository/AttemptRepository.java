@@ -19,4 +19,6 @@ public interface AttemptRepository extends JpaRepository<Attempt, Long> {
 	Optional<Attempt> findPracticeResultByAttemptId(@Param("attemptId") Long attemptId);
 
 	Long countByUserUserIdAndExamExamIdAndAttemptType(Long userId, Long examId, String attemptType);
+
+	Long countByExamExamIdAndUserUserId(Long examId, Long userId);
 }

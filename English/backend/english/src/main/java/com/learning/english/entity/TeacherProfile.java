@@ -31,6 +31,9 @@ public class TeacherProfile {
     @Column(name = "experience", columnDefinition = "NVARCHAR(MAX)")
     private String experience;
 
+    @Column(name = "phone", columnDefinition = "NVARCHAR(20)")
+    private String phone;
+
     @Column(name = "approvalstatus", nullable = false, length = 50)
     private String approvalStatus;
 

@@ -90,7 +90,7 @@ function StudentExamCard({ exam, courseId }) {
       return;
     }
 
-    navigate(`/courses/${courseId}/exams/${exam.examId}/start`);
+    navigate(`/exams/${exam.examId}/`);
   };
 
   const statusInfo = getStatusInfo(exam.status);

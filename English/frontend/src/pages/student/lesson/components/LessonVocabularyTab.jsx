@@ -9,19 +9,13 @@ function LessonVocabularyTab({ API_BASE, lessonId, getToken }) {
         loadVocabularies();
     }, [lessonId]);
 
-
-
     const loadVocabularies = async () => {
         try {
             setLoading(true);
 
             const token = getToken();
 
-            /*
-              API gợi ý:
-              GET /vocabularies/{lessonId}/lessons
-              hoặc GET /tu-vung/{lessonId}/lessons
-            */
+            
 
             const response = await fetch(
                 `${API_BASE}/tu-vung/lessons/${lessonId}`,

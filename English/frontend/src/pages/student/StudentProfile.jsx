@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentProfile.css";
 import { getFileUrl } from "../../utils/fileurl";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { studentHome } from "../../utils/breadcrumbPaths";
 
 function StudentProfile() {
     const navigate = useNavigate();
@@ -34,23 +36,7 @@ function StudentProfile() {
                 return;
             }
 
-            /*
-              API gợi ý:
-              GET /hosocanhan
-      
-              Response mẫu:
-              {
-                "userId": 1,
-                "fullName": "Nguyễn Văn An",
-                "username": "nguyenvanan",
-                "email": "nguyenvanan@example.com",
-                "avatarUrl": "/images/avatar.jpg",
-                "role": "student",
-                "status": "Active",
-                "createdAt": "2026-04-20T09:30:00",
-                "updatedAt": "2026-04-25T18:45:00"
-              }
-            */
+            
 
             const response = await fetch(`${API_BASE}/hosocanhan`, {
                 method: "GET",
@@ -94,8 +80,6 @@ function StudentProfile() {
                 return;
             }
 
-
-
             const response = await fetch(`${API_BASE}/teacher-profile/profile-registered`, {
                 method: "GET",
                 headers: {
@@ -125,8 +109,6 @@ function StudentProfile() {
             setLoading(false);
         }
     };
-
-
 
     const formatDateTime = (value) => {
         if (!value) return "--";
@@ -218,20 +200,15 @@ function StudentProfile() {
 
     return (
         <div className="student-profile-page">
+            <CourseBreadcrumb
+                items={[studentHome, { label: "Hồ sơ cá nhân" }]}
+            />
+
             <div className="student-profile-heading">
                 <div>
                     <h2>Hồ sơ cá nhân</h2>
                     <p>Xem thông tin tài khoản và quản lý hồ sơ học viên của bạn.</p>
                 </div>
-
-                <button
-                    type="button"
-                    className="btn btn-light student-back-btn"
-                    onClick={() => navigate(-1)}
-                >
-                    <i className="bi bi-arrow-left me-1"></i>
-                    Quay lại
-                </button>
             </div>
 
             <div className="row g-4">

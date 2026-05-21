@@ -24,9 +24,6 @@ public class SePayWebhookController {
     @Autowired
     private SePayWebhookService sePayWebhookService;
 
-//    @Autowired
-//    private ObjectMapper objectMapper;
-
     @Value("${sepay.webhook.secret}")
     private String webhookSecret;
 
@@ -57,11 +54,7 @@ public class SePayWebhookController {
                 return unauthorized("Invalid timestamp");
             }
 
-            /*
-                Nếu SePay gửi timestamp dạng milliseconds, ví dụ 1778349013000,
-                thì chuyển về seconds.
-                Còn nếu đã là seconds, ví dụ 1778349013, thì giữ nguyên.
-            */
+            
             long timestampSeconds = timestamp;
 
             if (timestampSeconds > 1000000000000L) {
@@ -77,21 +70,14 @@ public class SePayWebhookController {
             System.out.println("nowSeconds = " + nowSeconds);
             System.out.println("diffSeconds = " + diffSeconds);
 
-            /*
-                Cho phép lệch 15 phút để test qua SePay + ngrok.
-                Sau khi chạy ổn production có thể giảm về 300.
-            */
+            
             long allowedDiffSeconds = 900;
 
             if (diffSeconds > allowedDiffSeconds) {
                 return unauthorized("Request expired");
             }
 
-            /*
-                Quan trọng:
-                verifySignature phải dùng timestampHeader gốc,
-                không dùng timestampSeconds đã xử lý.
-            */
+            
             boolean validSignature = verifySignature(
                     rawBody,
                     timestampHeader,
@@ -174,10 +160,7 @@ public class SePayWebhookController {
 
         mac.init(secretKeySpec);
 
-        /*
-            Phải ký đúng dạng giống PHP:
-            timestamp + "." + rawBody
-        */
+        
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(timestamp.getBytes(StandardCharsets.UTF_8));
         outputStream.write(".".getBytes(StandardCharsets.UTF_8));

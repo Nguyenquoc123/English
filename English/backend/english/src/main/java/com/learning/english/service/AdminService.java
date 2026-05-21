@@ -6,6 +6,7 @@ import com.learning.english.dto.response.CourseReviewResponse;
 import com.learning.english.entity.*;
 import com.learning.english.mapper.CourseMapper;
 import com.learning.english.mapper.LessonMapper;
+import com.learning.english.mapper.TeacherProfileMapper;
 import com.learning.english.dto.request.NotificationRequest;
 import com.learning.english.dto.request.AdminCreateUserRequest;
 import com.learning.english.repository.*;
@@ -29,6 +30,9 @@ public class AdminService {
 
     @Autowired
     TeacherProfileRepository teacherProfileRepository;
+
+    @Autowired
+    TeacherProfileMapper teacherProfileMapper;
 
     @Autowired
     WithdrawalRepository withdrawalRepository;
@@ -57,8 +61,6 @@ public class AdminService {
     @Autowired
     CourseReviewRepository courseReviewRepository;
 
-    // ==================== DASHBOARD ====================
-
     public AdminDashboardResponse getDashboard() {
         long totalUsers = userRepository.count();
         long totalStudents = userRepository.countByRole_RoleName("student");
@@ -81,8 +83,6 @@ public class AdminService {
                 .totalRevenue(totalRevenue)
                 .build();
     }
-
-    // ==================== USER MANAGEMENT ====================
 
     public List<UserAdminResponse> getAllUsers(String keyword, String roleName, String status) {
         List<User> users;
@@ -198,50 +198,23 @@ public class AdminService {
                 .build();
     }
 
-    // ==================== TEACHER APPROVAL ====================
-
+    @Transactional(readOnly = true)
     public List<TeacherProfileResponse> getPendingTeachers() {
         return teacherProfileRepository
                 .findByApprovalStatusOrderByCreatedAtDesc("PENDING")
                 .stream()
-                .map(this::toTeacherProfileResponse)
+                .map(teacherProfileMapper::toTeacherProfileResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<TeacherProfileResponse> getAllTeacherProfiles() {
         return teacherProfileRepository
                 .findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(this::toTeacherProfileResponse)
+                .map(teacherProfileMapper::toTeacherProfileResponse)
                 .collect(Collectors.toList());
     }
-
-    private TeacherProfileResponse toTeacherProfileResponse(TeacherProfile tp) {
-        List<TeacherCertificateResponse> certificates = tp.getCertificates() == null ? List.of() :
-                tp.getCertificates().stream()
-                        .map(c -> TeacherCertificateResponse.builder()
-                                .certificateId(c.getCertificateId())
-                                .certificateUrl(c.getCertificateUrl())
-                                .build())
-                        .collect(Collectors.toList());
-
-        return TeacherProfileResponse.builder()
-                .teacherProfileId(tp.getTeacherProfileId())
-                .userId(tp.getUser() != null ? tp.getUser().getUserId() : null)
-                .fullName(tp.getUser() != null ? tp.getUser().getFullName() : null)
-                .email(tp.getUser() != null ? tp.getUser().getEmail() : null)
-                .bio(tp.getBio())
-                .experience(tp.getExperience())
-                .approvalStatus(tp.getApprovalStatus())
-                .rejectReason(tp.getRejectReason())
-                .reviewedAt(tp.getReviewedAt())
-                .createdAt(tp.getCreatedAt())
-                .updatedAt(tp.getUpdatedAt())
-                .certificates(certificates)
-                .build();
-    }
-
-    // ==================== COURSE APPROVAL ====================
 
     public List<CourseResponse> getPendingCourses() {
         return courseRepository
@@ -258,8 +231,6 @@ public class AdminService {
                 .map(courseMapper::toCourseResponse)
                 .collect(Collectors.toList());
     }
-
-    // ==================== WITHDRAWAL MANAGEMENT ====================
 
     public List<WithdrawalResponse> getPendingWithdrawals() {
         return withdrawalRepository.findByStatusOrderByRequestedAtDesc("PENDING")
@@ -301,8 +272,6 @@ public class AdminService {
         withdrawal = withdrawalRepository.save(withdrawal);
         return toWithdrawalResponse(withdrawal);
     }
-
-    // ==================== LESSON FREE MANAGEMENT ====================
 
     public List<LessonResponse> getFreeLessons() {
         return lessonRepository.findByLessonTypeOrderByCreatedAtDesc("Free")
@@ -361,8 +330,6 @@ public class AdminService {
         lessonRepository.save(lesson);
     }
 
-    // ==================== EXAM MANAGEMENT ====================
-
     public List<ExamAdminResponse> getAllExams() {
         return examRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -397,8 +364,6 @@ public class AdminService {
                 .updatedAt(exam.getUpdatedAt())
                 .build();
     }
-
-    // ==================== NOTIFICATION MANAGEMENT ====================
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest req, String adminUsername) {
@@ -442,8 +407,6 @@ public class AdminService {
                 .build();
     }
 
-    // ==================== TRANSACTION MANAGEMENT ====================
-
     public List<TransactionAdminResponse> getAllTransactions() {
         return transactionRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -486,8 +449,6 @@ public class AdminService {
         return "[Không xác định #" + targetId + "]";
     }
 
-    // ==================== COURSE REVIEW MANAGEMENT ====================
-
     public List<CourseReviewResponse> getAllCourseReviews() {
         return courseReviewRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -516,8 +477,6 @@ public class AdminService {
                 .build();
     }
 
-    // ==================== CHANGE PASSWORD ====================
-
     @Transactional
     public void changeAdminPassword(String username, String oldPassword, String newPassword, String confirmPassword) {
         if (oldPassword == null || oldPassword.isBlank())
@@ -542,8 +501,6 @@ public class AdminService {
         admin.setUpdatedAt(LocalDateTime.now());
         userRepository.save(admin);
     }
-
-    // ==================== HELPER ====================
 
     private WithdrawalResponse toWithdrawalResponse(Withdrawal w) {
         TeacherBankAccount bank = w.getBankAccount();

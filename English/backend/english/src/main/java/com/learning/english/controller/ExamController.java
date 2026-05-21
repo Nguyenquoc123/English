@@ -4,6 +4,9 @@ import com.learning.english.dto.request.ExamCreateRequest;
 import com.learning.english.dto.response.ExamListResponse;
 import com.learning.english.dto.response.ExamResponse;
 import com.learning.english.dto.response.StudentExamListResponse;
+import com.learning.english.dto.response.TeacherExamDetailResponse;
+import com.learning.english.dto.response.TeacherExamQuestionResponse;
+import com.learning.english.service.ExamQuestionService;
 import com.learning.english.service.ExamService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,9 @@ public class ExamController {
 	@Autowired
 	private ExamService examService;
 
+	@Autowired
+	ExamQuestionService examQuestionService;
+
 	@GetMapping("/all-bai-thi-teacher")
 	public ResponseEntity<List<ExamListResponse>> layDanhSachBaiThiByTeacher(
 			@RequestParam(name = "keyword", required = false) String keyword,
@@ -28,13 +34,24 @@ public class ExamController {
 	}
 
 	@GetMapping("/all-bai-thi")
-	public ResponseEntity<List<StudentExamListResponse>> layDanhSachBaiThiChoHocVien(@RequestParam(required = false) String keyword,
-			@RequestParam(required = false) String status, @RequestParam(required = false) Long courseId) {
+	public ResponseEntity<List<StudentExamListResponse>> layDanhSachBaiThiChoHocVien(
+			@RequestParam(required = false) String keyword, @RequestParam(required = false) String status,
+			@RequestParam(required = false) Long courseId) {
 		return ResponseEntity.ok(examService.layDanhSachBaiThiChoHocVien(courseId, keyword, status));
 	}
 
 	@PostMapping("/create")
 	public ResponseEntity<ExamResponse> taoBaiThi(@RequestBody ExamCreateRequest request) {
 		return ResponseEntity.ok(examService.taoBaiThi(request));
+	}
+
+	@GetMapping("/{examId}")
+	public TeacherExamDetailResponse layChiTietKyThiCuaTeacher(@PathVariable Long examId) {
+		return examService.layChiTietKyThiCuaTeacher(examId);
+	}
+
+	@GetMapping("/{examId}/questions/teacher")
+	public List<TeacherExamQuestionResponse> layDanhSachCauHoiTrongKyThiCuaTeacher(@PathVariable Long examId) {
+		return examQuestionService.layDanhSachCauHoiTrongKyThiCuaTeacher(examId);
 	}
 }

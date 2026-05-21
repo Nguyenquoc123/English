@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  adminCourses,
+  adminCourseReview,
+  adminLessonReview,
+  adminLessonGrammars,
+} from "../../../utils/breadcrumbPaths";
 import "./LessonGrammarDetail.css";
 
 function LessonGrammarDetail() {
@@ -13,7 +20,6 @@ function LessonGrammarDetail() {
     loadGrammar();
   }, [grammarId]);
 
-  // Tải chi tiết ngữ pháp cho admin xem
   const loadGrammar = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -57,16 +63,16 @@ function LessonGrammarDetail() {
 
   return (
     <div className="lesson-grammar-detail-page">
-      {/* Nút quay lại */}
-      <button
-        className="btn btn-light btn-sm mb-3"
-        onClick={() => navigate(`/admin/courses/${courseId}/lessons/${lessonId}/grammars`)}
-      >
-        <i className="bi bi-arrow-left me-1"></i>
-        Quay lại danh sách ngữ pháp
-      </button>
+      <CourseBreadcrumb
+        items={[
+          adminCourses,
+          adminCourseReview(courseId),
+          adminLessonReview(courseId, lessonId),
+          adminLessonGrammars(courseId, lessonId),
+          { label: "Chi tiết ngữ pháp" },
+        ]}
+      />
 
-      {/* Nội dung ngữ pháp */}
       <div className="card border-0 shadow-sm rounded-4 p-4">
         <h4 className="fw-bold mb-4" style={{ color: "#0f3c9c" }}>{grammar.title}</h4>
 

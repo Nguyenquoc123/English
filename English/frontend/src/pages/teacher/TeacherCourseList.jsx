@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Page from "../../compenents/phantrang/page";
 
 function TeacherCourseList() {
     const navigate = useNavigate();
@@ -17,6 +18,10 @@ function TeacherCourseList() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(6);
+    const [totalPages, setTotalPages] = useState(0);
+
     const sampleLevels = [
         { levelId: 1, levelName: "Sơ cấp" },
         { levelId: 2, levelName: "Trung cấp" },
@@ -26,17 +31,15 @@ function TeacherCourseList() {
     useEffect(() => {
         setLevels(sampleLevels);
 
-        // Load danh sách khóa học lần đầu
-        loadCourses();
+        loadCourses(getCurrentFilter(), 0);
 
-        
     }, []);
 
-    const buildQueryString = (filter) => {
+    const buildQueryString = (filter = {}, pageValue = page) => {
         const params = new URLSearchParams();
 
         if (filter.status && filter.status.trim() !== "") {
-            params.append("status", filter.status);
+            params.append("status", filter.status.trim());
         }
 
         if (filter.keyword && filter.keyword.trim() !== "") {
@@ -47,31 +50,30 @@ function TeacherCourseList() {
             params.append("levelId", filter.levelId);
         }
 
+        params.append("page", pageValue);
+        params.append("size", size);
+
         return params.toString();
     };
 
-    const loadCourses = async (filter = {}) => {
+    const loadCourses = async (filter = {}, pageValue = page) => {
         try {
             setLoading(true);
             setError("");
 
-            const queryString = buildQueryString(filter);
+            const queryString = buildQueryString(filter, pageValue);
 
-            const url = queryString
-                ? `${API_BASE}/danh-sach-khoa-hoc-teacher?${queryString}`
-                : `${API_BASE}/danh-sach-khoa-hoc-teacher`;
+            const url = `${API_BASE}/danh-sach-khoa-hoc-teacher?${queryString}`;
 
             const token = localStorage.getItem("token");
 
             const response = await fetch(url, {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
-            console.log(response);
-            
+
             let data = null;
 
             try {
@@ -85,7 +87,12 @@ function TeacherCourseList() {
                 return;
             }
 
-            setCourses(Array.isArray(data) ? data : []);
+            console.log(data);
+
+            setCourses(data.content || []);
+            setPage(data.number ?? 0);
+            setTotalPages(data.totalPages ?? 0);
+            setTotalElements(data.totalElements ?? 0);
         } catch (err) {
             console.error(err);
             setError("Lỗi kết nối server");
@@ -94,15 +101,19 @@ function TeacherCourseList() {
         }
     };
 
-    
-    const handleSearch = (e) => {
-        e.preventDefault();
-
-        loadCourses({
+    const getCurrentFilter = () => {
+        return {
             status: status,
             keyword: keyword,
             levelId: levelId,
-        });
+        };
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+
+        setPage(0);
+        loadCourses(getCurrentFilter(), 0);
     };
 
     const handleResetFilter = () => {
@@ -110,7 +121,21 @@ function TeacherCourseList() {
         setLevelId("");
         setStatus("");
 
-        loadCourses();
+        setPage(0);
+
+        loadCourses(
+            {
+                status: "",
+                keyword: "",
+                levelId: "",
+            },
+            0
+        );
+    };
+
+    const handlePageChange = (newPage) => {
+        setPage(newPage);
+        loadCourses(getCurrentFilter(), newPage);
     };
 
     const formatPrice = (price) => {
@@ -143,23 +168,7 @@ function TeacherCourseList() {
         if (!ok) return;
 
         try {
-            /*
-              Nếu bạn có API xóa thì mở đoạn này:
-      
-              const token = localStorage.getItem("token");
-      
-              const response = await fetch(`${API_BASE}/khoa-hoc/${courseId}`, {
-                method: "DELETE",
-                headers: {
-                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-              });
-      
-              if (!response.ok) {
-                alert("Xóa khóa học thất bại");
-                return;
-              }
-            */
+            
 
             setCourses((prev) => prev.filter((course) => course.courseId !== courseId));
             setAllCourses((prev) => prev.filter((course) => course.courseId !== courseId));
@@ -176,23 +185,7 @@ function TeacherCourseList() {
         if (!ok) return;
 
         try {
-            /*
-              Nếu bạn có API gửi duyệt thì mở đoạn này:
-      
-              const token = localStorage.getItem("token");
-      
-              const response = await fetch(`${API_BASE}/khoa-hoc/${courseId}/gui-duyet`, {
-                method: "PUT",
-                headers: {
-                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-              });
-      
-              if (!response.ok) {
-                alert("Gửi duyệt thất bại");
-                return;
-              }
-            */
+            
 
             setCourses((prev) =>
                 prev.map((course) =>
@@ -222,7 +215,6 @@ function TeacherCourseList() {
             <div className="d-flex justify-content-between align-items-start mb-4">
                 <div>
 
-
                     <h2 className="fw-bold mb-1">Danh sách khóa học của giáo viên</h2>
 
                     <p className="text-muted mb-0">
@@ -239,9 +231,6 @@ function TeacherCourseList() {
                     Tạo khóa học mới
                 </button>
             </div>
-
-
-
 
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body">
@@ -352,17 +341,11 @@ function TeacherCourseList() {
                                         </span>
                                     </td>
 
-
-
-
-
                                     <td>
                                         <span className={getStatusBadge(course.status)}>
                                             {course.status}
                                         </span>
                                     </td>
-
-
 
                                     <td>
                                         <div className="d-flex justify-content-end gap-1">
@@ -429,7 +412,11 @@ function TeacherCourseList() {
                         </tbody>
                     </table>
                 </div>
-
+                {courses && <Page
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />}
 
             </div>
         </div>

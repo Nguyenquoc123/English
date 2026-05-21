@@ -1,0 +1,72 @@
+.app-breadcrumb-bar {
+  background: #faf8ff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Nằm trong .layout-sticky-top — dính cùng menu khi cuộn */
+.app-breadcrumb-bar--embedded,
+.app-breadcrumb-bar--teacher,
+.app-breadcrumb-bar--admin {
+  position: static;
+  top: auto;
+  z-index: auto;
+  box-shadow: none;
+}
+
+.app-breadcrumb-bar--embedded {
+  border-top: 1px solid #eef0f6;
+  border-bottom: none;
+}
+
+.app-breadcrumb-bar__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 24px;
+}
+
+.app-breadcrumb-bar .course-breadcrumb {
+  margin-bottom: 0;
+}
+
+/* Khối menu + breadcrumb dính trên cùng khi lướt trang */
+.layout-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.layout-sticky-top--public .app-breadcrumb-bar--embedded {
+  background: #faf8ff;
+}
+
+.layout-sticky-top--teacher {
+  background: #fff;
+}
+
+.layout-sticky-top--admin {
+  background: #f5f7fb;
+}
+
+.layout-sticky-top--admin .admin-mini-bar {
+  position: static;
+  top: auto;
+  z-index: auto;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.layout-sticky-top--teacher .teacher-layout-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .nb-container {
+    height: 56px;
+  }
+
+  .app-breadcrumb-bar__inner {
+    padding: 8px 16px;
+  }
+}

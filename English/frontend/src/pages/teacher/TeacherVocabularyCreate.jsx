@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherVocabularyCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherVocabularyCreate() {
   const navigate = useNavigate();
@@ -120,7 +122,6 @@ function TeacherVocabularyCreate() {
         audioUrl: null,
         imageUrl: null,
 
-        // Vì chỉ upload 1 audio và 1 image nên index = 0 nếu có file
         audioFileIndex: audioFile ? 0 : null,
         imageFileIndex: imageFile ? 0 : null,
 
@@ -137,26 +138,20 @@ function TeacherVocabularyCreate() {
       );
 
       if (audioFile) {
-        formData.append("audioFiles", audioFile);
+        formData.append("audioFile", audioFile);
       }
 
       if (imageFile) {
-        formData.append("imageFiles", imageFile);
+        formData.append("imageFile", imageFile);
       }
 
-      /*
-        Backend gợi ý nhận:
-        @RequestPart("data") VocabularyRequest request
-        @RequestPart(value = "audioFiles", required = false) List<MultipartFile> audioFiles
-        @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/tu-vung/${lessonId}/them-tu-vung`,
         {
           method: "POST",
           headers: {
-            // Không set Content-Type khi dùng FormData
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: formData,
@@ -206,14 +201,9 @@ function TeacherVocabularyCreate() {
     <div className="vocab-create-page">
       <div className="vocab-create-heading">
         <div>
-          <button
-            type="button"
-            className="vocab-back-link"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonTrail(courseId, lessonId, "Thêm từ vựng")}
+          />
 
           <h2>Thêm từ vựng mới</h2>
 
@@ -379,8 +369,7 @@ function TeacherVocabularyCreate() {
                 onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
                 disabled={loading}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

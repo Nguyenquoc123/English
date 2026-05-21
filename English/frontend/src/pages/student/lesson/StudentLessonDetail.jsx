@@ -5,6 +5,12 @@ import LessonVocabularyTab from "./components/LessonVocabularyTab";
 import LessonGrammarTab from "./components/LessonGrammarTab";
 import LessonPracticeTab from "./components/LessonPracticeTab";
 import "./StudentLessonDetail.css";
+import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
+import {
+  studentHome,
+  studentCourses,
+  studentCourseDetail,
+} from "../../../utils/breadcrumbPaths";
 
 function StudentLessonDetail() {
   const navigate = useNavigate();
@@ -37,22 +43,7 @@ function StudentLessonDetail() {
         return;
       }
 
-      /*
-        API gợi ý:
-        GET /lessons/{lessonId}/student-detail
-
-        Response mẫu:
-        {
-          lessonId,
-          courseId,
-          courseTitle,
-          title,
-          description,
-          lessonOrder,
-          status,
-          progressPercent
-        }
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/lesson/${lessonId}/student-detail`,
@@ -171,10 +162,14 @@ function StudentLessonDetail() {
   if (error) {
     return (
       <div className="student-lesson-detail-page">
-        <button className="lesson-back-link" onClick={() => navigate(-1)}>
-          <i className="bi bi-arrow-left"></i>
-          Quay lại
-        </button>
+        <CourseBreadcrumb
+          items={[
+            studentHome,
+            studentCourses,
+            studentCourseDetail(courseId),
+            { label: "Bài học" },
+          ]}
+        />
 
         <div className="alert alert-danger mt-3">{error}</div>
       </div>
@@ -192,10 +187,14 @@ function StudentLessonDetail() {
   return (
     <div className="student-lesson-detail-page">
       <div className="student-lesson-container">
-        <button className="lesson-back-link" onClick={() => navigate(-1)}>
-          <i className="bi bi-arrow-left"></i>
-          Quay lại
-        </button>
+        <CourseBreadcrumb
+          items={[
+            studentHome,
+            studentCourses,
+            studentCourseDetail(courseId),
+            { label: lesson ? `Lesson ${lesson.lessonOrder}` : "Bài học" },
+          ]}
+        />
 
         <div className="lesson-hero">
           <div className="lesson-hero-left">

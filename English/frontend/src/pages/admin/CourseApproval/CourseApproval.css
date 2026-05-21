@@ -141,7 +141,6 @@
   margin-top: 8px;
 }
 
-/* Reuse shared styles from TeacherApproval */
 .reject-form {
   width: 100%;
   display: flex;
@@ -215,7 +214,6 @@
   cursor: default;
 }
 
-/* Badge reuse */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
 .badge-pending { background: #fef3c7; color: #d97706; }
 .badge-approved { background: #dcfce7; color: #15803d; }

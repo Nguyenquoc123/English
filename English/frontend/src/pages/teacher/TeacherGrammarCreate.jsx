@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import JoditEditor from "jodit-react";
 import "./TeacherGrammarCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherGrammarCreate() {
   const navigate = useNavigate();
@@ -150,16 +152,9 @@ function TeacherGrammarCreate() {
     <div className="grammar-create-page">
       <div className="grammar-create-heading">
         <div>
-          <button
-            type="button"
-            className="grammar-back-link"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)
-            }
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonTrail(courseId, lessonId, "Thêm ngữ pháp")}
+          />
 
           <h2>Thêm nội dung ngữ pháp</h2>
 
@@ -275,8 +270,7 @@ function TeacherGrammarCreate() {
                 }
                 disabled={loading}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

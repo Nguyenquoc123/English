@@ -181,7 +181,6 @@
   margin: 0;
 }
 
-/* Video tab */
 .lesson-video-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -319,7 +318,6 @@
   margin-top: 2px;
 }
 
-/* Vocabulary tab */
 .tab-section-header {
   display: flex;
   justify-content: space-between;
@@ -437,7 +435,6 @@
   line-height: 1.6;
 }
 
-/* Grammar tab */
 .grammar-tab-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -529,7 +526,6 @@
   padding: 10px;
 }
 
-/* Practice tab */
 .practice-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

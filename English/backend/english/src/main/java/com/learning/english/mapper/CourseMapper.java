@@ -1,5 +1,6 @@
 package com.learning.english.mapper;
 
+import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
@@ -20,6 +21,8 @@ public interface CourseMapper {
     @Mapping(source = "level.levelName", target = "levelName")
     @Mapping(source = "reviewedBy.userId", target = "reviewedBy")
     CourseResponse toCourseResponse(Course course);
+    
+    CourseComboboxResponse toComboboxResponse(Course course);
     
     @Mapping(target = "levelId", source = "level.levelId")
     @Mapping(target = "levelName", source = "level.levelName")

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
 
 function TeacherLessonVideoList() {
@@ -56,13 +58,9 @@ function TeacherLessonVideoList() {
     <div className="teacher-lesson-detail-page">
       <div className="lesson-detail-heading">
         <div>
-          <button
-            className="lesson-detail-back"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonTrail(courseId, lessonId, "Quản lý video")}
+          />
 
           <h2>Quản lý video bài học</h2>
           <p>Danh sách video của lesson. Video chỉ được phát khi click vào trang xem chi tiết.</p>

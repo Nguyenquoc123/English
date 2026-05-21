@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherQuestionCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherQuestionCreate() {
   const navigate = useNavigate();
@@ -90,23 +92,7 @@ function TeacherQuestionCreate() {
 
       const token = localStorage.getItem("token");
 
-      /*
-        API gợi ý:
-        GET /teacher/questions/my-bank?questionType=MULTIPLE_CHOICE
-
-        Response:
-        [
-          {
-            questionId,
-            questionType,
-            content,
-            correctText,
-            optionCount,
-            defaultPoint,
-            status
-          }
-        ]
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/questions/my-bank?questionType=${questionType}`,
@@ -331,16 +317,7 @@ function TeacherQuestionCreate() {
         formData.append("mediaFile", mediaFile);
       }
 
-      /*
-        API gợi ý:
-        POST /teacher/lessons/{lessonId}/questions
-
-        Backend:
-        - tạo question
-        - tạo question_options nếu có
-        - tạo lesson_questions
-        - ensure lesson_practice_configs tồn tại cho questionType
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/questions/lessons/${lessonId}`,
@@ -396,17 +373,7 @@ function TeacherQuestionCreate() {
         questionIds: selectedQuestionIds,
       };
 
-      /*
-        API gợi ý:
-        POST /teacher/lessons/{lessonId}/questions/attach
-
-        Backend:
-        - kiểm tra các questionId thuộc giáo viên hiện tại
-        - kiểm tra questionType khớp
-        - gắn vào lesson_questions
-        - tránh gắn trùng
-        - ensure lesson_practice_configs tồn tại cho questionType
-      */
+      
 
       const response = await fetch(
         `${API_BASE}/questions/lessons/${lessonId}/attach`,
@@ -482,16 +449,9 @@ function TeacherQuestionCreate() {
     <div className="question-create-page">
       <div className="question-create-heading">
         <div>
-          <button
-            type="button"
-            className="question-back-link"
-            onClick={() =>
-              navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)
-            }
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại chi tiết bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonTrail(courseId, lessonId, "Thêm câu hỏi")}
+          />
 
           <h2>Thêm câu hỏi ôn tập</h2>
 
@@ -694,7 +654,7 @@ function TeacherQuestionCreate() {
 
                       <div className="option-list">
                         {options.map((option, index) => (
-                          <div className="option-item" key={index}>
+                          <div className="option-item-add" key={index}>
                             <div className="form-check">
                               <input
                                 className="form-check-input"
@@ -908,8 +868,7 @@ function TeacherQuestionCreate() {
                 }
                 disabled={saving}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>
@@ -980,11 +939,7 @@ function TeacherQuestionCreate() {
               </div>
             </div>
 
-            <div className="alert alert-info mt-3">
-              <strong>Lưu ý:</strong> Khi thêm câu hỏi vào lesson, backend nên
-              đảm bảo có bản ghi trong <code>lesson_practice_configs</code> cho
-              dạng ôn tập tương ứng.
-            </div>
+            
           </div>
         </div>
       </form>

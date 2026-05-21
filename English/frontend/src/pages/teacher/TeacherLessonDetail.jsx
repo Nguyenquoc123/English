@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./TeacherLessonDetail.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonListTrail } from "../../utils/breadcrumbPaths";
 
 function TeacherLessonDetail() {
   const navigate = useNavigate();
@@ -139,14 +141,9 @@ function TeacherLessonDetail() {
     <div className="teacher-lesson-detail-page">
       <div className="lesson-detail-heading">
         <div>
-          <button
-            type="button"
-            className="lesson-detail-back"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons`)}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại danh sách bài học
-          </button>
+          <CourseBreadcrumb
+            items={teacherLessonListTrail(courseId, "Chi tiết bài học")}
+          />
 
           <div className="course-pill">
             <i className="bi bi-journal-bookmark"></i>

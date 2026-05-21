@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import JoditEditor from "jodit-react";
 import "./TeacherCourseCreate.css";
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherCourses } from "../../utils/breadcrumbPaths";
 
 function TeacherCourseCreate() {
   const navigate = useNavigate();
@@ -18,10 +20,8 @@ function TeacherCourseCreate() {
 
   const [accessType, setAccessType] = useState("FREE");
 
-  // PAID thì dùng price
   const [price, setPrice] = useState(0);
 
-  // FREE thì dùng examPrice
   const [examPrice, setExamPrice] = useState(0);
 
   const [thumbnailFile, setThumbnailFile] = useState(null);
@@ -185,13 +185,10 @@ function TeacherCourseCreate() {
         title: title.trim(),
         shortDescription: shortDescription.trim(),
 
-        // Jodit trả về HTML
         description: description.trim(),
 
         levelId: Number(levelId),
 
-        // Bạn đang dùng courseType trong code hiện tại
-        // Nếu backend của bạn dùng accessType thì đổi courseType thành accessType
         courseType: accessType,
 
         price: accessType === "PAID" ? Number(price) : 0,
@@ -215,7 +212,6 @@ function TeacherCourseCreate() {
       const response = await fetch(`${API_BASE}/khoa-hoc/tao-khoa-hoc`, {
         method: "POST",
         headers: {
-          // Không set Content-Type khi dùng FormData
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,
@@ -270,14 +266,9 @@ function TeacherCourseCreate() {
     <div className="create-course-page">
       <div className="create-page-heading">
         <div>
-          <button
-            type="button"
-            className="create-back-link"
-            onClick={() => navigate("/teacher/courses")}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Quay lại danh sách
-          </button>
+          <CourseBreadcrumb
+            items={[teacherCourses, { label: "Tạo khóa học" }]}
+          />
 
           <h2>Tạo khóa học mới</h2>
 
@@ -552,8 +543,7 @@ function TeacherCourseCreate() {
                 onClick={() => navigate("/teacher/courses")}
                 disabled={loading}
               >
-                <i className="bi bi-arrow-left me-1"></i>
-                Quay lại
+                Hủy
               </button>
             </div>
           </div>

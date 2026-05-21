@@ -42,7 +42,6 @@ function Statistics() {
     }
   };
 
-  // ── Helper formatters ──────────────────────────────────────
   const formatPrice = (amount) => {
     if (!amount && amount !== 0) return "0 ₫";
     return new Intl.NumberFormat("vi-VN", {
@@ -51,7 +50,6 @@ function Statistics() {
     }).format(amount);
   };
 
-  // ── User stats ─────────────────────────────────────────────
   const userStats = {
     total: users.length,
     students: users.filter((u) => u.roleName === "student").length,
@@ -62,7 +60,6 @@ function Statistics() {
     pending: users.filter((u) => u.status === "pending").length,
   };
 
-  // Monthly new users (last 6 months)
   const monthlyUsers = (() => {
     const now = new Date();
     const months = [];
@@ -81,7 +78,6 @@ function Statistics() {
 
   const maxMonthlyUsers = Math.max(...monthlyUsers.map((m) => m.count), 1);
 
-  // ── Course stats ───────────────────────────────────────────
   const courseStats = {
     total: courses.length,
     published: courses.filter((c) => c.status === "Published").length,
@@ -97,7 +93,6 @@ function Statistics() {
     ? Math.round((courseStats.published / (courseStats.published + courseStats.rejected || 1)) * 100)
     : 0;
 
-  // ── Revenue stats ──────────────────────────────────────────
   const successTx = transactions.filter((t) => t.status === "SUCCESS");
   const totalRevenue = successTx.reduce((sum, t) => sum + (t.amount || 0), 0);
   const courseTxRevenue = successTx
@@ -107,7 +102,6 @@ function Statistics() {
     .filter((t) => t.targetType === "EXAM")
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-  // Monthly revenue (last 6 months)
   const monthlyRevenue = (() => {
     const now = new Date();
     const months = [];
@@ -128,7 +122,6 @@ function Statistics() {
 
   const maxMonthlyRevenue = Math.max(...monthlyRevenue.map((m) => m.amount), 1);
 
-  // Top courses by revenue
   const topCourseRevenue = (() => {
     const map = {};
     successTx
@@ -174,7 +167,6 @@ function Statistics() {
         </div>
       )}
 
-      {/* ── Overview cards ── */}
       <div className="row g-3 mb-4">
         {[
           { label: "Tổng người dùng", value: dashboard?.totalUsers ?? userStats.total, icon: "bi-people", color: "bg-primary-subtle text-primary" },
@@ -198,7 +190,6 @@ function Statistics() {
         ))}
       </div>
 
-      {/* ── Revenue overview ── */}
       <div className="row g-3 mb-4">
         <div className="col-xl-4 col-md-6">
           <div className="admin-table-card h-100">
@@ -264,9 +255,7 @@ function Statistics() {
         </div>
       </div>
 
-      {/* ── User stats + Course stats ── */}
       <div className="row g-3 mb-4">
-        {/* User distribution */}
         <div className="col-xl-4 col-md-6">
           <div className="admin-table-card h-100">
             <h6 className="fw-bold text-muted mb-3">
@@ -313,7 +302,6 @@ function Statistics() {
           </div>
         </div>
 
-        {/* New users by month */}
         <div className="col-xl-4 col-md-6">
           <div className="admin-table-card h-100">
             <h6 className="fw-bold text-muted mb-3">
@@ -337,7 +325,6 @@ function Statistics() {
           </div>
         </div>
 
-        {/* Course status breakdown */}
         <div className="col-xl-4 col-md-12">
           <div className="admin-table-card h-100">
             <h6 className="fw-bold text-muted mb-3">
@@ -388,7 +375,6 @@ function Statistics() {
         </div>
       </div>
 
-      {/* ── Top courses by revenue ── */}
       {topCourseRevenue.length > 0 && (
         <div className="admin-table-card mb-4">
           <h6 className="fw-bold text-muted mb-3">
@@ -439,7 +425,6 @@ function Statistics() {
         </div>
       )}
 
-      {/* ── Recent transactions ── */}
       <div className="admin-table-card">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h6 className="fw-bold text-muted mb-0">
