@@ -417,3 +417,38 @@
   color: #9ca3af;
   font-size: 12px;
 }
+
+.profile-teacher-application-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.profile-teacher-application-card .application-status-not-sent,
+.profile-teacher-application-card .application-status-pending,
+.profile-teacher-application-card .application-status-approved,
+.profile-teacher-application-card .application-status-rejected {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.application-status-not-sent {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.application-status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.application-status-approved {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.application-status-rejected {
+  background: #f8d7da;
+  color: #842029;
+}

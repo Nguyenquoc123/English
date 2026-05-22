@@ -92,7 +92,6 @@ function TeacherCourseList() {
             setCourses(data.content || []);
             setPage(data.number ?? 0);
             setTotalPages(data.totalPages ?? 0);
-            setTotalElements(data.totalElements ?? 0);
         } catch (err) {
             console.error(err);
             setError("Lỗi kết nối server");

@@ -4,6 +4,8 @@ import "./StudentProfile.css";
 import { getFileUrl } from "../../utils/fileurl";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { studentHome } from "../../utils/breadcrumbPaths";
+import { getTeacherApplicationSummary } from "../../api/teacherProfileApi";
+import { getTeacherApplicationStatusMeta } from "../../utils/teacherApplicationStatus";
 
 function StudentProfile() {
     const navigate = useNavigate();
@@ -11,7 +13,7 @@ function StudentProfile() {
     const API_BASE = "http://localhost:8080";
 
     const [profile, setProfile] = useState(null);
-    const [registered, setRegistered] = useState(null);
+    const [teacherApplication, setTeacherApplication] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -70,43 +72,12 @@ function StudentProfile() {
 
     const checkProfileTeacher = async () => {
         try {
-            setLoading(true);
-            setError("");
-
-            const token = getToken();
-
-            if (!token) {
-                navigate("/dang-nhap");
-                return;
-            }
-
-            const response = await fetch(`${API_BASE}/teacher-profile/profile-registered`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            let data = null;
-
-            try {
-                data = await response.json();
-            } catch {
-                data = null;
-            }
-
-            if (!response.ok) {
-                setError(data?.message || "Lỗi hệ thống");
-                return;
-            }
-
-            const result = data.result || data.data || data;
-            setRegistered(Boolean(data));
+            const res = await getTeacherApplicationSummary();
+            const summary = res.data?.result ?? res.data?.data ?? res.data;
+            setTeacherApplication(summary || { registered: false });
         } catch (err) {
             console.error(err);
-            setError("Lỗi kết nối server");
-        } finally {
-            setLoading(false);
+            setTeacherApplication({ registered: false });
         }
     };
 
@@ -321,6 +292,14 @@ function StudentProfile() {
 
                             <div className="profile-info-item">
                                 <div className="info-label">
+                                    <i className="bi bi-telephone"></i>
+                                    Số điện thoại
+                                </div>
+                                <strong>{profile.phone || teacherApplication?.phone || "--"}</strong>
+                            </div>
+
+                            <div className="profile-info-item">
+                                <div className="info-label">
                                     <i className="bi bi-person-badge"></i>
                                     Vai trò
                                 </div>
@@ -356,6 +335,33 @@ function StudentProfile() {
                             </div>
                         </div>
 
+                        {teacherApplication && (() => {
+                            const appMeta = getTeacherApplicationStatusMeta(
+                                teacherApplication.approvalStatus,
+                                teacherApplication.registered
+                            );
+                            return (
+                                <div className="profile-teacher-application-card mb-3">
+                                    <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                        <div>
+                                            <h6 className="mb-1 fw-bold">Đơn đăng ký giáo viên</h6>
+                                            <p className="text-muted small mb-0">{appMeta.description}</p>
+                                        </div>
+                                        <span className={`badge ${appMeta.className}`}>
+                                            {appMeta.label}
+                                        </span>
+                                    </div>
+                                    {(teacherApplication.phone || profile.phone) && (
+                                        <p className="small mb-0 mt-2">
+                                            <i className="bi bi-telephone me-1" />
+                                            SĐT trên hồ sơ:{" "}
+                                            <strong>{teacherApplication.phone || profile.phone}</strong>
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
                         <div className="profile-action-area">
                             <button
                                 type="button"
@@ -374,22 +380,32 @@ function StudentProfile() {
                                 <i className="bi bi-lock me-2"></i>
                                 Đổi mật khẩu
                             </button>
-                            {!registered && <button
-                                type="button"
-                                className="btn btn-purple profile-action-btn"
-                                onClick={() => navigate("/student/teacher-register")}
-                            >
-                                <i className="bi bi-mortarboard me-2"></i>
-                                Đăng ký trở thành giáo viên
-                            </button>}
-                            {registered && <button
-                                type="button"
-                                className="btn btn-purple profile-action-btn"
-                                onClick={() => navigate("/student/teacher-register/result")}
-                            >
-                                <i className="bi bi-clipboard-check me-2"></i>
-                                Xem kết quả đăng ký
-                            </button>}
+                            {!teacherApplication?.registered && (
+                                <button
+                                    type="button"
+                                    className="btn btn-purple profile-action-btn"
+                                    onClick={() => navigate("/student/teacher-register")}
+                                >
+                                    <i className="bi bi-mortarboard me-2"></i>
+                                    Đăng ký trở thành giáo viên
+                                </button>
+                            )}
+                            {teacherApplication?.registered && (
+                                <button
+                                    type="button"
+                                    className="btn btn-purple profile-action-btn"
+                                    onClick={() =>
+                                        teacherApplication.approvalStatus === "REJECTED"
+                                            ? navigate("/student/teacher-register")
+                                            : navigate("/student/teacher-register/result")
+                                    }
+                                >
+                                    <i className="bi bi-clipboard-check me-2"></i>
+                                    {teacherApplication.approvalStatus === "REJECTED"
+                                        ? "Cập nhật đơn đăng ký"
+                                        : "Xem kết quả đăng ký"}
+                                </button>
+                            )}
 
                         </div>
                     </div>

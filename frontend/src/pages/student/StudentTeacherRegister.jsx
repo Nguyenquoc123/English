@@ -5,6 +5,8 @@ import "./StudentTeacherRegister.css";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
+import { getTeacherApplicationSummary, getTeacherProfile } from "../../api/teacherProfileApi";
+import { getTeacherApplicationStatusMeta } from "../../utils/teacherApplicationStatus";
 
 function StudentTeacherRegister() {
   const navigate = useNavigate();
@@ -13,6 +15,8 @@ function StudentTeacherRegister() {
   const API_BASE = "http://localhost:8080";
 
   const [profile, setProfile] = useState(null);
+  const [applicationStatus, setApplicationStatus] = useState(null);
+  const [hasSubmittedApplication, setHasSubmittedApplication] = useState(false);
 
   const [formData, setFormData] = useState({
     phone: "",
@@ -93,7 +97,15 @@ function StudentTeacherRegister() {
       }
 
       setProfile(result);
-      await loadTeacherDraft(token);
+
+      if (result?.phone) {
+        setFormData((prev) => ({
+          ...prev,
+          phone: prev.phone || result.phone,
+        }));
+      }
+
+      await loadTeacherDraft();
     } catch (error) {
       console.error(error);
       alert("Lỗi kết nối server");
@@ -102,31 +114,50 @@ function StudentTeacherRegister() {
     }
   };
 
-  const loadTeacherDraft = async (token) => {
+  const loadTeacherDraft = async () => {
     try {
-      const response = await fetch(`${API_BASE}/teacher-profile/profile-register`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const summaryRes = await getTeacherApplicationSummary();
+      const summary =
+        summaryRes.data?.result ?? summaryRes.data?.data ?? summaryRes.data;
+      const registered = Boolean(summary?.registered);
+      const status = String(summary?.approvalStatus || "").toUpperCase();
 
-      if (!response.ok) return;
+      setHasSubmittedApplication(registered);
+      setApplicationStatus(registered ? status : null);
 
-      const data = await response.json();
-      const body = data?.result || data?.data || data;
-      const status = String(body?.approvalStatus || "").toUpperCase();
+      if (status === "PENDING" || status === "APPROVED") {
+        navigate("/student/teacher-register/result");
+        return;
+      }
 
       if (status === "REJECTED") {
+        const res = await getTeacherProfile();
+        const body = res.data?.result ?? res.data?.data ?? res.data;
         setFormData((prev) => ({
           ...prev,
-          phone: body.phone || "",
+          phone: body.phone || summary.phone || prev.phone,
           bio: body.bio || "",
           experience: body.experience || "",
         }));
+        return;
+      }
+
+      if (summary?.phone) {
+        setFormData((prev) => ({
+          ...prev,
+          phone: prev.phone || summary.phone,
+        }));
       }
     } catch {
-      /* bỏ qua nếu chưa có hồ sơ */
+      setApplicationStatus(null);
+      setHasSubmittedApplication(false);
     }
   };
+
+  const formStatusMeta = getTeacherApplicationStatusMeta(
+    applicationStatus,
+    hasSubmittedApplication
+  );
 
   
 
@@ -393,7 +424,20 @@ function StudentTeacherRegister() {
               Hoàn thiện hồ sơ giảng dạy để gửi yêu cầu xét duyệt trở thành giáo viên
               trên hệ thống.
             </p>
+            <span className={`badge mt-2 ${formStatusMeta.className}`}>
+              {formStatusMeta.label}
+            </span>
+            {formStatusMeta.description && (
+              <p className="text-muted small mb-0 mt-1">{formStatusMeta.description}</p>
+            )}
           </div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => navigate("/student/teacher-register/result")}
+          >
+            Xem kết quả đăng ký
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -476,8 +520,8 @@ function StudentTeacherRegister() {
                     <p>Điền thông tin giảng dạy và tải lên chứng chỉ liên quan.</p>
                   </div>
 
-                  <span className="status-pending-badge">
-                    Trạng thái: Chưa gửi
+                  <span className={`status-pending-badge ${formStatusMeta.className}`}>
+                    Trạng thái: {formStatusMeta.label}
                   </span>
                 </div>
 

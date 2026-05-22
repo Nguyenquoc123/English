@@ -1,5 +1,7 @@
 package com.learning.english.entity;
 
+import org.hibernate.annotations.Nationalized;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,14 +30,16 @@ public class Course {
     @JoinColumn(name = "levelid")
     private Level level;
 
+    @Nationalized
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
+    @Nationalized
     @Column(name = "shortdescription", length = 500)
     private String shortDescription;
 
-    @Lob
-    @Column(name = "description")
+    @Nationalized
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(name = "thumbnailurl", length = 500)
@@ -63,6 +67,7 @@ public class Course {
     @JoinColumn(name = "reviewedBy")
     private User reviewedBy;
 
+    @Nationalized
     @Column(name = "rejectreason", length = 1000)
     private String rejectReason;
 

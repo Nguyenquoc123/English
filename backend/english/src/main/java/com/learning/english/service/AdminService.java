@@ -59,6 +59,9 @@ public class AdminService {
     NotificationRepository notificationRepository;
 
     @Autowired
+    NotificationService notificationService;
+
+    @Autowired
     CourseReviewRepository courseReviewRepository;
 
     public AdminDashboardResponse getDashboard() {
@@ -364,32 +367,11 @@ public class AdminService {
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest req, String adminUsername) {
-        if (req.getTitle() == null || req.getTitle().isBlank())
-            throw new RuntimeException("Tiêu đề thông báo không được rỗng");
-        if (req.getMessage() == null || req.getMessage().isBlank())
-            throw new RuntimeException("Nội dung thông báo không được rỗng");
-
-        User admin = userRepository.findByUsername(adminUsername)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
-
-        Notification notification = Notification.builder()
-                .title(req.getTitle())
-                .message(req.getMessage())
-                .targetType(req.getTargetType() != null ? req.getTargetType() : "ALL")
-                .targetValue(req.getTargetValue())
-                .createdBy(admin)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        notification = notificationRepository.save(notification);
-        return toNotificationResponse(notification);
+        return notificationService.createBroadcast(req, adminUsername);
     }
 
     public List<NotificationResponse> getAllNotifications() {
-        return notificationRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(this::toNotificationResponse)
-                .collect(Collectors.toList());
+        return notificationService.getAllBroadcasts();
     }
 
     private NotificationResponse toNotificationResponse(Notification n) {

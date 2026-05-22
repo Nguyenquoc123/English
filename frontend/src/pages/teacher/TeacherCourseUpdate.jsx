@@ -269,7 +269,7 @@ function TeacherCourseUpdate() {
       formData.append(
         "data",
         new Blob([JSON.stringify(courseData)], {
-          type: "application/json",
+          type: "application/json;charset=UTF-8",
         })
       );
 

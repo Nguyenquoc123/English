@@ -1,6 +1,7 @@
 package com.learning.english.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,10 +106,11 @@ public class CourseController {
             @RequestPart("data") String data,
             @RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile
     ) throws IOException {
-		System.out.println("Đã chạy");
         ObjectMapper objectMapper = new ObjectMapper();
 
-        CourseRequest request = objectMapper.readValue(data, CourseRequest.class);
+        CourseRequest request = objectMapper.readValue(
+                data.getBytes(StandardCharsets.UTF_8),
+                CourseRequest.class);
 
         return ResponseEntity.ok(courseService.taoKhoaHoc(request, thumbnailFile));
     }

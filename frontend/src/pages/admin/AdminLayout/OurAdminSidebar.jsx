@@ -26,7 +26,12 @@ function OurAdminSidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        <button className="btn btn-sm btn-light" onClick={onClose}>
+        <button
+          type="button"
+          className="btn btn-sm btn-light admin-sidebar-close"
+          onClick={onClose}
+          aria-label="Đóng menu"
+        >
           <i className="bi bi-x-lg"></i>
         </button>
       </div>

@@ -56,7 +56,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/hosocanhan").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.PUT, "/doi-mat-khau").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/teacher-profile/register").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-register", "/teacher-profile/profile-registered").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-register", "/teacher-profile/profile-registered").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/notifications/my", "/notifications/unread-count").hasAnyAuthority("SCOPE_student", "SCOPE_teacher", "SCOPE_admin")
+                .requestMatchers(HttpMethod.PUT, "/notifications/read-all").hasAnyAuthority("SCOPE_student", "SCOPE_teacher", "SCOPE_admin")
+                .requestMatchers(HttpMethod.PUT, "/notifications/*/read").hasAnyAuthority("SCOPE_student", "SCOPE_teacher", "SCOPE_admin")
                 .requestMatchers(HttpMethod.GET, "/check-mua").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/video-progress").hasAuthority("SCOPE_student")
                 

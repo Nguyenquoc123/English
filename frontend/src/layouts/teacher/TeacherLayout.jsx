@@ -1,7 +1,6 @@
 import { Outlet } from "react-router-dom";
 import TeacherSidebar from "../../compenents/teacher/TeacherSidebar";
 import TeacherHeader from "../../compenents/teacher/TeacherHeader";
-import AppBreadcrumbBar from "../../components/layout/AppBreadcrumbBar/AppBreadcrumbBar";
 import { BreadcrumbSuppressInline } from "../../context/BreadcrumbContext";
 import "../teacher/TeacherLayout.css";
 
@@ -26,8 +25,10 @@ function TeacherLayout() {
 
       <div className="teacher-main">
         <div className="layout-sticky-top layout-sticky-top--teacher">
-          <TeacherHeader onOpenSidebar={() => setSidebarOpen(true)} />
-          <AppBreadcrumbBar variant="teacher" />
+          <TeacherHeader
+            sidebarOpen={sidebarOpen}
+            onToggleSidebar={() => setSidebarOpen((open) => !open)}
+          />
         </div>
 
         <main className="p-4">

@@ -115,10 +115,10 @@ function App() {
         />
 
         <Route path="/khoa-hoc/:courseId" element={
-          <>
+          <AppShell>
             <StudentCourseDetail />
             <AiChatWidget />
-          </>
+          </AppShell>
         } />
 
         <Route path="/courses/:courseId/purchase" element={
@@ -234,7 +234,7 @@ function App() {
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
 
         <Route path="/teacher" element={<TeacherLayout />}>
-          <Route index element={<Navigate to="/teacher/revenue" replace />} />
+          <Route index element={<Navigate to="/teacher/courses" replace />} />
           <Route path="courses" element={<TeacherCourseList />} />
           <Route path="courses/create" element={<TeacherCourseCreate />} />
           <Route path="courses/:courseId" element={<TeacherCourseDetail />} />

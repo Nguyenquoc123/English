@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 import './Navbar.css';
+import NotificationBell from '../../NotificationBell/NotificationBell';
 
 function getUserFromToken() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || localStorage.getItem('english_token');
     if (!token) return null;
     const payload = JSON.parse(atob(token.split('.')[1]));
     return {
@@ -44,6 +45,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('english_token');
     setUser(null);
     setDropdownOpen(false);
     setMobileOpen(false);
@@ -82,6 +84,12 @@ export default function Navbar() {
             <div className="nb-mobile-auth">
               {user ? (
                 <>
+                  {(isStudent || isTeacher) && (
+                    <div className="nb-mobile-notifications">
+                      <div className="nb-mobile-notifications-label">Thông báo</div>
+                      <NotificationBell variant="light" />
+                    </div>
+                  )}
                   <div className="nb-mobile-user">
                     <span className="nb-avatar">{initials}</span>
                     <div>
@@ -94,19 +102,25 @@ export default function Navbar() {
                   </Link>
                   <div className="nb-mobile-divider" />
                   <Link to="/student/profile" className="nb-mobile-link" onClick={closeAll}>
-                    <i className="bi bi-person" /> Hồ sơ cá nhân
+                    <i className="bi bi-person-circle" /> Hồ sơ cá nhân
                   </Link>
                   <Link to="/student/change-password" className="nb-mobile-link" onClick={closeAll}>
-                    <i className="bi bi-key" /> Đổi mật khẩu
+                    <i className="bi bi-shield-lock" /> Đổi mật khẩu
                   </Link>
-                  {isStudent && (
+                  {(isStudent || isTeacher) && (
                     <Link to="/student/khoa-hoc-da-mua" className="nb-mobile-link" onClick={closeAll}>
-                      <i className="bi bi-journal-bookmark" /> Khóa học đã mua
+                      <i className="bi bi-journal-bookmark-fill" /> Khóa học đã mua
                     </Link>
                   )}
+                  <Link to="/personal-practices" className="nb-mobile-link" onClick={closeAll}>
+                    <i className="bi bi-journal-richtext" /> Bài ôn tập cá nhân
+                  </Link>
+                  <Link to="/lich-su-lam-bai" className="nb-mobile-link" onClick={closeAll}>
+                    <i className="bi bi-clock-history" /> Lịch sử làm bài
+                  </Link>
                   {!isTeacher && !isAdmin && (
                     <Link to="/student/teacher-register" className="nb-mobile-link" onClick={closeAll}>
-                      <i className="bi bi-pencil-square" /> Đăng ký làm giáo viên
+                      <i className="bi bi-person-badge" /> Đăng ký làm giáo viên
                     </Link>
                   )}
                   {isTeacher && (
@@ -137,6 +151,12 @@ export default function Navbar() {
             </div>
           )}
         </nav>
+
+        {user && (isStudent || isTeacher) && (
+          <div className="nb-notifications nb-notifications--desktop" title="Thông báo từ admin">
+            <NotificationBell variant="navbar" />
+          </div>
+        )}
 
         {/* ── Cart desktop ── */}
         <Link to="/gio-hang" className="nb-cart" onClick={closeAll} aria-label="Giỏ hàng">
@@ -169,28 +189,25 @@ export default function Navbar() {
 
                   <p className="nb-dropdown-section">Tài khoản</p>
                   <Link to="/student/profile" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-person" /> Hồ sơ cá nhân
+                    <i className="bi bi-person-circle" /> Hồ sơ cá nhân
                   </Link>
 
-                  <Link to="/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-key" /> Khóa học đã mua
-                  </Link>
-
-                  <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-key" /> Đổi mật khẩu
-                  </Link>
-                  {isStudent && (
+                  {(isStudent || isTeacher) && (
                     <Link to="/student/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
-                      <i className="bi bi-journal-bookmark" /> Khóa học đã mua
+                      <i className="bi bi-journal-bookmark-fill" /> Khóa học đã mua
                     </Link>
                   )}
 
+                  <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-shield-lock" /> Đổi mật khẩu
+                  </Link>
+
                   <Link to="/personal-practices" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-key" /> Bài ôn tập cá nhân
+                    <i className="bi bi-journal-richtext" /> Bài ôn tập cá nhân
                   </Link>
 
                   <Link to="/lich-su-lam-bai" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-key" /> Lịch sử làm bài
+                    <i className="bi bi-clock-history" /> Lịch sử làm bài
                   </Link>
 
                   {/* Đăng ký GV (student only) */}
@@ -199,7 +216,7 @@ export default function Navbar() {
                       <div className="nb-dropdown-divider" />
                       <p className="nb-dropdown-section">Nâng cấp</p>
                       <Link to="/student/teacher-register" className="nb-dropdown-item" onClick={closeAll}>
-                        <i className="bi bi-pencil-square" /> Đăng ký làm giáo viên
+                        <i className="bi bi-person-badge" /> Đăng ký làm giáo viên
                       </Link>
                     </>
                   )}

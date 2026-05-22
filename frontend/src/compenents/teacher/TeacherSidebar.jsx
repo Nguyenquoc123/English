@@ -35,7 +35,12 @@ function TeacherSidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        <button className="btn btn-sm btn-light" onClick={onClose}>
+        <button
+          type="button"
+          className="btn btn-sm btn-light teacher-sidebar-close"
+          onClick={onClose}
+          aria-label="Đóng menu"
+        >
           <i className="bi bi-x-lg"></i>
         </button>
       </div>
@@ -55,9 +60,14 @@ function TeacherSidebar({ isOpen, onClose }) {
 
         <p className="sidebar-title">Khóa học</p>
 
-        <NavLink to="/teacher/courses" className="sidebar-link" onClick={onClose}>
-          <i className="bi bi-journal-bookmark"></i>
-          Khóa học của tôi
+        <NavLink
+          to="/teacher/courses"
+          end
+          className="sidebar-link"
+          onClick={onClose}
+        >
+          <i className="bi bi-house-door"></i>
+          Trang chủ
         </NavLink>
 
         <NavLink

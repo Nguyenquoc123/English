@@ -54,9 +54,19 @@ function NotificationManagement() {
 
       const targetValue = formTargetType === "ALL" ? null : formTargetValue.trim();
 
-      await createNotification(formTitle, formMessage, formTargetType, targetValue);
+      const res = await createNotification(formTitle, formMessage, formTargetType, targetValue);
+      const body = res.data?.result ?? res.data?.data ?? res.data;
+      const count = body?.recipientCount ?? 0;
 
-      alert("Gửi thông báo thành công!");
+      let successMessage;
+      if (formTargetType === "ALL") {
+        successMessage = "Đã gửi thông báo đến toàn bộ hệ thống";
+      } else if (formTargetType === "ROLE") {
+        successMessage = `Đã gửi thông báo thành công đến ${count} người (vai trò ${formTargetValue.trim()})!`;
+      } else {
+        successMessage = `Đã gửi thông báo thành công đến ${count} người (người dùng #${formTargetValue.trim()})!`;
+      }
+      alert(successMessage);
 
       setFormTitle("");
       setFormMessage("");
@@ -72,7 +82,7 @@ function NotificationManagement() {
   };
 
   const getTargetTypeLabel = (type) => {
-    if (type === "ALL") return "Toàn hệ thống";
+    if (type === "ALL") return "Toàn bộ hệ thống";
     if (type === "ROLE") return "Theo vai trò";
     if (type === "USER") return "Người dùng cụ thể";
     return type;
@@ -137,7 +147,7 @@ function NotificationManagement() {
                 setFormTargetValue("");
               }}
             >
-              <option value="ALL">Toàn hệ thống</option>
+              <option value="ALL">Toàn bộ hệ thống</option>
               <option value="ROLE">Theo vai trò</option>
               <option value="USER">Người dùng cụ thể</option>
             </select>

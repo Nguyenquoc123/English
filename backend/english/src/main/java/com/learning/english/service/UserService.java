@@ -18,6 +18,7 @@ import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.entity.TeacherProfile;
 import com.learning.english.entity.User;
 import com.learning.english.mapper.UserMapper;
+import com.learning.english.repository.TeacherProfileRepository;
 import com.learning.english.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
@@ -36,6 +37,9 @@ public class UserService {
 	@Autowired
 	PasswordEncoder passwordEncoder;
 
+	@Autowired
+	TeacherProfileRepository teacherProfileRepository;
+
 	public StudentProfileResponse getHoSoCaNhan() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -48,7 +52,9 @@ public class UserService {
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-		return userMapper.toStudentProfileResponse(user);
+		StudentProfileResponse response = userMapper.toStudentProfileResponse(user);
+		response.setPhone(resolveEffectivePhone(user));
+		return response;
 	}
 
 	public StudentProfileResponse updateHoSoCaNhan(StudentUpdateRequest request, MultipartFile avatarFile) throws IOException {
@@ -67,8 +73,15 @@ public class UserService {
 			throw new RuntimeException("Email đã tồn tại");
 		}
 
-		user.setEmail(request.getEmail());
-		user.setFullName(request.getFullName());
+		user.setEmail(request.getEmail().trim());
+		user.setFullName(request.getFullName().trim());
+
+		if (request.getPhone() != null && !request.getPhone().isBlank()) {
+			String phone = normalizePhone(request.getPhone());
+			validatePhone(phone);
+			user.setPhone(phone);
+			syncTeacherProfilePhone(user, phone);
+		}
 
 		if (avatarFile != null && !avatarFile.isEmpty()) {
 			String avatarUrl = fileService.saveFile(avatarFile, "images");
@@ -78,7 +91,44 @@ public class UserService {
 		user.setUpdatedAt(LocalDateTime.now());
 		user = userRepository.save(user);
 
-		return userMapper.toStudentProfileResponse(user);
+		StudentProfileResponse response = userMapper.toStudentProfileResponse(user);
+		response.setPhone(resolveEffectivePhone(user));
+		return response;
+	}
+
+	private void syncTeacherProfilePhone(User user, String phone) {
+		teacherProfileRepository.findByUser(user).ifPresent(profile -> {
+			profile.setPhone(phone);
+			profile.setUpdatedAt(LocalDateTime.now());
+			teacherProfileRepository.save(profile);
+		});
+	}
+
+	private String resolveEffectivePhone(User user) {
+		String userPhone = user.getPhone();
+		if (userPhone != null && !userPhone.isBlank()) {
+			return userPhone;
+		}
+		return teacherProfileRepository.findByUser(user)
+				.map(TeacherProfile::getPhone)
+				.filter(p -> p != null && !p.isBlank())
+				.orElse(null);
+	}
+
+	private String normalizePhone(String phone) {
+		if (phone == null) {
+			return "";
+		}
+		return phone.trim().replaceAll("[\\s.\\-]", "");
+	}
+
+	private void validatePhone(String phone) {
+		if (phone == null || phone.isEmpty()) {
+			throw new RuntimeException("Số điện thoại không được để trống");
+		}
+		if (!phone.matches("^(\\+84|84|0)[0-9]{9,10}$")) {
+			throw new RuntimeException("Số điện thoại không hợp lệ (VD: 0912345678)");
+		}
 	}
 
 	@Transactional
