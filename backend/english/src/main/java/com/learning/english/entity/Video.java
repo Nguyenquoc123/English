@@ -31,6 +31,9 @@ public class Video {
     
     @Column(name = "status", nullable = true, length = 50)
     private String status;
+    
+    @Column(name = "fileurl", nullable = true, length = 500)
+    private String fileUrl;
 
     @Column(name = "durationseconds")
     private Integer durationSeconds;

@@ -51,12 +51,12 @@ public class QuestionService {
     @Autowired
     private FileService fileService;
 
-    public List<QuestionBankItemResponse> layNganHangCauHoiCuaGiaoVien(String questionType) {
+    public List<QuestionBankItemResponse> layNganHangCauHoiCuaGiaoVien(String questionType, String keyword, Long levelId) {
         String username = getCurrentUsername();
 
         validateQuestionType(questionType);
 
-        return questionRepository.findMyQuestionBankByType(username, questionType)
+        return questionRepository.findMyQuestionBankByType(username, questionType, keyword, levelId)
                 .stream()
                 .map(questionMapper::toQuestionBankItemResponse)
                 .toList();
@@ -89,6 +89,87 @@ public class QuestionService {
 
         LocalDateTime now = LocalDateTime.now();
 
+        Question question = buildQuestionFromRequest(
+                request,
+                teacher,
+                mediaUrl,
+                now
+        );
+
+        Question savedQuestion = questionRepository.save(question);
+
+        ganQuestionVaoLessonNeuChuaGan(lesson, savedQuestion);
+
+        ensurePracticeConfigExists(lesson, request.getQuestionType());
+
+        return questionMapper.toQuestionResponse(savedQuestion);
+    }
+    
+    
+    @Transactional
+    public List<QuestionResponse> taoNhieuCauHoiVaGanVaoLesson(
+            Long lessonId,
+            List<QuestionRequest> requests
+    ) {
+        if (requests == null || requests.isEmpty()) {
+            throw new RuntimeException("Danh sách câu hỏi không được để trống");
+        }
+
+        String username = getCurrentUsername();
+
+        Lesson lesson = lessonRepository.findLessonOfTeacher(lessonId, username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lesson hoặc bạn không có quyền thao tác"));
+
+        User teacher = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<QuestionResponse> responses = new ArrayList<>();
+
+        for (int i = 0; i < requests.size(); i++) {
+            QuestionRequest request = requests.get(i);
+
+            try {
+                request.setLessonId(lessonId);
+
+                validateQuestionType(request.getQuestionType());
+
+                /*
+                 * Import Excel hiện không có audio file.
+                 * Nếu request có mediaUrl thì vẫn cho lưu mediaUrl.
+                 */
+                validateCreateRequest(request, null);
+
+                Question question = buildQuestionFromRequest(
+                        request,
+                        teacher,
+                        request.getMediaUrl(),
+                        now
+                );
+
+                Question savedQuestion = questionRepository.save(question);
+
+                ganQuestionVaoLessonNeuChuaGan(lesson, savedQuestion);
+
+                ensurePracticeConfigExists(lesson, request.getQuestionType());
+
+                responses.add(questionMapper.toQuestionResponse(savedQuestion));
+            } catch (Exception e) {
+                throw new RuntimeException("Lỗi ở câu hỏi thứ " + (i + 1) + ": " + e.getMessage(), e);
+            }
+        }
+
+        return responses;
+    }
+    
+    
+    private Question buildQuestionFromRequest(
+            QuestionRequest request,
+            User teacher,
+            String mediaUrl,
+            LocalDateTime now
+    ) {
         Question question = Question.builder()
                 .createdBy(teacher)
                 .questionType(request.getQuestionType())
@@ -116,7 +197,15 @@ public class QuestionService {
                 .build();
 
         if (isChoiceType(request.getQuestionType())) {
+            if (request.getOptions() == null || request.getOptions().isEmpty()) {
+                throw new RuntimeException("Câu hỏi trắc nghiệm phải có danh sách đáp án");
+            }
+
             for (QuestionOptionRequest optionRequest : request.getOptions()) {
+                if (optionRequest.getOptionText() == null || optionRequest.getOptionText().isBlank()) {
+                    continue;
+                }
+
                 QuestionOption option = QuestionOption.builder()
                         .optionText(optionRequest.getOptionText().trim())
                         .isCorrect(Boolean.TRUE.equals(optionRequest.getIsCorrect()))
@@ -127,13 +216,7 @@ public class QuestionService {
             }
         }
 
-        Question savedQuestion = questionRepository.save(question);
-
-        ganQuestionVaoLessonNeuChuaGan(lesson, savedQuestion);
-
-        ensurePracticeConfigExists(lesson, request.getQuestionType());
-
-        return questionMapper.toQuestionResponse(savedQuestion);
+        return question;
     }
 
     @Transactional

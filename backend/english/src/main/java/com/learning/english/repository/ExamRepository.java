@@ -1,5 +1,6 @@
 package com.learning.english.repository;
 
+import com.learning.english.dto.response.ChiTietExam;
 import com.learning.english.entity.Exam;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -139,6 +140,37 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
           AND c.status = 'Published'
         """)
     Optional<Exam> findPublishedExamForStudent(@Param("examId") Long examId);
+    
+    @Query("""
+            SELECT new com.learning.english.dto.response.ChiTietExam(
+                e.examId,
+                'EXAM',
+                e.title,
+                e.durationMinutes,
+                COUNT(DISTINCT eq.examQuestionId),
+                COUNT(DISTINCT a.attemptId),
+                MAX(a.score),
+                MAX(a.submittedAt)
+            )
+            FROM Exam e
+            LEFT JOIN ExamQuestion eq
+                ON eq.exam.examId = e.examId
+                AND eq.question.status = 'PUBLISHED'
+            LEFT JOIN Attempt a
+                ON a.exam.examId = e.examId
+                AND a.user.userId = :userId
+                AND a.attemptType = 'EXAM'
+            WHERE e.examId = :examId
+              AND e.status = 'PUBLISHED'
+            GROUP BY
+                e.examId,
+                e.title,
+                e.durationMinutes
+        """)
+        Optional<ChiTietExam> findChiTietExamByIdAndUserId(
+                @Param("examId") Long examId,
+                @Param("userId") Long userId
+        );
 
     @Query("""
         SELECT

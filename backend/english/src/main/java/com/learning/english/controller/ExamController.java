@@ -1,6 +1,7 @@
 package com.learning.english.controller;
 
 import com.learning.english.dto.request.ExamCreateRequest;
+import com.learning.english.dto.response.ChiTietExam;
 import com.learning.english.dto.response.ExamListResponse;
 import com.learning.english.dto.response.ExamResponse;
 import com.learning.english.dto.response.StudentExamListResponse;
@@ -32,6 +33,14 @@ public class ExamController {
 			@RequestParam(name = "courseId", required = false) Long courseId) {
 		return ResponseEntity.ok(examService.layDanhSachBaiThiByTeacher(courseId, keyword, status));
 	}
+	
+	@GetMapping("/{examId}/chi-tiet")
+    public ResponseEntity<ChiTietExam> layChiTietExam(
+            @PathVariable Long examId
+    ) {
+        ChiTietExam result = examService.layBaiThiByStudent(examId);
+        return ResponseEntity.ok(result);
+    }
 
 	@GetMapping("/all-bai-thi")
 	public ResponseEntity<List<StudentExamListResponse>> layDanhSachBaiThiChoHocVien(

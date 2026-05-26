@@ -1,0 +1,255 @@
+.teacher-profile-container {
+  min-height: 100vh;
+  /* background: #f4f6f8; */
+  padding: 40px 16px;
+  font-family: Arial, sans-serif;
+}
+
+.profile-card {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #e5e7eb;
+}
+
+.profile-header h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #111827;
+}
+
+.username {
+  margin: 8px 0;
+  color: #6b7280;
+}
+
+.section {
+  margin-top: 32px;
+}
+
+.section h3 {
+  margin-bottom: 16px;
+  color: #111827;
+  font-size: 20px;
+  border-left: 4px solid #2563eb;
+  padding-left: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.info-item {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.info-item.full {
+  margin-bottom: 16px;
+}
+
+.info-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.info-item p {
+  margin: 0;
+  color: #111827;
+  line-height: 1.6;
+}
+
+.status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.reject-box {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fff1f2;
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  color: #991b1b;
+}
+
+.reject-box p {
+  margin-bottom: 0;
+}
+
+.certificate-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.certificate-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.certificate-card a {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.certificate-card a:hover {
+  text-decoration: underline;
+}
+
+.certificate-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.action-area {
+  margin-top: 32px;
+  text-align: right;
+}
+
+.action-area button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.action-area button:hover {
+  background: #1d4ed8;
+}
+
+.error-box {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 20px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-area {
+    text-align: center;
+  }
+}
+
+.certificate-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.certificate-card {
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.certificate-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.certificate-image-link {
+    display: block;
+    width: 100%;
+    height: 130px;
+    background: #f8f9fa;
+    overflow: hidden;
+}
+
+.certificate-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+
+.certificate-card-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: white;
+}
+
+.certificate-card-body span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+
+.certificate-view-link:hover {
+    background: #0b5ed7;
+    color: #ffffff;
+}

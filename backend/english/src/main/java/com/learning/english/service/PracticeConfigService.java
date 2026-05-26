@@ -63,7 +63,7 @@ public class PracticeConfigService {
 			throw new RuntimeException("Bạn cần mua khóa học để xem bài ôn tập của lesson này");
 		}
 
-		List<Object[]> rows = practiceConfigRepository.findStudentPracticeConfigsByLessonId(lessonId);
+		List<Object[]> rows = practiceConfigRepository.findStudentPracticeConfigsByLessonId(lessonId, user.getUserId());
 
 		return practiceConfigMapper.toPracticeConfigResponses(rows);
 	}

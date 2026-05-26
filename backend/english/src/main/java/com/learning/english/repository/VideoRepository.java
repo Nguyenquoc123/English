@@ -36,7 +36,8 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 			    v.updatedAt AS updatedAt,
 			    v.status AS status,
 			    CAST(ISNULL(vp.isCompleted, 0) AS bit) AS isCompleted,
-			    ISNULL(vp.watchedSeconds, 0) AS watchedSeconds
+			    ISNULL(vp.watchedSeconds, 0) AS watchedSeconds,
+			    v.fileUrl as fileUrl
 			FROM videos v
 			LEFT JOIN video_progress vp
 			    ON v.videoId = vp.videoId

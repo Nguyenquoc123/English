@@ -168,31 +168,7 @@ function TeacherLessonDetail() {
 
   return (
     <div className="teacher-lesson-detail-page">
-      <div className="lesson-detail-heading">
-        <nav className="teacher-breadcrumb">
-          <span
-            className="teacher-breadcrumb-item"
-            onClick={() => navigate("/teacher/courses")}
-          >
-            Khóa học
-          </span>
-
-          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
-
-          <span
-            className="teacher-breadcrumb-item"
-            onClick={() => navigate(`/teacher/courses/${courseId}`)}
-          >
-            Chi tiết khóa học
-          </span>
-
-          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
-
-          <span className="teacher-breadcrumb-item active">
-            Bài học
-          </span>
-        </nav>
-      </div>
+      
 
       <div className="lesson-content-card">
         <ul className="nav lesson-detail-tabs">

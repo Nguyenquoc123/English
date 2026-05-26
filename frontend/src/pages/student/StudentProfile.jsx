@@ -257,13 +257,7 @@ function StudentProfile() {
                             </span>
                         </div>
 
-                        <div className="profile-note-box">
-                            <i className="bi bi-info-circle"></i>
-                            <p>
-                                Bạn có thể cập nhật thông tin cá nhân hoặc đổi mật khẩu để bảo
-                                mật tài khoản.
-                            </p>
-                        </div>
+                        
                     </div>
 
                     <div className="student-security-card">

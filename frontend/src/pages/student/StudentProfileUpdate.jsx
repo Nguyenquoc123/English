@@ -440,17 +440,12 @@ function StudentProfileUpdate() {
                   </div>
                 </div>
 
-                <div className="profile-warning-box">
-                  <i className="bi bi-shield-exclamation"></i>
-                  <span>
-                    Sau khi cập nhật email, hệ thống có thể yêu cầu xác thực lại email để đảm bảo bảo mật tài khoản.
-                  </span>
-                </div>
+                
 
                 <div className="profile-form-actions">
                   <button
                     type="button"
-                    className="btn btn-light profile-action-btn"
+                    className="btn btn-warning profile-action-btn"
                     onClick={() => navigate("/student/profile")}
                     disabled={saving}
                   >

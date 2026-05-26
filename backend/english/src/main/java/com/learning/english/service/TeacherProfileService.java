@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.learning.english.dto.request.TeacherProfileUpdateRequest;
 import com.learning.english.dto.request.TeacherRegisterRequest;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.entity.Role;
@@ -22,6 +24,8 @@ import com.learning.english.mapper.TeacherProfileMapper;
 import com.learning.english.repository.RoleRepository;
 import com.learning.english.repository.TeacherProfileRepository;
 import com.learning.english.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class TeacherProfileService {
@@ -40,6 +44,10 @@ public class TeacherProfileService {
 	@Autowired
 	RoleRepository roleRepository;
 
+	@Autowired
+	ApplicationEventPublisher applicationEventPublisher;
+
+	@Transactional
 	public TeacherProfileResponse dangKyLamGiaoVien(TeacherRegisterRequest request,
 			List<MultipartFile> certificateFiles) throws IOException {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -103,13 +111,17 @@ public class TeacherProfileService {
 				}
 
 				TeacherProfile savedProfile = teacherProfileRepository.save(existingProfile);
+
+				applicationEventPublisher.publishEvent(savedProfile.getTeacherProfileId());
+
 				return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
+
 			}
 		}
 
 		TeacherProfile teacherProfile = TeacherProfile.builder().user(user).approvalStatus("PENDING")
-				.bio(request.getBio()).experience(request.getExperience()).phone(phone)
-				.certificates(new ArrayList<>()).createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+				.bio(request.getBio()).experience(request.getExperience()).phone(phone).certificates(new ArrayList<>())
+				.createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
 
 		for (MultipartFile file : certificateFiles) {
 			if (file == null || file.isEmpty()) {
@@ -125,6 +137,9 @@ public class TeacherProfileService {
 		}
 
 		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
+
+		applicationEventPublisher.publishEvent(savedProfile.getTeacherProfileId());
+
 		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
 	}
 
@@ -231,5 +246,53 @@ public class TeacherProfileService {
 		if (!phone.matches("^(\\+84|84|0)[0-9]{9,10}$")) {
 			throw new RuntimeException("Số điện thoại không hợp lệ (VD: 0912345678)");
 		}
+	}
+
+	private User getCurrentUser() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		return userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+	}
+
+	@Transactional
+	public TeacherProfileResponse updateHoSoGiaoVien(TeacherProfileUpdateRequest request) {
+		User user = getCurrentUser();
+
+		TeacherProfile teacherProfile = teacherProfileRepository.findByUser(user)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ giáo viên"));
+
+		boolean emailExisted = userRepository.existsByEmailAndUserIdNot(request.getEmail().trim(), user.getUserId());
+
+		if (emailExisted) {
+			throw new RuntimeException("Email đã được sử dụng");
+		}
+
+		user.setEmail(request.getEmail().trim());
+		user.setUpdatedAt(LocalDateTime.now());
+
+		teacherProfile.setPhone(request.getPhone().trim());
+		teacherProfile.setBio(request.getBio().trim());
+		teacherProfile.setExperience(request.getExperience());
+		teacherProfile.setUpdatedAt(LocalDateTime.now());
+
+		/*
+		 * Nếu bạn muốn giáo viên sửa hồ sơ xong phải duyệt lại, mở phần này ra:
+		 *
+		 * teacherProfile.setApprovalStatus("PENDING");
+		 * teacherProfile.setReviewedAt(null); teacherProfile.setReviewedBy(null);
+		 * teacherProfile.setRejectReason(null);
+		 */
+
+		userRepository.save(user);
+		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
+
+		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
 	}
 }

@@ -176,7 +176,7 @@ public class AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("english.com")
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli()))
                 .claim("scope", role)
                 .build();
 

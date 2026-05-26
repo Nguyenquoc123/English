@@ -17,6 +17,9 @@ function TeacherVideoCreate() {
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreviewName, setVideoPreviewName] = useState("");
 
+  const [materialFile, setMaterialFile] = useState(null);
+  const [materialPreviewName, setMaterialPreviewName] = useState("");
+
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState("");
 
@@ -84,6 +87,18 @@ function TeacherVideoCreate() {
     video.src = URL.createObjectURL(file);
   };
 
+  const handleMaterialChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    
+
+    setError("");
+    setMaterialFile(file);
+    setMaterialPreviewName(file.name);
+  };
+
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
 
@@ -137,6 +152,10 @@ function TeacherVideoCreate() {
         formData.append("thumbnailFile", thumbnailFile);
       }
 
+      if (materialFile) {
+        formData.append("materialFile", materialFile);
+      }
+
       const response = await fetch(`${API_BASE}/video/${lessonId}/lessons`, {
         method: "POST",
         headers: {
@@ -180,6 +199,8 @@ function TeacherVideoCreate() {
     setThumbnailPreviewUrl("");
 
     setDurationSeconds("");
+    setMaterialFile(null);
+    setMaterialPreviewName("");
 
     setError("");
   };
@@ -196,40 +217,7 @@ function TeacherVideoCreate() {
 
   return (
     <div className="video-create-page">
-      <div className="lesson-detail-heading">
-        <nav className="teacher-breadcrumb">
-          <span
-            className="teacher-breadcrumb-item"
-            onClick={() => navigate("/teacher/courses")}
-          >
-            Khóa học
-          </span>
 
-          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
-
-          <span
-            className="teacher-breadcrumb-item"
-            onClick={() => navigate(`/teacher/courses/${courseId}`)}
-          >
-            Chi tiết khóa học
-          </span>
-
-          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
-
-          <span
-            className="teacher-breadcrumb-item"
-            onClick={() => navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
-          >
-            Bài học
-          </span>
-
-          <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
-
-          <span className="teacher-breadcrumb-item active">
-            Video
-          </span>
-        </nav>
-      </div>
 
       {error && (
         <div className="alert alert-danger d-flex align-items-center gap-2">
@@ -318,28 +306,63 @@ function TeacherVideoCreate() {
                   )}
                 </div>
 
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">
-                      Trạng thái video <span className="text-danger">*</span>
-                    </label>
 
+
+                <div className="row g-3 mb-3 align-items-end">
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold">Trạng thái</label>
                     <select
                       className="form-select"
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                     >
-                      <option value="DRAFT">Draft</option>
-                      <option value="PUBLISHED">Published</option>
-                      <option value="HIDDEN">Hidden</option>
+                      <option value="DRAFT">Bản nháp</option>
+                      <option value="PUBLISHED">Công khai</option>
+                      <option value="HIDDEN">Ẩn</option>
                     </select>
-
-                    <small className="text-muted">
-                      Nên để Draft cho đến khi kiểm tra nội dung hoàn tất.
-                    </small>
                   </div>
 
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold">Tài liệu bài học</label>
 
+                    <div className="d-flex align-items-center gap-2">
+                      <label className="btn btn-outline-secondary mb-0">
+                        <i className="bi bi-file-earmark-zip me-2"></i>
+                        Chọn file tài liệu
+                        <input
+                          type="file"
+                          accept=".zip,.pdf,.doc,.docx,.ppt,.pptx,.rar"
+                          hidden
+                          onChange={handleMaterialChange}
+                        />
+                      </label>
+
+                      {materialPreviewName ? (
+                        <>
+                          <span
+                            className="text-muted small text-truncate"
+                            style={{ maxWidth: "180px" }}
+                            title={materialPreviewName}
+                          >
+                            {materialPreviewName}
+                          </span>
+
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              setMaterialFile(null);
+                              setMaterialPreviewName("");
+                            }}
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-muted small">Chưa chọn file</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

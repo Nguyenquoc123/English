@@ -18,22 +18,30 @@ import com.learning.english.repository.UserRepository;
 public class AttemptService {
 	@Autowired
 	AttemptRepository attemptRepository;
-	
+
 	@Autowired
 	AttemptMapper attemptMapper;
-	
+
 	@Autowired
 	UserRepository userRepository;
-	
-	public List<AttemptResponse> layLichSuLamBai() {
-		User user = getCurrentUser();
-        List<Attempt> attempts = attemptRepository.findByUser_UserIdOrderByStartedAtDesc(user.getUserId());
 
-        return attempts.stream()
-                .map(attemptMapper::toAttemptResponse)
-                .toList();
-    }
+	public List<AttemptResponse> layLichSuLamBaiOnTap(Long lessonId, String practiceType) {
+		User user = getCurrentUser();
+		List<Attempt> attempts = attemptRepository
+				.findByUser_UserIdAndLesson_LessonIdAndPracticeTypeOrderByStartedAtDesc(user.getUserId(),
+						lessonId, practiceType);
+
+		return attempts.stream().map(attemptMapper::toAttemptResponse).toList();
+	}
 	
+	public List<AttemptResponse> layLichSuLamBaiThi(Long examId) {
+		User user = getCurrentUser();
+		List<Attempt> attempts = attemptRepository
+				.findByUser_UserIdAndExam_ExamIdOrderByStartedAtDesc(user.getUserId(), examId);
+
+		return attempts.stream().map(attemptMapper::toAttemptResponse).toList();
+	}
+
 	private User getCurrentUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

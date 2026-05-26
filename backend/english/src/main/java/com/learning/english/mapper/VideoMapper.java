@@ -34,6 +34,7 @@ public interface VideoMapper {
         response.setStatus(row[9] == null ? null : row[9].toString());
         response.setIsCompleted(toBoolean(row[10]));
         response.setWatchedSeconds(toInteger(row[11]));
+        response.setFileUrl((String) row[12]);
 
         return response;
     }

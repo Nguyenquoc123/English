@@ -21,6 +21,7 @@ import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
 import com.learning.english.entity.Course;
+import com.learning.english.entity.Enrollment;
 import com.learning.english.entity.Level;
 import com.learning.english.entity.User;
 import com.learning.english.mapper.CourseMapper;
@@ -169,6 +170,50 @@ public class CourseService {
 				.thumbnailUrl(thumbnailUrl).price(request.getPrice()).courseType(request.getCourseType())
 				.status("Draft").submittedAt(now).reviewedAt(null).reviewedBy(null)
 				.rejectReason(null).createdAt(now).updatedAt(now).build();
+
+		Course savedCourse = courseRepository.save(course);
+
+		return courseMapper.toCourseResponse(savedCourse);
+	}
+	
+	public CourseResponse capNhatKhoaHoc(Long courseId, CourseRequest request, MultipartFile thumbnailFile) throws IOException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+//		String username = authentication.getName();
+
+//		User user = userRepository.findByUsername(username)
+//				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với username = " + username));
+
+		Level level = levelRepository.findById(request.getLevelId())
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy level với id = " + request.getLevelId()));
+
+		LocalDateTime now = LocalDateTime.now();
+		
+		Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("không tìm thấy khóa học"));
+		
+		
+
+		String thumbnailUrl = course.getThumbnailUrl();
+
+		if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+			thumbnailUrl = fileService.saveFile(thumbnailFile, "images");
+		}
+		
+		course.setCourseType(request.getCourseType());
+		course.setDescription(request.getDescription());
+		course.setLevel(level);
+		course.setPrice(request.getPrice());
+		course.setShortDescription(request.getShortDescription());
+		course.setThumbnailUrl(thumbnailUrl);
+		course.setTitle(request.getTitle());
+		course.setUpdatedAt(now);
+		
+		;
+		
 
 		Course savedCourse = courseRepository.save(course);
 
@@ -409,6 +454,24 @@ public class CourseService {
 		                    "SUCCESS"
 		            );
 		}
+	    
+	    public void dangKyKhoaHocFree(Long courseId) {
+	    	User user = getCurrentUser();
+	    	Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
+	    	boolean check = enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
+	    	if(check)
+	    		throw new RuntimeException("Bạn đã đăng ký khóa học này!");
+	    	
+	    	if("FREE".equals(course.getCourseType())) {
+	    		Enrollment enrollment = Enrollment.builder()
+	    				.course(course)
+	    				.user(user)
+	    				.createdAt(LocalDateTime.now())
+	    				.updatedAt(LocalDateTime.now())
+	    				.hasCourseAccess(true)
+	    				.build();
+	    		enrollmentRepository.save(enrollment);	    	}
+	    }
 	    
 	    
 }

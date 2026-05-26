@@ -1,6 +1,7 @@
 package com.learning.english.controller;
 
 import com.learning.english.dto.request.QuestionAttachRequest;
+import com.learning.english.dto.request.QuestionManyRequest;
 import com.learning.english.dto.request.QuestionRequest;
 import com.learning.english.dto.response.QuestionBankItemResponse;
 import com.learning.english.dto.response.QuestionResponse;
@@ -21,9 +22,11 @@ public class QuestionController {
 
     @GetMapping("/my-bank")
     public List<QuestionBankItemResponse> layNganHangCauHoiCuaToi(
-            @RequestParam String questionType
+            @RequestParam String questionType,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long levelId
     ) {
-        return questionService.layNganHangCauHoiCuaGiaoVien(questionType);
+        return questionService.layNganHangCauHoiCuaGiaoVien(questionType, keyword, levelId);
     }
 
     @PostMapping("/lessons/{lessonId}")
@@ -38,6 +41,19 @@ public class QuestionController {
                 lessonId,
                 request,
                 mediaFile
+        );
+    }
+    
+    @PostMapping("/lessons/{lessonId}/many")
+    public List<QuestionResponse> taoNhieuCauHoiVaGanVaoLesson(
+            @PathVariable Long lessonId,
+            @RequestBody QuestionManyRequest request
+    ) {
+        request.getQuestions().forEach(q -> q.setLessonId(lessonId));
+
+        return questionService.taoNhieuCauHoiVaGanVaoLesson(
+                lessonId,
+                request.getQuestions()
         );
     }
 

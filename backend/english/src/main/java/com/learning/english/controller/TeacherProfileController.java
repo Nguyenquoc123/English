@@ -1,9 +1,12 @@
 package com.learning.english.controller;
 
 import com.learning.english.dto.request.TeacherDuyetRequest;
+import com.learning.english.dto.request.TeacherProfileUpdateRequest;
 import com.learning.english.dto.request.TeacherRegisterRequest;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.service.TeacherProfileService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,15 @@ public class TeacherProfileController {
 			throws IOException {
 
 		return ResponseEntity.ok(teacherProfileService.dangKyLamGiaoVien(request, certificateFiles));
+	}
+    
+    @PutMapping(value = "/update")
+	public ResponseEntity<TeacherProfileResponse> updateHoSoGiaoVien(@Valid @RequestBody TeacherProfileUpdateRequest request) {
+
+    	TeacherProfileResponse response =
+                teacherProfileService.updateHoSoGiaoVien(request);
+
+        return ResponseEntity.ok(response);
 	}
 
     @GetMapping("/profile-register")
