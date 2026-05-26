@@ -156,12 +156,7 @@ function TeacherGrammarCreate() {
             items={teacherLessonTrail(courseId, lessonId, "Thêm ngữ pháp")}
           />
 
-          <h2>Thêm nội dung ngữ pháp</h2>
-
-          <p>
-            Soạn nội dung ngữ pháp cho bài học hiện tại. Nội dung sẽ được lưu
-            dạng HTML và hiển thị ở tab Ngữ pháp trong chi tiết lesson.
-          </p>
+          
         </div>
       </div>
 

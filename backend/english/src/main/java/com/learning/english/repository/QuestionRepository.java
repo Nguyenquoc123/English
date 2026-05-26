@@ -27,17 +27,45 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 			""")
 	List<Question> findQuestionsByLessonId(@Param("lessonId") Long lessonId);
 
+//	@Query("""
+//			    SELECT DISTINCT q
+//			    FROM Question q
+//			    LEFT JOIN FETCH q.options o
+//			    WHERE q.createdBy.username = :username
+//			      AND q.questionType = :questionType
+//			      AND q.status <> 'Deleted'
+//			    ORDER BY q.createdAt DESC
+//			""")
+//	List<Question> findMyQuestionBankByType(@Param("username") String username,
+//			@Param("questionType") String questionType);
+	
 	@Query("""
-			    SELECT DISTINCT q
-			    FROM Question q
-			    LEFT JOIN FETCH q.options o
-			    WHERE q.createdBy.username = :username
-			      AND q.questionType = :questionType
-			      AND q.status <> 'Deleted'
-			    ORDER BY q.createdAt DESC
-			""")
-	List<Question> findMyQuestionBankByType(@Param("username") String username,
-			@Param("questionType") String questionType);
+	        SELECT DISTINCT q
+	        FROM Question q
+	        LEFT JOIN FETCH q.options o
+	        LEFT JOIN FETCH q.level l
+	        WHERE q.createdBy.username = :username
+	          AND q.questionType = :questionType
+	          AND q.status <> 'Deleted'
+	          AND (
+	                :keyword IS NULL
+	                OR :keyword = ''
+	                OR LOWER(q.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                OR LOWER(q.correctText) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                OR LOWER(q.explanation) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	          )
+	          AND (
+	                :levelId IS NULL
+	                OR q.level.levelId = :levelId
+	          )
+	        ORDER BY q.createdAt DESC
+	        """)
+	List<Question> findMyQuestionBankByType(
+	        @Param("username") String username,
+	        @Param("questionType") String questionType,
+	        @Param("keyword") String keyword,
+	        @Param("levelId") Long levelId
+	);
 
 	@Query("""
 			    SELECT DISTINCT q

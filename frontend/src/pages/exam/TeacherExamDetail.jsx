@@ -349,7 +349,7 @@ function TeacherExamDetail() {
   return (
     <div className="teacher-exam-detail-page">
       <div className="teacher-exam-detail-container">
-        <div className="teacher-exam-page-top">
+        {/* <div className="teacher-exam-page-top">
           <nav className="teacher-breadcrumb">
             <span
               className="teacher-breadcrumb-item"
@@ -373,7 +373,7 @@ function TeacherExamDetail() {
               Bài thi
             </span>
           </nav>
-        </div>
+        </div> */}
 
         <section className="exam-overview-card exam-overview-card-new">
           <div className="exam-overview-header">

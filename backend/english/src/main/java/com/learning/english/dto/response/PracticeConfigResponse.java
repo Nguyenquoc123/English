@@ -1,5 +1,9 @@
 package com.learning.english.dto.response;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+
 import lombok.*;
 
 @Getter
@@ -18,4 +22,10 @@ public class PracticeConfigResponse {
     private Boolean isEnabled;
 
     private Long questionCount;
+    
+    private LocalDateTime lanCuoi;
+    
+    private Long soLanLam;
+    
+    private BigDecimal diemCaoNhat;
 }

@@ -21,9 +21,10 @@ public class VideoController {
 	@PostMapping("/{lessonId}/lessons")
 	public VideoResponse themVideoChoLesson(@PathVariable Long lessonId, @RequestPart("data") VideoRequest request,
 			@RequestPart("videoFile") MultipartFile videoFile,
-			@RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile) throws IOException {
+			@RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
+			@RequestPart(value = "materialFile", required = false) MultipartFile materialFile) throws IOException {
 		System.out.println("Đã chạy qua=======================================================");
-		return videoService.themVideoChoLesson(lessonId, request, videoFile, thumbnailFile);
+		return videoService.themVideoChoLesson(lessonId, request, videoFile, thumbnailFile, materialFile);
 	}
 
 	@GetMapping("/{lessonId}/lessons")

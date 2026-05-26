@@ -218,34 +218,7 @@ function StudentCoursePurchase() {
 
     return (
         <div className="student-purchase-page">
-            <div className="purchase-breadcrumb">
-                <button
-                    type="button"
-                    className="purchase-breadcrumb-link"
-                    onClick={() => navigate("/khoa-hoc")}
-                >
-                    Khóa học
-                </button>
-
-                <i className="bi bi-chevron-right"></i>
-
-                <button
-                    type="button"
-                    className="purchase-breadcrumb-link"
-                    onClick={() => navigate(`/khoa-hoc/${courseId}`)}
-                >
-                    Chi tiết khóa học
-                </button>
-
-                <i className="bi bi-chevron-right"></i>
-
-                <strong>Mua khóa học</strong>
-            </div>
-
-            <div className="purchase-heading">
-                <h2>Mua khóa học</h2>
-                <p>Xác nhận thông tin khóa học và chọn phương thức thanh toán để hoàn tất đăng ký học.</p>
-            </div>
+            
 
             <div className="row g-4">
                 <div className="col-lg-7">
@@ -497,7 +470,7 @@ function StudentCoursePurchase() {
                                 className="btn btn-success"
                                 onClick={() => handleClick()}
                             >
-                                Đã chuyển
+                                Đã thanh toán
                             </button>
 
                             <button

@@ -57,6 +57,7 @@ function StudentTeacherRegister() {
   );
 
   useEffect(() => {
+    loadRegisterResult();
     loadProfile();
   }, []);
 
@@ -128,7 +129,7 @@ function StudentTeacherRegister() {
     }
   };
 
-  
+
 
   const getInitialName = () => {
     if (!profile?.fullName) return "HV";
@@ -334,7 +335,7 @@ function StudentTeacherRegister() {
         submitData.append("certificateFiles", file);
       });
 
-      
+
 
       const response = await fetch(`${API_BASE}/teacher-profile/register`, {
         method: "POST",
@@ -368,6 +369,49 @@ function StudentTeacherRegister() {
     }
   };
 
+  const loadRegisterResult = async () => {
+    try {
+      
+      
+
+      const token = getToken();
+
+      if (!token) {
+        navigate("/dang-nhap");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE}/teacher-profile/profile-register`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      const body = data?.result || data?.data || data;
+
+      if (!response.ok) {
+        
+        return;
+      }
+
+      console.log(body)
+      if (body.approvalStatus.toLowerCase() === "pending" || body.approvalStatus.toLowerCase() === "approved")
+        navigate("/student/teacher-register/result")
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi kết nối server");
+    } 
+  };
+
   if (loadingProfile) {
     return (
       <div className="teacher-register-page">
@@ -386,15 +430,7 @@ function StudentTeacherRegister() {
           items={[studentHome, studentProfile, { label: "Đăng ký giáo viên" }]}
         />
 
-        <div className="teacher-register-heading">
-          <div>
-            <h2>Đăng ký trở thành giáo viên</h2>
-            <p>
-              Hoàn thiện hồ sơ giảng dạy để gửi yêu cầu xét duyệt trở thành giáo viên
-              trên hệ thống.
-            </p>
-          </div>
-        </div>
+
 
         <form onSubmit={handleSubmit}>
           <div className="row g-4">
@@ -426,13 +462,7 @@ function StudentTeacherRegister() {
 
                 <span className="role-badge">{getRoleText(profile?.role)}</span>
 
-                <div className="profile-note">
-                  <i className="bi bi-info-circle"></i>
-                  <span>
-                    Hồ sơ của bạn sẽ được admin xét duyệt trước khi kích hoạt quyền
-                    giáo viên.
-                  </span>
-                </div>
+
               </div>
 
               <div className="teacher-register-guide-card mt-4">
@@ -525,7 +555,7 @@ function StudentTeacherRegister() {
                       value={formData.experience}
                       config={joditConfig}
                       onBlur={handleExperienceChange}
-                      onChange={() => {}}
+                      onChange={() => { }}
                     />
                   </div>
                 </div>
@@ -585,7 +615,7 @@ function StudentTeacherRegister() {
                 <div className="teacher-register-actions">
                   <button
                     type="button"
-                    className="btn btn-light action-btn"
+                    className="btn btn-warning action-btn"
                     onClick={() => navigate("/student/profile")}
                     disabled={submitting}
                   >

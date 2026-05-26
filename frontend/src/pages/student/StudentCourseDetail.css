@@ -1358,3 +1358,22 @@
     width: 100%;
   }
 }
+.video-material-download {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.video-material-download:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}

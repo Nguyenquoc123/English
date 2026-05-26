@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAllUsers, updateUserStatus, updateUserRole, createUser } from "../../../api/adminApi";
 import "./UserManagement.css";
+import { getFileUrl } from "../../../utils/fileurl";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -355,7 +356,7 @@ function UserManagement() {
                     <td>
                       <div className="user-info-cell">
                         {user.avatarUrl ? (
-                          <img className="user-avatar" src={user.avatarUrl} alt="" />
+                          <img className="user-avatar" src={getFileUrl(user.avatarUrl)} alt="" />
                         ) : (
                           <div className="user-avatar-placeholder">
                             {(user.fullName || user.username || "?")[0].toUpperCase()}
@@ -446,7 +447,7 @@ function UserManagement() {
                 {selectedUser.avatarUrl ? (
                   <img
                     className="user-avatar-lg"
-                    src={selectedUser.avatarUrl}
+                    src={getFileUrl(selectedUser.avatarUrl)}
                     alt=""
                   />
                 ) : (

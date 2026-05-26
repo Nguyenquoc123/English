@@ -42,7 +42,7 @@ function TeacherLessonGrammarDetail() {
           teacherCourses,
           teacherCourseDetail(courseId),
           teacherLessonDetail(courseId, lessonId),
-          teacherLessonGrammars(courseId, lessonId),
+          // teacherLessonGrammars(courseId, lessonId),
           { label: "Chi tiết ngữ pháp" },
         ]}
       />

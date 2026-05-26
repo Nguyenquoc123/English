@@ -82,6 +82,11 @@ import DSKhoaHocDaMua from "./pages/dskhoahocdamua/DSKhoaHocDaMua.jsx";
 import CartPage from "./pages/cart/CartPage.jsx";
 import ThanhToanGioHang from "./pages/cart/ThanhToanGioHang.jsx";
 import Navbar from "./components/layout/Navbar/Navbar.jsx";
+import TeacherProfilePage from "./pages/teacher-profile/TeacherProfilePage.jsx";
+import TeacherProfileUpdatePage from "./pages/teacher-profile/TeacherProfileUpdatePage.jsx";
+import TeacherBankAccountsPage from "./pages/teacher-bank-account/TeacherBankAccountsPage.jsx";
+import TeacherDashboard from "./pages/teacher-dashboard/TeacherDashboard.jsx";
+
 
 function ProtectedAdminRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -107,7 +112,7 @@ function App() {
           path="/danh-sach-khoa-hoc"
           element={
             <>
-            <Navbar/>
+              <Navbar />
               <DSKhoaHoc />
               <AiChatWidget />
             </>
@@ -116,6 +121,7 @@ function App() {
 
         <Route path="/khoa-hoc/:courseId" element={
           <>
+            <Navbar />
             <StudentCourseDetail />
             <AiChatWidget />
           </>
@@ -131,13 +137,25 @@ function App() {
           <AppShell><StudentLessonDetail /></AppShell>
         } />
         <Route path="/khoa-hoc/:courseId/lessons/:lessonId/practice/:practiceType" element={
-          <AppShell><StudentPracticePage /></AppShell>
+          <>
+            <Navbar />
+            <StudentPracticePage />
+
+          </>
         } />
         <Route path="/khoa-hoc/:courseId/lessons/:lessonId/practice-result/:attemptId" element={
-          <AppShell><StudentPracticeResultPage /></AppShell>
+          <>
+            <Navbar />
+            <StudentPracticeResultPage />
+          </>
         } />
 
         <Route path="/exams" element={<AppShell><StudentExamListPage /></AppShell>} />
+        <Route path="/exams/:examId" element={<>
+          <Navbar />
+          <StudentExamTakingPage />
+
+        </>} />
 
         <Route path="/student/profile" element={
           <AppShell>
@@ -226,9 +244,9 @@ function App() {
         } />
 
         <Route path="/thanh-toan" element={<>
-            <Navbar />
-            <ThanhToanGioHang />
-          </>} />
+          <Navbar />
+          <ThanhToanGioHang />
+        </>} />
 
 
         <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
@@ -295,8 +313,10 @@ function App() {
             element={<TeacherExamQuestionCreate />}
           />
 
-          <Route path="profile" element={<h1>Hồ sơ giáo viên</h1>} />
-          <Route path="bank" element={<h1>Tài khoản ngân hàng</h1>} />
+          
+          <Route path="profile" element={<TeacherProfilePage />} />
+          <Route path="profile/update" element={<TeacherProfileUpdatePage />} />
+          <Route path="bank" element={<TeacherBankAccountsPage />} />
           <Route path="lessons" element={<h1>Quản lý lesson</h1>} />
           <Route path="videos" element={<h1>Upload video bài học</h1>} />
           <Route path="vocabularies" element={<h1>Quản lý từ vựng</h1>} />
@@ -304,7 +324,7 @@ function App() {
           <Route path="practice-questions" element={<h1>Quản lý câu hỏi ôn tập</h1>} />
           <Route path="exams" element={<h1>Quản lý kỳ thi</h1>} />
           <Route path="exam-results" element={<h1>Kết quả thi học viên</h1>} />
-          <Route path="revenue" element={<h1>Dashboard doanh thu</h1>} />
+          <Route path="revenue" element={<TeacherDashboard />} />
           <Route path="withdrawals/create" element={<h1>Tạo yêu cầu rút tiền</h1>} />
           <Route path="withdrawals" element={<h1>Lịch sử rút tiền</h1>} />
         </Route>

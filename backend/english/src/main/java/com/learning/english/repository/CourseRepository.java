@@ -116,7 +116,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 			    c.reviewedAt AS approvedAt,
 			    c.rejectReason AS rejectReason,
 			    u.fullName AS teacherName,
-			    l.levelId AS levelId
+			    l.levelId AS levelId,
+			    c.shortDescription
 			FROM courses c
 			LEFT JOIN levels l
 			    ON c.levelId = l.levelId

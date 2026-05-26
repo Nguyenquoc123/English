@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import JoditEditor from "jodit-react";
-import "./TeacherCourseUpdate.css";
+import "./TeacherCourseCreate.css";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
-import { teacherCourses, teacherCourseDetail } from "../../utils/breadcrumbPaths";
+import { teacherCourses } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
 
 function TeacherCourseUpdate() {
@@ -22,16 +22,13 @@ function TeacherCourseUpdate() {
 
   const [accessType, setAccessType] = useState("FREE");
   const [price, setPrice] = useState(0);
-  const [examPrice, setExamPrice] = useState(0);
 
-  const [oldThumbnailUrl, setOldThumbnailUrl] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
-
-  const [courseStatus, setCourseStatus] = useState("");
+  const [oldThumbnailUrl, setOldThumbnailUrl] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
   const [levelLoading, setLevelLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,7 +36,8 @@ function TeacherCourseUpdate() {
     () => ({
       readonly: false,
       height: 320,
-      placeholder: "Nhập mô tả chi tiết khóa học...",
+      placeholder:
+        "Nhập mô tả chi tiết khóa học, nội dung chính, đối tượng học phù hợp, kết quả học viên đạt được...",
       language: "vi",
       toolbarAdaptive: false,
       toolbarSticky: false,
@@ -84,6 +82,7 @@ function TeacherCourseUpdate() {
   const loadLevels = async () => {
     try {
       setLevelLoading(true);
+      setError("");
 
       const response = await fetch(`${API_BASE}/level/all-level`);
       const data = await response.json();
@@ -111,21 +110,16 @@ function TeacherCourseUpdate() {
 
   const loadCourseDetail = async () => {
     try {
-      setLoading(true);
+      setPageLoading(true);
       setError("");
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `${API_BASE}/khoa-hoc/chi-tiet-khoa-hoc-teacher/${courseId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE}/khoa-hoc/chi-tiet-khoa-hoc-teacher/${courseId}`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
       let data = null;
 
@@ -140,38 +134,42 @@ function TeacherCourseUpdate() {
         return;
       }
 
-      const courseData = data.result || data.data || data;
-      fillForm(courseData);
+      const course = data.result || data.data || data;
+
+      setTitle(course.title || "");
+      setShortDescription(course.shortDescription || "");
+      setDescription(course.description || "");
+
+      setLevelId(
+        String(
+          course.levelId ??
+            course.level?.levelId ??
+            course.level?.levelid ??
+            ""
+        )
+      );
+
+      const courseType =
+        course.courseType || course.accessType || course.type || "FREE";
+
+      setAccessType(courseType);
+      setPrice(courseType === "PAID" ? course.price || 0 : 0);
+
+      const thumbnail =
+        course.thumbnailUrl ||
+        course.thumbnail ||
+        course.imageUrl ||
+        course.thumbnailPath ||
+        "";
+
+      setOldThumbnailUrl(getFileUrl(thumbnail));
+      setPreviewImage(getFileUrl(thumbnail));
     } catch (err) {
       console.error(err);
-      setError("Lỗi kết nối server");
+      setError("Lỗi hệ thống, vui lòng thử lại");
     } finally {
-      setLoading(false);
+      setPageLoading(false);
     }
-  };
-
-  const fillForm = (course) => {
-    const currentLevelId =
-      course.levelId ??
-      course.levelid ??
-      course.level?.levelId ??
-      course.level?.levelid ??
-      "";
-
-    setTitle(course.title || "");
-    setShortDescription(course.shortDescription || "");
-    setDescription(course.description || "");
-    setLevelId(currentLevelId !== "" ? String(currentLevelId) : "");
-
-    setAccessType(course.accessType || course.courseType || "FREE");
-
-    setPrice(course.price || 0);
-    setExamPrice(course.examPrice || 0);
-
-    setOldThumbnailUrl(course.thumbnailUrl || "");
-    setPreviewImage(getFileUrl(course.thumbnailUrl) || "");
-
-    setCourseStatus(course.status || "");
   };
 
   const handleThumbnailChange = (e) => {
@@ -221,12 +219,12 @@ function TeacherCourseUpdate() {
       return "Vui lòng chọn cấp độ";
     }
 
-    if (accessType === "PAID" && Number(price) <= 0) {
-      return "Khóa học có phí phải nhập giá khóa học lớn hơn 0";
+    if (!accessType) {
+      return "Vui lòng chọn loại khóa học";
     }
 
-    if (accessType === "FREE" && Number(examPrice) < 0) {
-      return "Giá quyền thi không được âm";
+    if (accessType === "PAID" && Number(price) <= 0) {
+      return "Khóa học có phí phải nhập giá khóa học lớn hơn 0";
     }
 
     return "";
@@ -245,23 +243,17 @@ function TeacherCourseUpdate() {
     }
 
     try {
-      setSaving(true);
+      setLoading(true);
 
       const token = localStorage.getItem("token");
 
       const courseData = {
         title: title.trim(),
         shortDescription: shortDescription.trim(),
-
         description: description.trim(),
-
         levelId: Number(levelId),
-
-        accessType: accessType,
-
+        courseType: accessType,
         price: accessType === "PAID" ? Number(price) : 0,
-
-        examPrice: accessType === "FREE" ? Number(examPrice) : 0,
       };
 
       const formData = new FormData();
@@ -277,13 +269,16 @@ function TeacherCourseUpdate() {
         formData.append("thumbnailFile", thumbnailFile);
       }
 
-      const response = await fetch(`${API_BASE}/teacher/khoa-hoc/${courseId}`, {
-        method: "PUT",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_BASE}/khoa-hoc/cap-nhat-khoa-hoc/${courseId}`,
+        {
+          method: "PUT",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: formData,
+        }
+      );
 
       let data = null;
 
@@ -299,63 +294,64 @@ function TeacherCourseUpdate() {
       }
 
       alert("Cập nhật khóa học thành công");
-
       navigate(`/teacher/courses/${courseId}`);
     } catch (err) {
       console.error(err);
       setError("Lỗi hệ thống, vui lòng thử lại");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const handleResetImage = () => {
+  const handleReset = () => {
+    loadCourseDetail();
     setThumbnailFile(null);
-    setPreviewImage(getFileUrl(oldThumbnailUrl) || "");
+    setError("");
+  };
+
+  const handleCourseTypeChange = (e) => {
+    const selectedType = e.target.value;
+
+    setAccessType(selectedType);
+
+    if (selectedType === "FREE") {
+      setPrice(0);
+    }
+  };
+
+  const handleRemoveThumbnail = () => {
+    setThumbnailFile(null);
+    setPreviewImage("");
+    setOldThumbnailUrl("");
   };
 
   const selectedLevelName =
     levels.find((level) => String(level.levelId) === String(levelId))
       ?.levelName || "Chưa chọn";
 
-  if (loading) {
+  if (pageLoading) {
     return (
-      <div className="update-course-page">
-        <div className="text-center py-5 text-muted">
-          <div className="spinner-border text-primary mb-3"></div>
-          <div>Đang tải thông tin khóa học...</div>
+      <div className="create-course-page">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary"></div>
+          <p className="mt-3 text-muted">Đang tải thông tin khóa học...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="update-course-page">
-      <div className="update-page-heading">
+    <div className="create-course-page">
+      <div className="create-page-heading">
         <div>
           <CourseBreadcrumb
             items={[
               teacherCourses,
-              teacherCourseDetail(courseId),
               { label: "Cập nhật khóa học" },
             ]}
           />
 
           <h2>Cập nhật khóa học</h2>
-
-          <p>
-            Chỉnh sửa thông tin cơ bản của khóa học. Nếu khóa học đã Published,
-            sau khi chỉnh sửa bạn có thể cần gửi lại để admin duyệt tùy theo
-            quy trình hệ thống.
-          </p>
-        </div>
-
-        <div>
-          {courseStatus && (
-            <span className="badge rounded-pill text-bg-secondary px-3 py-2">
-              {courseStatus}
-            </span>
-          )}
         </div>
       </div>
 
@@ -369,10 +365,10 @@ function TeacherCourseUpdate() {
       <form onSubmit={handleSubmit}>
         <div className="row g-4">
           <div className="col-lg-8">
-            <div className="card border-0 shadow-sm update-card">
+            <div className="card border-0 shadow-sm create-card">
               <div className="card-header bg-white border-0 pb-0">
                 <h5 className="fw-bold mb-1">
-                  <i className="bi bi-pencil-square text-primary me-2"></i>
+                  <i className="bi bi-info-circle text-primary me-2"></i>
                   Thông tin khóa học
                 </h5>
 
@@ -419,7 +415,7 @@ function TeacherCourseUpdate() {
 
                   <div className="d-flex justify-content-between mt-1">
                     <small className="text-muted">
-                      Dùng cho card danh sách khóa học.
+                      Nên viết 1-2 câu ngắn gọn, dễ hiểu.
                     </small>
 
                     <small className="text-muted">
@@ -459,7 +455,7 @@ function TeacherCourseUpdate() {
 
                     <select
                       className="form-select"
-                      value={String(levelId)}
+                      value={levelId}
                       onChange={(e) => setLevelId(e.target.value)}
                       disabled={levelLoading}
                     >
@@ -480,48 +476,21 @@ function TeacherCourseUpdate() {
 
                   <div className="col-md-6">
                     <label className="form-label fw-semibold">
-                      Loại khóa học
+                      Loại khóa học <span className="text-danger">*</span>
                     </label>
 
-                    <div className="course-type-group">
-                      <input
-                        type="radio"
-                        className="btn-check"
-                        name="accessType"
-                        id="freeCourseUpdate"
-                        checked={accessType === "FREE"}
-                        onChange={() => {
-                          setAccessType("FREE");
-                          setPrice(0);
-                        }}
-                      />
-                      <label
-                        className="btn btn-outline-success"
-                        htmlFor="freeCourseUpdate"
-                      >
-                        <i className="bi bi-gift me-1"></i>
-                        Free
-                      </label>
+                    <select
+                      className="form-select"
+                      value={accessType}
+                      onChange={handleCourseTypeChange}
+                    >
+                      <option value="FREE">Khóa học miễn phí</option>
+                      <option value="PAID">Khóa học có phí</option>
+                    </select>
 
-                      <input
-                        type="radio"
-                        className="btn-check"
-                        name="accessType"
-                        id="paidCourseUpdate"
-                        checked={accessType === "PAID"}
-                        onChange={() => {
-                          setAccessType("PAID");
-                          setExamPrice(0);
-                        }}
-                      />
-                      <label
-                        className="btn btn-outline-primary"
-                        htmlFor="paidCourseUpdate"
-                      >
-                        <i className="bi bi-credit-card me-1"></i>
-                        Paid
-                      </label>
-                    </div>
+                    <small className="text-muted">
+                      Chọn miễn phí hoặc có phí cho khóa học.
+                    </small>
                   </div>
 
                   {accessType === "PAID" && (
@@ -553,36 +522,6 @@ function TeacherCourseUpdate() {
                       </small>
                     </div>
                   )}
-
-                  {accessType === "FREE" && (
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        Giá quyền thi
-                      </label>
-
-                      <div className="input-group">
-                        <span className="input-group-text bg-light">
-                          <i className="bi bi-patch-check"></i>
-                        </span>
-
-                        <input
-                          type="number"
-                          className="form-control"
-                          min="0"
-                          step="1000"
-                          placeholder="Nhập giá quyền thi"
-                          value={examPrice}
-                          onChange={(e) => setExamPrice(e.target.value)}
-                        />
-
-                        <span className="input-group-text bg-light">VNĐ</span>
-                      </div>
-
-                      <small className="text-muted">
-                        Nếu phần thi miễn phí, nhập 0.
-                      </small>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -591,9 +530,9 @@ function TeacherCourseUpdate() {
               <button
                 type="submit"
                 className="btn btn-primary px-4"
-                disabled={saving}
+                disabled={loading}
               >
-                {saving ? (
+                {loading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2"></span>
                     Đang cập nhật...
@@ -609,18 +548,18 @@ function TeacherCourseUpdate() {
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                onClick={loadCourseDetail}
-                disabled={saving}
+                onClick={handleReset}
+                disabled={loading}
               >
                 <i className="bi bi-arrow-clockwise me-1"></i>
-                Tải lại dữ liệu
+                Khôi phục
               </button>
 
               <button
                 type="button"
                 className="btn btn-light"
                 onClick={() => navigate(`/teacher/courses/${courseId}`)}
-                disabled={saving}
+                disabled={loading}
               >
                 Hủy
               </button>
@@ -628,7 +567,7 @@ function TeacherCourseUpdate() {
           </div>
 
           <div className="col-lg-4">
-            <div className="card border-0 shadow-sm update-card sticky-preview">
+            <div className="card border-0 shadow-sm create-card sticky-preview">
               <div className="card-header bg-white border-0 pb-0">
                 <h5 className="fw-bold mb-1">
                   <i className="bi bi-image text-primary me-2"></i>
@@ -636,7 +575,7 @@ function TeacherCourseUpdate() {
                 </h5>
 
                 <small className="text-muted">
-                  Chọn ảnh mới nếu muốn thay đổi ảnh hiện tại
+                  Nên dùng ảnh ngang tỉ lệ 16:9
                 </small>
               </div>
 
@@ -660,29 +599,29 @@ function TeacherCourseUpdate() {
                   />
                 </label>
 
-                {thumbnailFile && (
+                {(thumbnailFile || oldThumbnailUrl || previewImage) && (
                   <div className="selected-file mt-3">
                     <div>
-                      <strong>{thumbnailFile.name}</strong>
-                      <span>
-                        {(thumbnailFile.size / 1024 / 1024).toFixed(2)} MB
-                      </span>
+                      <strong>
+                        {thumbnailFile
+                          ? thumbnailFile.name
+                          : "Ảnh hiện tại của khóa học"}
+                      </strong>
+
+                      {thumbnailFile && (
+                        <span>
+                          {(thumbnailFile.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      )}
                     </div>
 
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-danger"
-                      onClick={handleResetImage}
+                      onClick={handleRemoveThumbnail}
                     >
-                      Hủy ảnh mới
+                      Xóa
                     </button>
-                  </div>
-                )}
-
-                {!thumbnailFile && oldThumbnailUrl && (
-                  <div className="alert alert-light border mt-3 mb-0 small">
-                    Đang dùng ảnh hiện tại. Nếu không chọn ảnh mới, hệ thống sẽ
-                    giữ nguyên ảnh này.
                   </div>
                 )}
 
@@ -713,7 +652,9 @@ function TeacherCourseUpdate() {
 
                   <div className="summary-item">
                     <span>Loại khóa học</span>
-                    <strong>{accessType}</strong>
+                    <strong>
+                      {accessType === "FREE" ? "Miễn phí" : "Có phí"}
+                    </strong>
                   </div>
 
                   {accessType === "PAID" && (
@@ -725,29 +666,20 @@ function TeacherCourseUpdate() {
                     </div>
                   )}
 
-                  {accessType === "FREE" && (
-                    <div className="summary-item">
-                      <span>Giá quyền thi</span>
-                      <strong>
-                        {Number(examPrice || 0).toLocaleString("vi-VN")} VNĐ
-                      </strong>
-                    </div>
-                  )}
-
-                  <div className="summary-item">
-                    <span>Trạng thái hiện tại</span>
+                  {/* <div className="summary-item">
+                    <span>Trạng thái</span>
                     <span className="badge text-bg-secondary">
-                      {courseStatus || "Draft"}
+                      
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
 
-            <div className="alert alert-warning mt-3">
-              <strong>Lưu ý:</strong> Nếu khóa học đã gửi duyệt hoặc đã xuất
-              bản, bạn nên cân nhắc việc chỉnh sửa nội dung vì có thể cần admin
-              duyệt lại.
+            <div className="alert alert-info mt-3">
+              <strong>Lưu ý:</strong> Sau khi cập nhật khóa học, bạn nên kiểm
+              tra lại lesson, video, từ vựng, ngữ pháp, câu hỏi ôn tập và bài
+              thi trước khi gửi admin duyệt.
             </div>
           </div>
         </div>

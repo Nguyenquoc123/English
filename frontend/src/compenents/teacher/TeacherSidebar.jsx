@@ -69,9 +69,9 @@ function TeacherSidebar({ isOpen, onClose }) {
           Tạo khóa học
         </NavLink>
 
-        <p className="sidebar-title">Nội dung học</p>
+        {/* <p className="sidebar-title">Nội dung học</p> */}
 
-        <NavLink to="/teacher/lessons" className="sidebar-link" onClick={onClose}>
+        {/* <NavLink to="/teacher/lessons" className="sidebar-link" onClick={onClose}>
           <i className="bi bi-file-earmark-text"></i>
           Quản lý lesson
         </NavLink>
@@ -118,7 +118,7 @@ function TeacherSidebar({ isOpen, onClose }) {
         >
           <i className="bi bi-bar-chart"></i>
           Kết quả thi
-        </NavLink>
+        </NavLink> */}
 
         <p className="sidebar-title">Doanh thu</p>
 

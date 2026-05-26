@@ -35,7 +35,7 @@ function StudentPracticeResultPage() {
       const token = getToken();
 
       if (!token) {
-        navigate("/login");
+        navigate("/dang-nhap");
         return;
       }
 
@@ -187,7 +187,6 @@ function StudentPracticeResultPage() {
             studentHome,
             studentCourses,
             studentCourseDetail(courseId),
-            studentLesson(courseId, lessonId),
             { label: "Kết quả ôn tập" },
           ]}
         />
@@ -212,13 +211,7 @@ function StudentPracticeResultPage() {
               Làm lại
             </button>
 
-            <button
-              type="button"
-              className="btn btn-primary result-action-btn"
-              onClick={() => navigate(`/khoa-hoc/${courseId}/lessons/${lessonId}`)}
-            >
-              Về bài học
-            </button>
+            
           </div>
         </div>
 

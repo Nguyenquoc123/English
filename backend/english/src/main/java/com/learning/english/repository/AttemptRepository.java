@@ -26,5 +26,7 @@ public interface AttemptRepository extends JpaRepository<Attempt, Long> {
 
 	boolean existsByUserUserIdAndExamExamId(Long userId, Long examId);
 	
-	List<Attempt> findByUser_UserIdOrderByStartedAtDesc(Long userId);
+	List<Attempt> findByUser_UserIdAndLesson_LessonIdAndPracticeTypeOrderByStartedAtDesc(Long userId, Long lessonId, String practiceType);
+	
+	List<Attempt> findByUser_UserIdAndExam_ExamIdOrderByStartedAtDesc(Long userId, Long examId);
 }

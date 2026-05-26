@@ -186,20 +186,7 @@ function TeacherCourseDetail() {
 
   return (
     <div className="course-detail-page">
-      <nav className="teacher-breadcrumb">
-        <span
-          className="teacher-breadcrumb-item"
-          onClick={() => navigate("/teacher/courses")}
-        >
-          Khóa học
-        </span>
-
-        <i className="bi bi-chevron-right teacher-breadcrumb-separator"></i>
-
-        <span className="teacher-breadcrumb-item active">
-          Chi tiết khóa học
-        </span>
-      </nav>
+      
 
       <CourseDetailHero
         course={course}

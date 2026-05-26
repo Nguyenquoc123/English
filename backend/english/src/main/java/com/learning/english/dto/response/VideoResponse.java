@@ -34,4 +34,6 @@ public class VideoResponse {
     private Boolean isCompleted;
 
     private Integer watchedSeconds;
+    
+    private String fileUrl;
 }

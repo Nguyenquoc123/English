@@ -285,7 +285,7 @@ function StudentPracticePage() {
   }
 
   return (
-    <div className="student-practice-page">
+    <div className="container student-practice-page">
       <div className="student-practice-container">
         <CourseBreadcrumb
           items={[
@@ -296,7 +296,7 @@ function StudentPracticePage() {
           ]}
         />
 
-        
+
       </div>
 
 

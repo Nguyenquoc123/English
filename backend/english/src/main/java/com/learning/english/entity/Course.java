@@ -34,8 +34,8 @@ public class Course {
     @Column(name = "shortdescription", length = 500)
     private String shortDescription;
 
-    @Lob
-    @Column(name = "description")
+   
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(name = "thumbnailurl", length = 500)
