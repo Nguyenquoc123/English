@@ -57,8 +57,7 @@ public class PracticeAttemptService {
 	public PracticeSubmitResponse submitAttemptCore(User user, Lesson lesson, Exam exam, String practiceType,
 			String attemptType, List<Question> questions, List<PracticeAnswerRequest> answers) {
 
-		Map<Long, Question> questionMap = questions.stream()
-				.collect(Collectors.toMap(Question::getQuestionId, Function.identity()));
+		
 
 		Map<Long, PracticeAnswerRequest> answerMap = answers.stream().filter(answer -> answer.getQuestionId() != null)
 				.collect(Collectors.toMap(PracticeAnswerRequest::getQuestionId, Function.identity(),

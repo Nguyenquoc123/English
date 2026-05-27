@@ -388,29 +388,27 @@ public class AdminService {
 
     // ==================== TRANSACTION MANAGEMENT ====================
 
-//    public List<TransactionAdminResponse> getAllTransactions() {
-//        return transactionRepository.findAllByOrderByCreatedAtDesc()
-//                .stream()
-//                .map(this::toTransactionAdminResponse)
-//                .collect(Collectors.toList());
-//    }
-//
-//    private TransactionAdminResponse toTransactionAdminResponse(Transaction t) {
-//        User user = t.getUser();
-//        return TransactionAdminResponse.builder()
-//                .transactionId(t.getTransactionId())
-//                .userId(user != null ? user.getUserId() : null)
-//                .username(user != null ? user.getUsername() : null)
-//                .email(user != null ? user.getEmail() : null)
-//                .targetType(t.getTargetType())
-//                .targetId(t.getTargetId())
-//                .targetName(resolveTargetName(t.getTargetType(), t.getTargetId()))
-//                .amount(t.getAmount())
-//                .status(t.getStatus())
-//                .createdAt(t.getCreatedAt())
-//                .updatedAt(t.getUpdatedAt())
-//                .build();
-//    }
+    public List<TransactionAdminResponse> getAllTransactions() {
+        return transactionRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(this::toTransactionAdminResponse)
+                .collect(Collectors.toList());
+    }
+
+    private TransactionAdminResponse toTransactionAdminResponse(Transaction t) {
+        User user = t.getUser();
+        return TransactionAdminResponse.builder()
+                .transactionId(t.getTransactionId())
+                .userId(user != null ? user.getUserId() : null)
+                .username(user != null ? user.getUsername() : null)
+                .email(user != null ? user.getEmail() : null)
+
+                .amount(t.getTotalAmount())
+                .status(t.getStatus())
+                .createdAt(t.getCreatedAt())
+                .updatedAt(t.getUpdatedAt())
+                .build();
+    }
 //    public List<TransactionAdminResponse> getAllTransactions() {
 //        return transactionRepository.findAllByOrderByCreatedAtDesc()
 //                .stream()

@@ -82,6 +82,7 @@ export default function CartPage() {
             }
 
             setCartItems((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
+            window.dispatchEvent(new Event('cartChanged'));
         } catch (err) {
             alert(err.message || 'Xóa khóa học thất bại');
         } finally {
@@ -184,12 +185,12 @@ export default function CartPage() {
                                                 </p>
 
                                                 <div className="d-flex flex-wrap gap-2">
-                                                    {item.teacherName && (
+                                                    {/* {item.teacherName && (
                                                         <span className="badge text-bg-light">
                                                             <i className="bi bi-person me-1" />
                                                             {item.teacherName}
                                                         </span>
-                                                    )}
+                                                    )} */}
 
                                                     {item.levelName && (
                                                         <span className="badge text-bg-light">

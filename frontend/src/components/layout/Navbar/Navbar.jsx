@@ -2,11 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 import './Navbar.css';
-import NotificationBell from '../../NotificationBell/NotificationBell';
 
 function getUserFromToken() {
   try {
-    const token = localStorage.getItem('token') || localStorage.getItem('english_token');
+    const token = localStorage.getItem('token');
     if (!token) return null;
     const payload = JSON.parse(atob(token.split('.')[1]));
     return {
@@ -45,20 +44,67 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('english_token');
     setUser(null);
     setDropdownOpen(false);
     setMobileOpen(false);
+    setCartCount(0);
     navigate('/dang-nhap');
   };
 
   const closeAll = () => { setDropdownOpen(false); setMobileOpen(false); };
 
-  const isTeacher  = user?.role?.includes('teacher');
-  const isAdmin    = user?.role?.includes('admin');
-  const isStudent  = user && !isTeacher && !isAdmin;
-  const initials   = user?.username?.slice(0, 2).toUpperCase() || 'U';
-  const roleLabel  = isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : 'Học viên';
+  const isTeacher = user?.role?.includes('teacher');
+  const isAdmin = user?.role?.includes('admin');
+  const isStudent = user && !isTeacher && !isAdmin;
+  const initials = user?.username?.slice(0, 2).toUpperCase() || 'U';
+  const roleLabel = isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : 'Học viên';
+
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:8080/gio-hang/khoa-hoc', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        setCartCount(0);
+        return;
+      }
+
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : data.items || [];
+
+      setCartCount(items.length);
+    } catch (err) {
+      console.error(err);
+      setCartCount(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartCount();
+
+    const handleCartChanged = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener('cartChanged', handleCartChanged);
+
+    return () => {
+      window.removeEventListener('cartChanged', handleCartChanged);
+    };
+  }, []);
+
 
   return (
     <header className="nb-header">
@@ -84,12 +130,6 @@ export default function Navbar() {
             <div className="nb-mobile-auth">
               {user ? (
                 <>
-                  {(isStudent || isTeacher) && (
-                    <div className="nb-mobile-notifications">
-                      <div className="nb-mobile-notifications-label">Thông báo</div>
-                      <NotificationBell variant="light" />
-                    </div>
-                  )}
                   <div className="nb-mobile-user">
                     <span className="nb-avatar">{initials}</span>
                     <div>
@@ -99,28 +139,25 @@ export default function Navbar() {
                   </div>
                   <Link to="/gio-hang" className="nb-mobile-link" onClick={closeAll}>
                     <i className="bi bi-cart3" /> Giỏ hàng
+                    {cartCount > 0 && (
+                      <span className="nb-cart-mobile-badge">{cartCount}</span>
+                    )}
                   </Link>
                   <div className="nb-mobile-divider" />
                   <Link to="/student/profile" className="nb-mobile-link" onClick={closeAll}>
-                    <i className="bi bi-person-circle" /> Hồ sơ cá nhân
+                    <i className="bi bi-person" /> Hồ sơ cá nhân
                   </Link>
                   <Link to="/student/change-password" className="nb-mobile-link" onClick={closeAll}>
-                    <i className="bi bi-shield-lock" /> Đổi mật khẩu
+                    <i className="bi bi-key" /> Đổi mật khẩu
                   </Link>
-                  {(isStudent || isTeacher) && (
+                  {/* {isStudent && (
                     <Link to="/student/khoa-hoc-da-mua" className="nb-mobile-link" onClick={closeAll}>
-                      <i className="bi bi-journal-bookmark-fill" /> Khóa học đã mua
+                      <i className="bi bi-journal-bookmark" /> Khóa học đã mua
                     </Link>
-                  )}
-                  <Link to="/personal-practices" className="nb-mobile-link" onClick={closeAll}>
-                    <i className="bi bi-journal-richtext" /> Bài ôn tập cá nhân
-                  </Link>
-                  <Link to="/lich-su-lam-bai" className="nb-mobile-link" onClick={closeAll}>
-                    <i className="bi bi-clock-history" /> Lịch sử làm bài
-                  </Link>
+                  )} */}
                   {!isTeacher && !isAdmin && (
                     <Link to="/student/teacher-register" className="nb-mobile-link" onClick={closeAll}>
-                      <i className="bi bi-person-badge" /> Đăng ký làm giáo viên
+                      <i className="bi bi-pencil-square" /> Đăng ký làm giáo viên
                     </Link>
                   )}
                   {isTeacher && (
@@ -152,15 +189,13 @@ export default function Navbar() {
           )}
         </nav>
 
-        {user && (isStudent || isTeacher) && (
-          <div className="nb-notifications nb-notifications--desktop" title="Thông báo từ admin">
-            <NotificationBell variant="navbar" />
-          </div>
-        )}
-
         {/* ── Cart desktop ── */}
         <Link to="/gio-hang" className="nb-cart" onClick={closeAll} aria-label="Giỏ hàng">
           <i className="bi bi-cart3" />
+
+          {cartCount > 0 && (
+            <span className="nb-cart-badge">{cartCount}</span>
+          )}
         </Link>
         {/* ── Auth desktop ── */}
         <div className="nb-auth">
@@ -189,24 +224,35 @@ export default function Navbar() {
 
                   <p className="nb-dropdown-section">Tài khoản</p>
                   <Link to="/student/profile" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-person-circle" /> Hồ sơ cá nhân
+                    <i className="bi bi-person" /> Hồ sơ cá nhân
                   </Link>
 
-                  {(isStudent || isTeacher) && (
-                    <Link to="/student/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
-                      <i className="bi bi-journal-bookmark-fill" /> Khóa học đã mua
+                  {/* <Link to="/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-journal-bookmark" /> Khóa học đã mua
+                  </Link> */}
+
+                  <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
+                    <i className="bi bi-key" /> Đổi mật khẩu
+                  </Link>
+                  {isStudent && (
+                    <Link to="/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
+                      <i className="bi bi-journal-bookmark" /> Khóa học đã mua
                     </Link>
                   )}
 
-                  <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-shield-lock" /> Đổi mật khẩu
+                  <Link
+                    to="/personal-practices"
+                    className="nb-dropdown-item"
+                    onClick={closeAll}
+                  >
+                    <i className="bi bi-journal-check" /> Bài ôn tập cá nhân
                   </Link>
 
-                  <Link to="/personal-practices" className="nb-dropdown-item" onClick={closeAll}>
-                    <i className="bi bi-journal-richtext" /> Bài ôn tập cá nhân
-                  </Link>
-
-                  <Link to="/lich-su-lam-bai" className="nb-dropdown-item" onClick={closeAll}>
+                  <Link
+                    to="/lich-su-lam-bai"
+                    className="nb-dropdown-item"
+                    onClick={closeAll}
+                  >
                     <i className="bi bi-clock-history" /> Lịch sử làm bài
                   </Link>
 
@@ -216,7 +262,7 @@ export default function Navbar() {
                       <div className="nb-dropdown-divider" />
                       <p className="nb-dropdown-section">Nâng cấp</p>
                       <Link to="/student/teacher-register" className="nb-dropdown-item" onClick={closeAll}>
-                        <i className="bi bi-person-badge" /> Đăng ký làm giáo viên
+                        <i className="bi bi-pencil-square" /> Đăng ký làm giáo viên
                       </Link>
                     </>
                   )}

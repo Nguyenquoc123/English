@@ -42,7 +42,7 @@ public class VideoService {
 
 	@Transactional
 	public VideoResponse themVideoChoLesson(Long lessonId, VideoRequest request, MultipartFile videoFile,
-			MultipartFile thumbnailFile) throws IOException {
+			MultipartFile thumbnailFile, MultipartFile materialFile) throws IOException {
 
 		if (lessonId == null) {
 			throw new RuntimeException("lessonId không được để trống");
@@ -62,9 +62,14 @@ public class VideoService {
 		String videoUrl = fileService.saveFile(videoFile, "videos");
 
 		String thumbnailUrl = null;
+		String fileUrl = null;
 
 		if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
 			thumbnailUrl = fileService.saveFile(thumbnailFile, "images");
+		}
+		
+		if (materialFile != null && !materialFile.isEmpty()) {
+			fileUrl = fileService.saveFile(materialFile, "files");
 		}
 
 		Integer nextDisplayOrder = getNextDisplayOrder(lessonId);
@@ -73,7 +78,9 @@ public class VideoService {
 
 		Video video = Video.builder().lesson(lesson).title(request.getTitle().trim()).videoUrl(videoUrl)
 				.durationSeconds(request.getDurationSeconds()).thumbnailUrl(thumbnailUrl).displayOrder(nextDisplayOrder)
-				.createdAt(now).updatedAt(now).status(request.getStatus()).build();
+				.createdAt(now).updatedAt(now).status(request.getStatus())
+				.fileUrl(fileUrl)
+				.build();
 
 		Video savedVideo = videoRepository.save(video);
 

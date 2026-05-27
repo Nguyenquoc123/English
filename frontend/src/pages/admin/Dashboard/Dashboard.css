@@ -1,1 +1,208 @@
 
+.admin-dashboard {
+  animation: dashboardFadeIn 0.25s ease;
+}
+
+.dashboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(13, 110, 253, 0.14), transparent 34%),
+    linear-gradient(135deg, #ffffff, #f8fbff);
+  border: 1px solid rgba(13, 110, 253, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  color: #0d6efd;
+  background: rgba(13, 110, 253, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.revenue-card,
+.pending-card,
+.admin-stat-card {
+  height: 100%;
+  border: 0;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.revenue-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 220px;
+  padding: 28px;
+  background:
+    radial-gradient(circle at right, rgba(25, 135, 84, 0.16), transparent 32%),
+    linear-gradient(135deg, #ffffff, #f8fff9);
+}
+
+.revenue-icon,
+.pending-icon,
+.admin-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.revenue-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  color: #198754;
+  background: rgba(25, 135, 84, 0.12);
+  font-size: 26px;
+}
+
+.revenue-art {
+  position: absolute;
+  right: 28px;
+  bottom: -18px;
+  color: rgba(25, 135, 84, 0.1);
+  font-size: 138px;
+  line-height: 1;
+}
+
+.pending-card {
+  padding: 24px;
+}
+
+.pending-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  color: #fd7e14;
+  background: rgba(253, 126, 20, 0.12);
+  font-size: 26px;
+}
+
+.pending-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pending-list div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f8f9fa;
+}
+
+.pending-list span {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.admin-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
+}
+
+.admin-stat-card p {
+  font-size: 14px;
+}
+
+.admin-stat-icon {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 18px;
+  font-size: 25px;
+}
+
+.admin-stat-icon.primary {
+  color: #0d6efd;
+  background: rgba(13, 110, 253, 0.12);
+}
+
+.admin-stat-icon.info {
+  color: #0dcaf0;
+  background: rgba(13, 202, 240, 0.14);
+}
+
+.admin-stat-icon.success {
+  color: #198754;
+  background: rgba(25, 135, 84, 0.12);
+}
+
+.admin-stat-icon.warning {
+  color: #f59f00;
+  background: rgba(255, 193, 7, 0.18);
+}
+
+.admin-stat-icon.danger {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.12);
+}
+
+.dashboard-loading {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-error {
+  border-radius: 20px;
+}
+
+@keyframes dashboardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-hero .btn {
+    width: 100%;
+  }
+
+  .revenue-card {
+    min-height: unset;
+  }
+
+  .revenue-art {
+    display: none;
+  }
+}

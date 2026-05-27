@@ -21,6 +21,8 @@ public class CourseDetailResponse {
     private String title;
 
     private String description;
+    
+    private String shortDescription;
 
     private String thumbnailUrl;
 

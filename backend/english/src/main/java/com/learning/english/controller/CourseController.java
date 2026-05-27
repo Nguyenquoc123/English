@@ -1,8 +1,9 @@
 package com.learning.english.controller;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -56,15 +57,23 @@ public class CourseController {
 	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, 12);
 	}
 	
-//	@GetMapping("/danh-sach-khoa-hoc-da-mua")
-//	public Page<CourseResponse> dsKhoaHocDaMua(
-//	        @RequestParam(required = false) String keyword,
-//	        @RequestParam(required = false) Long levelId,
-//	        @RequestParam(required = false) Integer page
-//	) {
-//	    return courseService.dsKhoaHocDaMua(keyword, levelId, page, 12);
-////	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, size);
-//	}
+	@GetMapping("/danh-sach-khoa-hoc-da-mua")
+	public Page<CourseResponse> dsKhoaHocDaMua(
+	        @RequestParam(required = false) String keyword,
+	        @RequestParam(required = false) Long levelId,
+	        @RequestParam(required = false) Integer page
+	) {
+	    return courseService.dsKhoaHocDaMua(keyword, levelId, page, 12);
+//	    return courseService.dsAllKhoaHocPublic(keyword, levelId, page, size);
+	}
+	
+	@PostMapping("/dang-ky-khoa-hoc-free/{courseId}")
+	public ResponseEntity<?> dangKyKhoaHocFree(@PathVariable Long courseId){
+		courseService.dangKyKhoaHocFree(courseId);
+		Map<String, String> kq = new HashMap<String, String>();
+		kq.put("message", "Đăng ký khóa học thành công!");
+		return ResponseEntity.ok(kq);
+	}
 	
 	@GetMapping("/danh-sach-khoa-hoc-teacher")
 	public Page<CourseResponse> dsKhoaHocCuaGiaoVien(
@@ -106,13 +115,29 @@ public class CourseController {
             @RequestPart("data") String data,
             @RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile
     ) throws IOException {
+		System.out.println("Đã chạy");
         ObjectMapper objectMapper = new ObjectMapper();
 
-        CourseRequest request = objectMapper.readValue(
-                data.getBytes(StandardCharsets.UTF_8),
-                CourseRequest.class);
+        CourseRequest request = objectMapper.readValue(data, CourseRequest.class);
 
         return ResponseEntity.ok(courseService.taoKhoaHoc(request, thumbnailFile));
+    }
+	
+	@PutMapping(
+            value = "/cap-nhat-khoa-hoc/{courseId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<CourseResponse> updateKhoaHoc(
+    		@PathVariable("courseId") Long courseId,
+            @RequestPart("data") String data,
+            @RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile
+    ) throws IOException {
+		System.out.println("Đã chạy");
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        CourseRequest request = objectMapper.readValue(data, CourseRequest.class);
+
+        return ResponseEntity.ok(courseService.capNhatKhoaHoc(courseId, request, thumbnailFile));
     }
 	
 	
@@ -145,10 +170,10 @@ public class CourseController {
 	    return ResponseEntity.ok(courseService.layChiTietKhoaHocChoHocVien(courseId));
 	}
 
-	@GetMapping("/danh-sach-khoa-hoc-da-mua")
-	public List<CourseResponse> dsKhoaHocDaMua() {
-		return courseService.dsKhoaHocDaMua();
-	}
+//	@GetMapping("/danh-sach-khoa-hoc-da-mua")
+//	public List<CourseResponse> dsKhoaHocDaMua() {
+//		return courseService.dsKhoaHocDaMua();
+//	}
     
     
     @PostMapping("/{courseId}/tao-thanh-toan")

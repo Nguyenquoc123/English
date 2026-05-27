@@ -5,7 +5,7 @@ import "./StudentExamTakingPage.css";
 
 import QuestionRenderer from "../../../compenents/exam-taking/QuestionRenderer";
 import CourseBreadcrumb from "../../../components/CourseBreadcrumb/CourseBreadcrumb";
-import { studentHome, studentExams } from "../../../utils/breadcrumbPaths";
+import { studentHome, studentCourseDetail } from "../../../utils/breadcrumbPaths";
 
 const API_BASE = "http://localhost:8080";
 
@@ -484,37 +484,7 @@ const StudentExamTakingPage = () => {
 
                 <div className="student-exam-left">
 
-                    <div className="student-exam-header-card">
-
-                        <CourseBreadcrumb
-                            items={[
-                                studentHome,
-                                studentExams,
-                                { label: exam?.title || "Làm bài thi" },
-                            ]}
-                        />
-
-                        <h1 className="student-exam-title">
-                            {exam?.title}
-                        </h1>
-
-                        <div className="student-exam-meta">
-
-                            <div className="student-exam-meta-item">
-                                ⏱ {exam?.durationMinutes} phút
-                            </div>
-
-                            <div className="student-exam-meta-item">
-                                ❓ {questions.length} câu
-                            </div>
-
-                            <div className="student-exam-meta-item">
-                                ⭐ {exam?.totalPoint} điểm
-                            </div>
-
-                        </div>
-
-                    </div>
+                    
 
                     <div className="student-exam-questions">
 
@@ -575,33 +545,7 @@ const StudentExamTakingPage = () => {
 
                     </div>
 
-                    <div className="student-exam-sidebar-card">
-
-                        <div className="student-exam-progress-top">
-
-                            <span>Tiến độ bài thi</span>
-
-                            <span>
-                                {progressPercent}%
-                            </span>
-
-                        </div>
-
-                        <div className="student-exam-progress-bar">
-                            <div
-                                className="student-exam-progress-fill"
-                                style={{
-                                    width: `${progressPercent}%`,
-                                }}
-                            />
-                        </div>
-
-                        <div className="student-exam-progress-text">
-                            Đã trả lời {answeredCount}/
-                            {questions.length} câu
-                        </div>
-
-                    </div>
+                    
 
                     <div className="student-exam-sidebar-card">
 

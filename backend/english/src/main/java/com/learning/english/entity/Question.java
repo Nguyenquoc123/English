@@ -30,6 +30,10 @@ public class Question {
     private String questionType;
     
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "levelId")
+    private Level level;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personalPracticeId")
     private PersonalPractice personalPractice;
 

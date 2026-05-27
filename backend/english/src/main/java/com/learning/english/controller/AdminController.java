@@ -175,10 +175,10 @@ public class AdminController {
     // ==================== TRANSACTION MANAGEMENT ====================
 
     // GET /admin/transactions
-//    @GetMapping("/transactions")
-//    public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
-//        return ResponseEntity.ok(adminService.getAllTransactions());
-//    }
+    @GetMapping("/transactions")
+    public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
+        return ResponseEntity.ok(adminService.getAllTransactions());
+    }
 
     @GetMapping("/reviews")
     public ResponseEntity<List<CourseReviewResponse>> getAllReviews() {

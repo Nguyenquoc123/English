@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAllReviews, deleteReview } from "../../../api/adminApi";
 import "./ReviewManagement.css";
+import { getFileUrl } from "../../../utils/fileurl";
 
 function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
@@ -198,7 +199,7 @@ function ReviewManagement() {
               <div className="review-card-header">
                 <div className="review-card-avatar">
                   {review.avatarUrl ? (
-                    <img src={review.avatarUrl} alt={review.fullName} />
+                    <img src={getFileUrl(review.avatarUrl)} alt={review.fullName} />
                   ) : (
                     <div className="review-card-avatar-placeholder">
                       {(review.fullName || "?").charAt(0).toUpperCase()}

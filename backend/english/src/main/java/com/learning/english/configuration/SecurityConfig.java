@@ -47,7 +47,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(request -> request
                 // Public endpoints
                 .requestMatchers(HttpMethod.POST, "/register", "/login", "/xacminh").permitAll()
-                .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-public", "/images/**", "/videos/**", "/level/*", "/audios/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-public", "/images/**", "/videos/**", "/level/*", "/audios/**", "/files/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/webhooks/sepay").permitAll()
                 .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/**", "/uploads/**", "/files/**", "/khoa-hoc/chi-tiet-khoa-hoc-student/*", "/danh-gia/ds-danh-gia/*").permitAll()
 
@@ -55,11 +55,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/hosocanhan").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.PUT, "/hosocanhan").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.PUT, "/doi-mat-khau").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/teacher-profile/register").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-register", "/teacher-profile/profile-registered").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/notifications/my", "/notifications/unread-count").hasAnyAuthority("SCOPE_student", "SCOPE_teacher", "SCOPE_admin")
-                .requestMatchers(HttpMethod.PUT, "/notifications/read-all").hasAnyAuthority("SCOPE_student", "SCOPE_teacher", "SCOPE_admin")
-                .requestMatchers(HttpMethod.PUT, "/notifications/*/read").hasAnyAuthority("SCOPE_student", "SCOPE_teacher", "SCOPE_admin")
+                .requestMatchers(HttpMethod.POST, "/teacher-profile/register", "/teacher-profile/update").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.PUT, "/teacher-profile/update").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-registered").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-register").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/check-mua").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/video-progress").hasAuthority("SCOPE_student")
                 
@@ -71,9 +70,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc").hasAnyAuthority("SCOPE_admin")
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/chi-tiet-khoa-hoc/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/duyet", "/khoa-hoc/*/tu-choi").hasAuthority("SCOPE_admin")
-                .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/gui-duyet").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/gui-duyet", "/khoa-hoc/cap-nhat-khoa-hoc/*").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/danh-sach-khoa-hoc-da-mua").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/tao-thanh-toan").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/tao-thanh-toan", "/khoa-hoc/dang-ky-khoa-hoc-free/*").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
                 
                 
@@ -98,7 +97,7 @@ public class SecurityConfig {
                 // Practice & exams
                 .requestMatchers(HttpMethod.GET, "/practice-configs/*", "/practice-configs/{lessonId}/practice/{practiceType}/student", "/practice-attempts/*/result").hasAnyAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/practice-attempts/submit").hasAnyAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi").hasAnyAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi", "/exams/*/chi-tiet").hasAnyAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi-teacher", "/exams/*", "/exams/{examId}/questions/teacher").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exams/create").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exams/*").hasAuthority("SCOPE_teacher")
@@ -106,7 +105,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/exam-questions/*/ds").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exam-submit").hasAuthority("SCOPE_student")
                 
-                .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai/*").hasAuthority("SCOPE_student")
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAuthority("SCOPE_student")
                 
@@ -118,6 +117,12 @@ public class SecurityConfig {
                 
                 .requestMatchers(HttpMethod.POST, "/gio-hang/them/*", "/gio-hang/xoa/*").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/gio-hang/khoa-hoc").hasAuthority("SCOPE_student")
+                
+                // bank
+                .requestMatchers(HttpMethod.POST, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.DELETE, "/bank-account/*").hasAuthority("SCOPE_teacher")
 
                 // Admin area
                 .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("SCOPE_admin")

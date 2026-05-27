@@ -13,6 +13,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +28,11 @@ public interface PracticeConfigMapper {
 		}
 
 		return PracticeConfigResponse.builder().configId(toLong(row[0])).lessonId(toLong(row[1]))
-				.practiceType(toStringValue(row[2])).isEnabled(toBoolean(row[3])).questionCount(toLong(row[4])).build();
+				.practiceType(toStringValue(row[2])).isEnabled(toBoolean(row[3])).questionCount(toLong(row[4]))
+				.lanCuoi(toLocalDateTime(row[5]))
+				.soLanLam(toLong(row[6]))
+				.diemCaoNhat(toBigDecimal(row[7]))
+				.build();
 	}
 
 	default List<PracticeConfigResponse> toPracticeConfigResponses(List<Object[]> rows) {
@@ -36,6 +42,34 @@ public interface PracticeConfigMapper {
 
 		return rows.stream().map(this::toPracticeConfigResponse).toList();
 	}
+	
+	private BigDecimal toBigDecimal(Object value) {
+        if (value == null) return BigDecimal.ZERO;
+
+        if (value instanceof BigDecimal bigDecimal) {
+            return bigDecimal;
+        }
+
+        if (value instanceof Number number) {
+            return BigDecimal.valueOf(number.doubleValue());
+        }
+
+        return new BigDecimal(value.toString());
+    }
+
+    private java.time.LocalDateTime toLocalDateTime(Object value) {
+        if (value == null) return null;
+
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+
+        if (value instanceof java.time.LocalDateTime localDateTime) {
+            return localDateTime;
+        }
+
+        return null;
+    }
 
 	default Long toLong(Object value) {
 		if (value == null) {

@@ -59,6 +59,7 @@ public interface CourseMapper {
                 .rejectReason(toString(row[16]))
                 .teacherName(toString(row[17]))
                 .levelId(toLong(row[18]))
+                .shortDescription(toString(row[19]))
                 .build();
     }
     

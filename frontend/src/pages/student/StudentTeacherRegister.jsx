@@ -5,8 +5,6 @@ import "./StudentTeacherRegister.css";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 import { getFileUrl } from "../../utils/fileurl";
-import { getTeacherApplicationSummary, getTeacherProfile } from "../../api/teacherProfileApi";
-import { getTeacherApplicationStatusMeta } from "../../utils/teacherApplicationStatus";
 
 function StudentTeacherRegister() {
   const navigate = useNavigate();
@@ -15,8 +13,6 @@ function StudentTeacherRegister() {
   const API_BASE = "http://localhost:8080";
 
   const [profile, setProfile] = useState(null);
-  const [applicationStatus, setApplicationStatus] = useState(null);
-  const [hasSubmittedApplication, setHasSubmittedApplication] = useState(false);
 
   const [formData, setFormData] = useState({
     phone: "",
@@ -61,6 +57,7 @@ function StudentTeacherRegister() {
   );
 
   useEffect(() => {
+    loadRegisterResult();
     loadProfile();
   }, []);
 
@@ -97,15 +94,7 @@ function StudentTeacherRegister() {
       }
 
       setProfile(result);
-
-      if (result?.phone) {
-        setFormData((prev) => ({
-          ...prev,
-          phone: prev.phone || result.phone,
-        }));
-      }
-
-      await loadTeacherDraft();
+      await loadTeacherDraft(token);
     } catch (error) {
       console.error(error);
       alert("Lỗi kết nối server");
@@ -114,52 +103,33 @@ function StudentTeacherRegister() {
     }
   };
 
-  const loadTeacherDraft = async () => {
+  const loadTeacherDraft = async (token) => {
     try {
-      const summaryRes = await getTeacherApplicationSummary();
-      const summary =
-        summaryRes.data?.result ?? summaryRes.data?.data ?? summaryRes.data;
-      const registered = Boolean(summary?.registered);
-      const status = String(summary?.approvalStatus || "").toUpperCase();
+      const response = await fetch(`${API_BASE}/teacher-profile/profile-register`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      setHasSubmittedApplication(registered);
-      setApplicationStatus(registered ? status : null);
+      if (!response.ok) return;
 
-      if (status === "PENDING" || status === "APPROVED") {
-        navigate("/student/teacher-register/result");
-        return;
-      }
+      const data = await response.json();
+      const body = data?.result || data?.data || data;
+      const status = String(body?.approvalStatus || "").toUpperCase();
 
       if (status === "REJECTED") {
-        const res = await getTeacherProfile();
-        const body = res.data?.result ?? res.data?.data ?? res.data;
         setFormData((prev) => ({
           ...prev,
-          phone: body.phone || summary.phone || prev.phone,
+          phone: body.phone || "",
           bio: body.bio || "",
           experience: body.experience || "",
         }));
-        return;
-      }
-
-      if (summary?.phone) {
-        setFormData((prev) => ({
-          ...prev,
-          phone: prev.phone || summary.phone,
-        }));
       }
     } catch {
-      setApplicationStatus(null);
-      setHasSubmittedApplication(false);
+      /* bỏ qua nếu chưa có hồ sơ */
     }
   };
 
-  const formStatusMeta = getTeacherApplicationStatusMeta(
-    applicationStatus,
-    hasSubmittedApplication
-  );
 
-  
 
   const getInitialName = () => {
     if (!profile?.fullName) return "HV";
@@ -365,7 +335,7 @@ function StudentTeacherRegister() {
         submitData.append("certificateFiles", file);
       });
 
-      
+
 
       const response = await fetch(`${API_BASE}/teacher-profile/register`, {
         method: "POST",
@@ -399,6 +369,49 @@ function StudentTeacherRegister() {
     }
   };
 
+  const loadRegisterResult = async () => {
+    try {
+      
+      
+
+      const token = getToken();
+
+      if (!token) {
+        navigate("/dang-nhap");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE}/teacher-profile/profile-register`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      const body = data?.result || data?.data || data;
+
+      if (!response.ok) {
+        
+        return;
+      }
+
+      console.log(body)
+      if (body.approvalStatus.toLowerCase() === "pending" || body.approvalStatus.toLowerCase() === "approved")
+        navigate("/student/teacher-register/result")
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi kết nối server");
+    } 
+  };
+
   if (loadingProfile) {
     return (
       <div className="teacher-register-page">
@@ -417,28 +430,7 @@ function StudentTeacherRegister() {
           items={[studentHome, studentProfile, { label: "Đăng ký giáo viên" }]}
         />
 
-        <div className="teacher-register-heading">
-          <div>
-            <h2>Đăng ký trở thành giáo viên</h2>
-            <p>
-              Hoàn thiện hồ sơ giảng dạy để gửi yêu cầu xét duyệt trở thành giáo viên
-              trên hệ thống.
-            </p>
-            <span className={`badge mt-2 ${formStatusMeta.className}`}>
-              {formStatusMeta.label}
-            </span>
-            {formStatusMeta.description && (
-              <p className="text-muted small mb-0 mt-1">{formStatusMeta.description}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            onClick={() => navigate("/student/teacher-register/result")}
-          >
-            Xem kết quả đăng ký
-          </button>
-        </div>
+
 
         <form onSubmit={handleSubmit}>
           <div className="row g-4">
@@ -470,13 +462,7 @@ function StudentTeacherRegister() {
 
                 <span className="role-badge">{getRoleText(profile?.role)}</span>
 
-                <div className="profile-note">
-                  <i className="bi bi-info-circle"></i>
-                  <span>
-                    Hồ sơ của bạn sẽ được admin xét duyệt trước khi kích hoạt quyền
-                    giáo viên.
-                  </span>
-                </div>
+
               </div>
 
               <div className="teacher-register-guide-card mt-4">
@@ -520,8 +506,8 @@ function StudentTeacherRegister() {
                     <p>Điền thông tin giảng dạy và tải lên chứng chỉ liên quan.</p>
                   </div>
 
-                  <span className={`status-pending-badge ${formStatusMeta.className}`}>
-                    Trạng thái: {formStatusMeta.label}
+                  <span className="status-pending-badge">
+                    Trạng thái: Chưa gửi
                   </span>
                 </div>
 
@@ -569,7 +555,7 @@ function StudentTeacherRegister() {
                       value={formData.experience}
                       config={joditConfig}
                       onBlur={handleExperienceChange}
-                      onChange={() => {}}
+                      onChange={() => { }}
                     />
                   </div>
                 </div>
@@ -629,7 +615,7 @@ function StudentTeacherRegister() {
                 <div className="teacher-register-actions">
                   <button
                     type="button"
-                    className="btn btn-light action-btn"
+                    className="btn btn-warning action-btn"
                     onClick={() => navigate("/student/profile")}
                     disabled={submitting}
                   >

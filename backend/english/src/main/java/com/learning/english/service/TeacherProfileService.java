@@ -4,17 +4,17 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.learning.english.constant.ApprovalStatus;
+import com.learning.english.dto.request.TeacherProfileUpdateRequest;
 import com.learning.english.dto.request.TeacherRegisterRequest;
-import com.learning.english.dto.response.TeacherApplicationSummaryResponse;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.entity.Role;
 import com.learning.english.entity.TeacherCertificate;
@@ -24,6 +24,8 @@ import com.learning.english.mapper.TeacherProfileMapper;
 import com.learning.english.repository.RoleRepository;
 import com.learning.english.repository.TeacherProfileRepository;
 import com.learning.english.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class TeacherProfileService {
@@ -43,16 +45,21 @@ public class TeacherProfileService {
 	RoleRepository roleRepository;
 
 	@Autowired
-	NotificationService notificationService;
+	ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public TeacherProfileResponse dangKyLamGiaoVien(TeacherRegisterRequest request,
 			List<MultipartFile> certificateFiles) throws IOException {
-		User user = getCurrentUser();
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (!"student".equalsIgnoreCase(user.getRole().getRoleName())) {
-			throw new RuntimeException("Chỉ học viên mới có thể đăng ký trở thành giáo viên");
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
 		}
+
+		String username = authentication.getName();
+
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
 		String phone = normalizePhone(request.getPhone());
 		validatePhone(phone);
@@ -72,144 +79,50 @@ public class TeacherProfileService {
 		TeacherProfile existingProfile = teacherProfileRepository.findByUser(user).orElse(null);
 
 		if (existingProfile != null) {
-			if (ApprovalStatus.isPending(existingProfile.getApprovalStatus())) {
+			if ("PENDING".equalsIgnoreCase(existingProfile.getApprovalStatus())) {
 				throw new RuntimeException("Yêu cầu đăng ký giáo viên của bạn đang chờ duyệt");
 			}
 
-			if (ApprovalStatus.isApproved(existingProfile.getApprovalStatus())) {
+			if ("APPROVED".equalsIgnoreCase(existingProfile.getApprovalStatus())) {
 				throw new RuntimeException("Bạn đã là giáo viên");
 			}
 
-			if (ApprovalStatus.isRejected(existingProfile.getApprovalStatus())) {
+			if ("REJECTED".equalsIgnoreCase(existingProfile.getApprovalStatus())) {
 				existingProfile.setBio(request.getBio());
 				existingProfile.setExperience(request.getExperience());
 				existingProfile.setPhone(phone);
-				existingProfile.setApprovalStatus(ApprovalStatus.PENDING);
+				existingProfile.setApprovalStatus("PENDING");
 				existingProfile.setReviewedAt(null);
 				existingProfile.setReviewedBy(null);
 				existingProfile.setRejectReason(null);
 				existingProfile.setUpdatedAt(LocalDateTime.now());
-				existingProfile.getCertificates().clear();
 
-				addCertificates(existingProfile, certificateFiles);
+				for (MultipartFile file : certificateFiles) {
+					if (file == null || file.isEmpty()) {
+						continue;
+					}
 
-				user.setPhone(phone);
-				user.setUpdatedAt(LocalDateTime.now());
-				userRepository.save(user);
+					String imageUrl = fileService.saveFile(file, "images");
+
+					TeacherCertificate certificate = TeacherCertificate.builder().teacherProfile(existingProfile)
+							.certificateUrl(imageUrl).build();
+
+					existingProfile.getCertificates().add(certificate);
+				}
 
 				TeacherProfile savedProfile = teacherProfileRepository.save(existingProfile);
+
+				applicationEventPublisher.publishEvent(savedProfile.getTeacherProfileId());
+
 				return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
+
 			}
 		}
 
-		TeacherProfile teacherProfile = TeacherProfile.builder().user(user)
-				.approvalStatus(ApprovalStatus.PENDING).bio(request.getBio()).experience(request.getExperience())
-				.phone(phone).certificates(new ArrayList<>()).createdAt(LocalDateTime.now())
-				.updatedAt(LocalDateTime.now()).build();
+		TeacherProfile teacherProfile = TeacherProfile.builder().user(user).approvalStatus("PENDING")
+				.bio(request.getBio()).experience(request.getExperience()).phone(phone).certificates(new ArrayList<>())
+				.createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
 
-		addCertificates(teacherProfile, certificateFiles);
-
-		user.setPhone(phone);
-		user.setUpdatedAt(LocalDateTime.now());
-		userRepository.save(user);
-
-		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
-		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
-	}
-
-	public TeacherProfileResponse getProfileDangKy() {
-		User user = getCurrentUser();
-		TeacherProfile teacherProfile = teacherProfileRepository.findByUser(user)
-				.orElseThrow(() -> new RuntimeException("Chưa có hồ sơ đăng ký giáo viên"));
-		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
-	}
-
-	@Transactional
-	public TeacherProfileResponse duyetDangKyLamGiaoVien(Long teacherProfileId, String approvalStatus,
-			String rejectReason) {
-		User admin = getCurrentUser();
-
-		if (admin.getRole() == null || !"admin".equalsIgnoreCase(admin.getRole().getRoleName())) {
-			throw new RuntimeException("Không đủ quyền thực hiện thao tác này");
-		}
-
-		TeacherProfile teacherProfile = teacherProfileRepository.findById(teacherProfileId)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ đăng ký giáo viên"));
-
-		if (!ApprovalStatus.isPending(teacherProfile.getApprovalStatus())) {
-			throw new RuntimeException("Hồ sơ này không ở trạng thái chờ duyệt");
-		}
-
-		if (approvalStatus == null || approvalStatus.trim().isEmpty()) {
-			throw new RuntimeException("Trạng thái duyệt không được để trống");
-		}
-
-		if (!ApprovalStatus.isApproved(approvalStatus) && !ApprovalStatus.isRejected(approvalStatus)) {
-			throw new RuntimeException("Trạng thái duyệt chỉ được là APPROVED hoặc REJECTED");
-		}
-
-		teacherProfile.setApprovalStatus(approvalStatus.toUpperCase());
-		teacherProfile.setReviewedAt(LocalDateTime.now());
-		teacherProfile.setReviewedBy(admin);
-		teacherProfile.setUpdatedAt(LocalDateTime.now());
-
-		User applicant = teacherProfile.getUser();
-
-		if (ApprovalStatus.isRejected(approvalStatus)) {
-			if (rejectReason == null || rejectReason.trim().isEmpty()) {
-				throw new RuntimeException("Vui lòng nhập lý do từ chối");
-			}
-			teacherProfile.setRejectReason(rejectReason.trim());
-
-			notificationService.notifyUser(applicant,
-					"Hồ sơ đăng ký giáo viên bị từ chối",
-					"Lý do: " + rejectReason.trim() + ". Bạn có thể cập nhật hồ sơ và gửi lại.",
-					admin);
-		} else {
-			teacherProfile.setRejectReason(null);
-
-			Role role = roleRepository.findByRoleName("teacher")
-					.orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò giáo viên"));
-			applicant.setRole(role);
-			userRepository.save(applicant);
-
-			notificationService.notifyUser(applicant,
-					"Hồ sơ đăng ký giáo viên đã được duyệt",
-					"Chúc mừng! Bạn đã được cấp quyền giáo viên. Hãy đăng nhập lại hoặc vào khu vực giáo viên để bắt đầu tạo khóa học.",
-					admin);
-		}
-
-		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
-		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
-	}
-
-	public TeacherApplicationSummaryResponse getApplicationSummary() {
-		User user = getCurrentUser();
-		return teacherProfileRepository.findByUser(user)
-				.map(profile -> TeacherApplicationSummaryResponse.builder()
-						.registered(true)
-						.approvalStatus(profile.getApprovalStatus())
-						.phone(resolvePhoneForUser(user, profile))
-						.build())
-				.orElseGet(() -> TeacherApplicationSummaryResponse.builder()
-						.registered(false)
-						.approvalStatus(null)
-						.phone(user.getPhone())
-						.build());
-	}
-
-	private String resolvePhoneForUser(User user, TeacherProfile profile) {
-		if (profile.getPhone() != null && !profile.getPhone().isBlank()) {
-			return profile.getPhone();
-		}
-		if (user.getPhone() != null && !user.getPhone().isBlank()) {
-			return user.getPhone();
-		}
-		return null;
-	}
-
-	private void addCertificates(TeacherProfile teacherProfile, List<MultipartFile> certificateFiles)
-			throws IOException {
 		for (MultipartFile file : certificateFiles) {
 			if (file == null || file.isEmpty()) {
 				continue;
@@ -223,12 +136,14 @@ public class TeacherProfileService {
 			teacherProfile.getCertificates().add(certificate);
 		}
 
-		if (teacherProfile.getCertificates().isEmpty()) {
-			throw new RuntimeException("Vui lòng tải lên ít nhất 1 ảnh chứng chỉ hợp lệ");
-		}
+		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
+
+		applicationEventPublisher.publishEvent(savedProfile.getTeacherProfileId());
+
+		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
 	}
 
-	private User getCurrentUser() {
+	public TeacherProfileResponse getProfileDangKy() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (authentication == null || !authentication.isAuthenticated()) {
@@ -237,8 +152,84 @@ public class TeacherProfileService {
 
 		String username = authentication.getName();
 
-		return userRepository.findByUsername(username)
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+
+		TeacherProfile teacherProfile = teacherProfileRepository.findByUser(user)
+				.orElseThrow(() -> new RuntimeException());
+		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
+	}
+
+	public TeacherProfileResponse duyetDangKyLamGiaoVien(Long teacherProfileId, String approvalStatus,
+			String rejectReason) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		User admin = userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+
+		if ("admin".equals(admin.getStatus()))
+			throw new RuntimeException("Không đủ quyền");
+
+		TeacherProfile teacherProfile = teacherProfileRepository.findById(teacherProfileId)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ đăng ký giáo viên"));
+
+		if (!"pending".equalsIgnoreCase(teacherProfile.getApprovalStatus())) {
+			throw new RuntimeException("Hồ sơ này không ở trạng thái chờ duyệt");
+		}
+
+		if (approvalStatus == null || approvalStatus.trim().isEmpty()) {
+			throw new RuntimeException("Trạng thái duyệt không được để trống");
+		}
+
+		if (!"approved".equalsIgnoreCase(approvalStatus) && !"rejected".equalsIgnoreCase(approvalStatus)) {
+			throw new RuntimeException("Trạng thái duyệt chỉ được là APPROVED hoặc REJECTED");
+		}
+
+		teacherProfile.setApprovalStatus(approvalStatus.toUpperCase());
+		teacherProfile.setReviewedAt(LocalDateTime.now());
+		teacherProfile.setReviewedBy(admin);
+
+		if ("rejected".equalsIgnoreCase(approvalStatus)) {
+			if (rejectReason == null || rejectReason.trim().isEmpty()) {
+				throw new RuntimeException("Vui lòng nhập lý do từ chối");
+			}
+			teacherProfile.setRejectReason(rejectReason.trim());
+		} else {
+			teacherProfile.setRejectReason(null);
+
+			Optional<Role> role = roleRepository.findByRoleName("teacher");
+			if (role.isEmpty())
+				throw new RuntimeException("Không tìm thấy roles.");
+			User teacher = teacherProfile.getUser();
+			teacher.setRole(role.get());
+			userRepository.save(teacher);
+		}
+
+		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
+		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
+	}
+
+	public Boolean daDangKyLamGiaoVien() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+		Boolean kq = teacherProfileRepository.existsByUser(user);
+
+		return kq;
 	}
 
 	private String normalizePhone(String phone) {
@@ -255,5 +246,53 @@ public class TeacherProfileService {
 		if (!phone.matches("^(\\+84|84|0)[0-9]{9,10}$")) {
 			throw new RuntimeException("Số điện thoại không hợp lệ (VD: 0912345678)");
 		}
+	}
+
+	private User getCurrentUser() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
+
+		String username = authentication.getName();
+
+		return userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+	}
+
+	@Transactional
+	public TeacherProfileResponse updateHoSoGiaoVien(TeacherProfileUpdateRequest request) {
+		User user = getCurrentUser();
+
+		TeacherProfile teacherProfile = teacherProfileRepository.findByUser(user)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ giáo viên"));
+
+		boolean emailExisted = userRepository.existsByEmailAndUserIdNot(request.getEmail().trim(), user.getUserId());
+
+		if (emailExisted) {
+			throw new RuntimeException("Email đã được sử dụng");
+		}
+
+		user.setEmail(request.getEmail().trim());
+		user.setUpdatedAt(LocalDateTime.now());
+
+		teacherProfile.setPhone(request.getPhone().trim());
+		teacherProfile.setBio(request.getBio().trim());
+		teacherProfile.setExperience(request.getExperience());
+		teacherProfile.setUpdatedAt(LocalDateTime.now());
+
+		/*
+		 * Nếu bạn muốn giáo viên sửa hồ sơ xong phải duyệt lại, mở phần này ra:
+		 *
+		 * teacherProfile.setApprovalStatus("PENDING");
+		 * teacherProfile.setReviewedAt(null); teacherProfile.setReviewedBy(null);
+		 * teacherProfile.setRejectReason(null);
+		 */
+
+		userRepository.save(user);
+		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
+
+		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
 	}
 }

@@ -44,6 +44,12 @@ function StudentCourseDetail() {
     const [purchasing, setPurchasing] = useState(false);
     const [addCard, setAddCard] = useState(false);
 
+
+    const [showAttemptHistory, setShowAttemptHistory] = useState(false);
+    const [attemptHistories, setAttemptHistories] = useState([]);
+    const [loadingAttemptHistory, setLoadingAttemptHistory] = useState(false);
+    const [loadingExamDetail, setLoadingExamDetail] = useState(false);
+
     useEffect(() => {
         loadCourseDetail();
 
@@ -366,6 +372,7 @@ function StudentCourseDetail() {
         }
 
         alert(data.message);
+        window.dispatchEvent(new Event('cartChanged'));
 
         return data;
     }
@@ -465,14 +472,103 @@ function StudentCourseDetail() {
     //     navigate(`/khoa-hoc/${courseId}/lessons/${lesson.lessonId}`);
     // };
 
-    const handleContentClick = (item) => {
+    const lichSuLamBaiOnTap = async () => {
+        if (!previewModal.data) return;
+
+        try {
+            setLoadingAttemptHistory(true);
+            setShowAttemptHistory(true);
+
+            const lessonId = previewModal.data.lessonId;
+            const practiceType = previewModal.data.practiceType;
+            const token = getToken();
+
+            const response = await fetch(
+                `${API_BASE}/lich-su-lam-bai/practice/${lessonId}/${practiceType}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Không thể lấy lịch sử làm bài");
+            }
+
+            const data = await response.json();
+
+            setAttemptHistories(data || []);
+        } catch (error) {
+            console.error("Lỗi khi lấy lịch sử làm bài:", error);
+            setAttemptHistories([]);
+        } finally {
+            setLoadingAttemptHistory(false);
+        }
+    };
+
+    const fetchExamDetail = async (examId) => {
+        const token = getToken();
+
+        const response = await fetch(`${API_BASE}/exams/${examId}/chi-tiet`, {
+            method: "GET",
+            headers: {
+                Accept: "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error("Không thể lấy chi tiết bài thi");
+        }
+
+        return await response.json();
+    };
+
+    const handleContentClick = async (item) => {
         if (item.locked) {
             alert(item.lockReason || "Nội dung này đang bị khóa");
             return;
         }
 
         if (item.type === "EXAM") {
-            navigate(`/exams/${item.id}`);
+            try {
+                setLoadingExamDetail(true);
+                setShowAttemptHistory(false);
+                setAttemptHistories([]);
+
+                setPreviewModal({
+                    open: true,
+                    type: "exam",
+                    data: null,
+                });
+
+                const examId = item.examId || item.id;
+                console.log(examId)
+                const examDetail = await fetchExamDetail(examId);
+
+                setPreviewModal({
+                    open: true,
+                    type: "exam",
+                    data: {
+                        ...item,
+                        ...examDetail,
+                    },
+                });
+            } catch (error) {
+                console.error("Lỗi khi lấy chi tiết bài thi:", error);
+                alert("Không thể lấy chi tiết bài thi");
+                setPreviewModal({
+                    open: false,
+                    type: "",
+                    data: null,
+                });
+            } finally {
+                setLoadingExamDetail(false);
+            }
+
             return;
         }
 
@@ -588,6 +684,79 @@ function StudentCourseDetail() {
         }
     };
 
+    const lichSuThi = async () => {
+        if (!previewModal.data) return;
+
+        try {
+            setLoadingAttemptHistory(true);
+            setShowAttemptHistory(true);
+
+            const examId = previewModal.data.examId || previewModal.data.id;
+            const token = getToken();
+
+            const response = await fetch(
+                `${API_BASE}/lich-su-lam-bai/exam/${examId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Không thể lấy lịch sử thi");
+            }
+
+            const data = await response.json();
+
+            setAttemptHistories(data || []);
+        } catch (error) {
+            console.error("Lỗi khi lấy lịch sử thi:", error);
+            setAttemptHistories([]);
+        } finally {
+            setLoadingAttemptHistory(false);
+        }
+    };
+
+    const handleViewDetail = (attemptId) => {
+        navigate(`/lich-su-lam-bai/${attemptId}`);
+    };
+
+    const handleDangKy = async () => {
+        try {
+            setPurchasing(true);
+
+            const response = await fetch(
+                `http://localhost:8080/khoa-hoc/dang-ky-khoa-hoc-free/${course.courseId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Đăng ký thất bại");
+            }
+
+            alert(data.message);
+
+            window.location.reload();
+
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        } finally {
+            setPurchasing(false);
+        }
+    };
+
     const formatDate = (value) => {
         if (!value) return "--";
 
@@ -602,6 +771,23 @@ function StudentCourseDetail() {
         } catch {
             return value;
         }
+    };
+
+    const formatDateTime = (value) => {
+        if (!value) return "Chưa có";
+
+        return new Date(value).toLocaleString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    };
+
+    const formatScore = (value) => {
+        if (value === null || value === undefined) return "Chưa có";
+        return Number(value).toFixed(2);
     };
 
     const formatDuration = (seconds) => {
@@ -729,6 +915,20 @@ function StudentCourseDetail() {
                                 </div>
 
                                 <div className="d-flex align-items-center gap-2">
+                                    {video.fileUrl && (
+                                        <a
+                                            href={getFileUrl(video.fileUrl)}
+                                            download
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="video-material-download"
+                                            title="Tải tài liệu"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <i className="bi bi-download"></i>
+                                        </a>
+                                    )}
+
                                     {isVideoCompleted ? (
                                         <i className="bi bi-check-circle text-success"></i>
                                     ) : (
@@ -954,11 +1154,11 @@ function StudentCourseDetail() {
                                 </div>
                             }
                             <div className="d-flex gap-2 flex-wrap mt-3">
-                                {course.accessType === "FREE" &&
+                                {!course.isEnrolled && course.accessType === "FREE" &&
 
                                     <button
                                         className="btn btn-primary px-4"
-                                        onClick={handlePurchase}
+                                        onClick={handleDangKy}
                                         disabled={purchasing}
                                     >
                                         {purchasing ? (
@@ -1664,7 +1864,7 @@ function StudentCourseDetail() {
 
                                 {previewModal.type === "practice" && previewModal.data && (
                                     <div>
-                                        <div className="mb-3">
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
                                             <span
                                                 className={
                                                     previewModal.data.isEnabled
@@ -1674,6 +1874,16 @@ function StudentCourseDetail() {
                                             >
                                                 {previewModal.data.isEnabled ? "Đang mở" : "Đang khóa"}
                                             </span>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary btn-sm"
+                                                onClick={lichSuLamBaiOnTap}
+                                                disabled={!previewModal.data.soLanLam}
+                                            >
+                                                <i className="bi bi-clock-history me-1"></i>
+                                                Lịch sử làm bài
+                                            </button>
                                         </div>
 
                                         <h4 className="fw-bold mb-2">
@@ -1684,15 +1894,110 @@ function StudentCourseDetail() {
                                             {previewModal.data.practiceType}
                                         </div>
 
-                                        <div className="border rounded-3 p-3 mb-3">
-                                            <div className="text-muted small">Số câu hỏi</div>
-                                            <strong>{previewModal.data.questionCount || 0} câu hỏi</strong>
+                                        <div className="row g-3 mb-3">
+                                            <div className="col-md-6">
+                                                <div className="border rounded-3 p-3 h-100">
+                                                    <div className="text-muted small">Số câu hỏi</div>
+                                                    <strong>{previewModal.data.questionCount || 0} câu hỏi</strong>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-6">
+                                                <div className="border rounded-3 p-3 h-100">
+                                                    <div className="text-muted small">Số lần làm</div>
+                                                    <strong>{previewModal.data.soLanLam || 0} lần</strong>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-6">
+                                                <div className="border rounded-3 p-3 h-100">
+                                                    <div className="text-muted small">Điểm cao nhất</div>
+                                                    <strong>{formatScore(previewModal.data.diemCaoNhat)}</strong>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-6">
+                                                <div className="border rounded-3 p-3 h-100">
+                                                    <div className="text-muted small">Lần làm gần nhất</div>
+                                                    <strong>{formatDateTime(previewModal.data.lanCuoi)}</strong>
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        {showAttemptHistory && (
+                                            <div className="border rounded-3 p-3 mb-3">
+                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                    <h6 className="fw-bold mb-0">
+                                                        <i className="bi bi-clock-history me-1"></i>
+                                                        Lịch sử làm bài
+                                                    </h6>
+
+                                                    <button
+                                                        type="button"
+                                                        className="btn-close"
+                                                        aria-label="Close"
+                                                        onClick={() => setShowAttemptHistory(false)}
+                                                    ></button>
+                                                </div>
+
+                                                {loadingAttemptHistory ? (
+                                                    <div className="text-muted small">
+                                                        Đang tải lịch sử làm bài...
+                                                    </div>
+                                                ) : attemptHistories.length === 0 ? (
+                                                    <div className="text-muted small">
+                                                        Chưa có lần làm bài nào.
+                                                    </div>
+                                                ) : (
+                                                    <div className="table-responsive">
+                                                        <table className="table table-sm table-bordered align-middle mb-0">
+                                                            <thead className="table-light">
+                                                                <tr>
+                                                                    <th style={{ width: "60px" }}>#</th>
+                                                                    <th>Bắt đầu</th>
+                                                                    <th>Nộp bài</th>
+                                                                    <th>Điểm</th>
+                                                                    <th>Số câu đúng</th>
+                                                                    <th class="text-center">Hành động</th>
+                                                                </tr>
+                                                            </thead>
+
+                                                            <tbody>
+                                                                {attemptHistories.map((attempt, index) => (
+                                                                    <tr key={attempt.attemptId || index}>
+                                                                        <td>{index + 1}</td>
+                                                                        <td>{formatDateTime(attempt.startedAt)}</td>
+                                                                        <td>{formatDateTime(attempt.submittedAt)}</td>
+                                                                        <td>
+                                                                            <strong>{formatScore(attempt.score)}</strong>
+                                                                        </td>
+                                                                        <td>
+                                                                            <span className="badge text-bg-light">
+                                                                                {attempt.totalCorrect || "0"}
+                                                                            </span>
+                                                                        </td>
+
+                                                                        <td class="text-center">
+                                                                            <button class="btn btn-primary"
+                                                                                onClick={() => handleViewDetail(attempt.attemptId)}
+                                                                            >Xem</button>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
                                         <button
                                             type="button"
                                             className="btn btn-primary"
-                                            disabled={!previewModal.data.isEnabled || !previewModal.data.questionCount}
+                                            disabled={
+                                                !previewModal.data.isEnabled ||
+                                                !previewModal.data.questionCount
+                                            }
                                             onClick={() => {
                                                 navigate(
                                                     `/khoa-hoc/${courseId}/lessons/${previewModal.data.lessonId}/practice/${previewModal.data.practiceType}`
@@ -1704,6 +2009,189 @@ function StudentCourseDetail() {
                                         </button>
                                     </div>
                                 )}
+
+                                {previewModal.type === "exam" && (
+    <div>
+        {loadingExamDetail || !previewModal.data ? (
+            <div className="text-center py-4">
+                <div className="spinner-border text-primary mb-3" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className="text-muted">Đang tải thông tin bài thi...</div>
+            </div>
+        ) : (
+            <>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <span className="badge text-bg-warning">
+                        Bài thi
+                    </span>
+
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={lichSuThi}
+                    >
+                        <i className="bi bi-clock-history me-1"></i>
+                        Lịch sử thi
+                    </button>
+                </div>
+
+                <h4 className="fw-bold mb-2">
+                    {previewModal.data.title ||
+                        previewModal.data.examTitle ||
+                        previewModal.data.name ||
+                        "Bài thi"}
+                </h4>
+
+                <div className="text-muted mb-4">
+                    {previewModal.data.description ||
+                        "Bạn hãy kiểm tra thông tin bài thi trước khi bắt đầu."}
+                </div>
+
+                <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                        <div className="border rounded-3 p-3 h-100">
+                            <div className="text-muted small">Số câu hỏi</div>
+                            <strong>{previewModal.data.questionCount || 0} câu hỏi</strong>
+                        </div>
+                    </div>
+
+                    <div className="col-md-6">
+                        <div className="border rounded-3 p-3 h-100">
+                            <div className="text-muted small">Số lần thi</div>
+                            <strong>{previewModal.data.soLanLam || 0} lần</strong>
+                        </div>
+                    </div>
+
+                    <div className="col-md-6">
+                        <div className="border rounded-3 p-3 h-100">
+                            <div className="text-muted small">Điểm cao nhất</div>
+                            <strong>{formatScore(previewModal.data.diemCaoNhat)}</strong>
+                        </div>
+                    </div>
+
+                    <div className="col-md-6">
+                        <div className="border rounded-3 p-3 h-100">
+                            <div className="text-muted small">Lần thi gần nhất</div>
+                            <strong>{formatDateTime(previewModal.data.lanCuoi)}</strong>
+                        </div>
+                    </div>
+
+                    {(previewModal.data.durationMinutes || previewModal.data.duration) && (
+                        <div className="col-md-6">
+                            <div className="border rounded-3 p-3 h-100">
+                                <div className="text-muted small">Thời gian làm bài</div>
+                                <strong>
+                                    {previewModal.data.durationMinutes ||
+                                        previewModal.data.duration} phút
+                                </strong>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {showAttemptHistory && (
+                    <div className="border rounded-3 p-3 mb-3">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h6 className="fw-bold mb-0">
+                                <i className="bi bi-clock-history me-1"></i>
+                                Lịch sử thi
+                            </h6>
+
+                            <button
+                                type="button"
+                                className="btn-close"
+                                aria-label="Close"
+                                onClick={() => setShowAttemptHistory(false)}
+                            ></button>
+                        </div>
+
+                        {loadingAttemptHistory ? (
+                            <div className="text-muted small">
+                                Đang tải lịch sử thi...
+                            </div>
+                        ) : attemptHistories.length === 0 ? (
+                            <div className="text-muted small">
+                                Chưa có lần thi nào.
+                            </div>
+                        ) : (
+                            <div className="table-responsive">
+                                <table className="table table-sm table-bordered align-middle mb-0">
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th style={{ width: "60px" }}>#</th>
+                                            <th>Bắt đầu</th>
+                                            <th>Nộp bài</th>
+                                            <th>Điểm</th>
+                                            <th>Số câu đúng</th>
+                                            <th className="text-center">Hành động</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {attemptHistories.map((attempt, index) => (
+                                            <tr key={attempt.attemptId || index}>
+                                                <td>{index + 1}</td>
+
+                                                <td>{formatDateTime(attempt.startedAt)}</td>
+
+                                                <td>{formatDateTime(attempt.submittedAt)}</td>
+
+                                                <td>
+                                                    <strong>{formatScore(attempt.score)}</strong>
+                                                </td>
+
+                                                <td>
+                                                    <span className="badge text-bg-light">
+                                                        {attempt.totalCorrect || "0"}
+                                                    </span>
+                                                </td>
+
+                                                <td className="text-center">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-primary btn-sm"
+                                                        onClick={() =>
+                                                            handleViewDetail(attempt.attemptId)
+                                                        }
+                                                    >
+                                                        <i className="bi bi-eye me-1"></i>
+                                                        Xem
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                        const examId = previewModal.data.examId || previewModal.data.id;
+
+                        setPreviewModal({
+                            open: false,
+                            type: "",
+                            data: null,
+                        });
+
+                        navigate(`/exams/${examId}`);
+                    }}
+                >
+                    <i className="bi bi-play-circle me-1"></i>
+                    Bắt đầu làm bài
+                </button>
+            </>
+        )}
+    </div>
+)}
+
+
                             </div>
                         </div>
                     </div>

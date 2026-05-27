@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.learning.english.dto.request.ExamCreateRequest;
+import com.learning.english.dto.response.ChiTietExam;
 import com.learning.english.dto.response.ExamListResponse;
 import com.learning.english.dto.response.ExamResponse;
 import com.learning.english.dto.response.StudentExamListResponse;
@@ -102,6 +103,11 @@ public class ExamService {
 		courseItemRepository.save(courseItem);
 
 		return examMapper.toExamResponse(exam);
+	}
+	
+	public ChiTietExam layBaiThiByStudent(Long examId) {
+		User user = getCurrentUser();
+		return examRepository.findChiTietExamByIdAndUserId(examId, user.getUserId()).orElseThrow(() -> new RuntimeException("Không tìm thấy bài thi"));
 	}
 
 	private User getCurrentUser() {
