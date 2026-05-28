@@ -23,6 +23,7 @@ function TeacherLessonCreate() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [isFreePreview, setIsFreePreview] = useState(false);
 
   useEffect(() => {
     loadCourseInfo();
@@ -35,7 +36,7 @@ function TeacherLessonCreate() {
 
       const token = localStorage.getItem("token");
 
-      
+
 
       const response = await fetch(
         `${API_BASE}/khoa-hoc/chi-tiet-khoa-hoc-teacher/${courseId}`,
@@ -119,6 +120,7 @@ function TeacherLessonCreate() {
       title: title.trim(),
       description: description.trim(),
       status: status,
+      isFreePreview: isFreePreview,
     };
 
     if (createType === "LESSON") {
@@ -177,9 +179,9 @@ function TeacherLessonCreate() {
       if (!response.ok) {
         setError(
           data?.message ||
-            (createType === "LESSON"
-              ? "Tạo bài học thất bại"
-              : "Tạo bài thi thất bại")
+          (createType === "LESSON"
+            ? "Tạo bài học thất bại"
+            : "Tạo bài thi thất bại")
         );
         return;
       }
@@ -205,6 +207,7 @@ function TeacherLessonCreate() {
     setDescription("");
     setStatus("DRAFT");
     setDurationMinutes("");
+    setIsFreePreview(false);
     setError("");
   };
 
@@ -275,20 +278,7 @@ function TeacherLessonCreate() {
             items={teacherLessonListTrail(courseId, "Thêm bài học")}
           />
 
-          <h2>Thêm nội dung mới</h2>
 
-          <p>
-            Chọn loại nội dung muốn tạo cho khóa học. Nếu chọn bài học, hệ thống
-            sẽ gọi API thêm lesson. Nếu chọn bài thi, hệ thống sẽ gọi API thêm
-            exam.
-          </p>
-
-          {course && (
-            <div className="course-info-pill">
-              <i className="bi bi-journal-bookmark"></i>
-              <span>{course.title}</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -300,8 +290,8 @@ function TeacherLessonCreate() {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="row g-4">
-          <div className="col-lg-8">
+        <div className="row g-4 justify-content-center">
+          <div className="col-lg-10 col-xl-9">
             <div className="card border-0 shadow-sm lesson-create-card">
               <div className="card-header bg-white border-0 pb-0">
                 <h5 className="fw-bold mb-1">
@@ -454,23 +444,26 @@ function TeacherLessonCreate() {
                       </small>
                     </div>
                   )}
+                  <div className="col-md-12">
+                    <div className="form-check form-switch mt-2">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="isFreePreview"
+                        checked={isFreePreview}
+                        onChange={(e) => setIsFreePreview(e.target.checked)}
+                      />
 
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">
-                      Thứ tự trong khóa học
-                    </label>
-
-                    <div className="auto-order-box">
-                      <div>
-                        <strong>Tự động</strong>
-                        <span>
-                          Hệ thống sẽ xếp nội dung này ở cuối lộ trình.
-                        </span>
-                      </div>
-
-                      <i className="bi bi-sort-numeric-down text-primary"></i>
+                      <label className="form-check-label fw-semibold" htmlFor="isFreePreview">
+                        Cho học thử miễn phí
+                      </label>
                     </div>
+
+                    <small className="text-muted">
+                      Nếu bật, học viên chưa mua khóa học vẫn có thể xem nội dung này.
+                    </small>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -515,95 +508,7 @@ function TeacherLessonCreate() {
             </div>
           </div>
 
-          <div className="col-lg-4">
-            <div className="card border-0 shadow-sm lesson-create-card sticky-preview">
-              <div className="card-header bg-white border-0 pb-0">
-                <h5 className="fw-bold mb-1">
-                  <i className="bi bi-eye text-primary me-2"></i>
-                  Xem trước nội dung
-                </h5>
 
-                <small className="text-muted">
-                  Thông tin sẽ được lưu vào khóa học
-                </small>
-              </div>
-
-              <div className="card-body">
-                <div className="lesson-preview-box">
-                  <div className="preview-icon">
-                    <i className={getPreviewIcon()}></i>
-                  </div>
-
-                  <h6>
-                    {title ||
-                      (createType === "LESSON"
-                        ? "Tên bài học chưa nhập"
-                        : "Tên bài thi chưa nhập")}
-                  </h6>
-
-                  <p>
-                    {description
-                      ? description.slice(0, 160) +
-                        (description.length > 160 ? "..." : "")
-                      : createType === "LESSON"
-                      ? "Chưa có mô tả bài học."
-                      : "Chưa có mô tả bài thi."}
-                  </p>
-
-                  <span className={getStatusBadgeClass()}>{status}</span>
-                </div>
-
-                <hr />
-
-                <div className="preview-summary">
-                  <h6 className="fw-bold">Thông tin sau khi tạo</h6>
-
-                  <div className="summary-item">
-                    <span>Khóa học</span>
-                    <strong>{course?.title || "Đang tải..."}</strong>
-                  </div>
-
-                  <div className="summary-item">
-                    <span>Loại nội dung</span>
-                    <strong>
-                      {createType === "LESSON" ? "Bài học" : "Bài thi"}
-                    </strong>
-                  </div>
-
-                  <div className="summary-item">
-                    <span>Tiêu đề</span>
-                    <strong>{title || "Chưa nhập"}</strong>
-                  </div>
-
-                  {createType === "EXAM" && (
-                    <div className="summary-item">
-                      <span>Thời lượng</span>
-                      <strong>
-                        {durationMinutes ? `${durationMinutes} phút` : "Chưa nhập"}
-                      </strong>
-                    </div>
-                  )}
-
-                  <div className="summary-item">
-                    <span>Thứ tự</span>
-                    <strong>Tự động</strong>
-                  </div>
-
-                  <div className="summary-item">
-                    <span>Trạng thái</span>
-                    <span className="badge text-bg-secondary">{status}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="alert alert-info mt-3">
-              <strong>Gợi ý:</strong>{" "}
-              {createType === "LESSON"
-                ? "Sau khi tạo bài học, bạn nên thêm video, từ vựng, ngữ pháp và câu hỏi ôn tập."
-                : "Sau khi tạo bài thi, bạn cần thêm câu hỏi vào bài thi trước khi mở cho học viên làm."}
-            </div>
-          </div>
         </div>
       </form>
     </div>

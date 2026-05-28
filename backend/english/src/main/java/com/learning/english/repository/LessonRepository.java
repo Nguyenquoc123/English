@@ -188,4 +188,11 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
           AND c.status = 'PUBLISHED'
     """)
     Optional<Lesson> findPublishedLessonWithCourseByLessonId(@Param("lessonId") Long lessonId);
+    
+    @Query("""
+            SELECT COUNT(l)
+            FROM Lesson l
+            WHERE l.course.teacher.userId = :teacherId
+            """)
+    long countLessonsByTeacherId(@Param("teacherId") Long teacherId);
 }

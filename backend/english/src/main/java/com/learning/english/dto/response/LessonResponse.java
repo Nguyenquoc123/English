@@ -15,21 +15,14 @@ import lombok.Setter;
 @Builder
 public class LessonResponse {
 
-    private Long lessonId;
+	private Long lessonId;
 
-    private Long courseId;
+	private String title;
 
-    private String courseTitle;
+	private String description;
 
-    private Integer itemOrder;
+	private String status;
 
-    private String title;
+	private Boolean isPreviewFree;
 
-    private String description;
-
-    private String status;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 }

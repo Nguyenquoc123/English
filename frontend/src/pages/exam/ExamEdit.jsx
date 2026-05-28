@@ -1,0 +1,345 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import { teacherLessonListTrail } from "../../utils/breadcrumbPaths";
+
+function ExamEdit() {
+  const navigate = useNavigate();
+  const { courseId, examId } = useParams();
+
+  const API_BASE = "http://localhost:8080";
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [status, setStatus] = useState("Draft");
+  const [isFreePreview, setIsFreePreview] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadExamInfo();
+  }, [courseId, examId]);
+
+  const getToken = () => localStorage.getItem("token");
+
+  const parseJsonSafely = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  };
+
+  const loadExamInfo = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const token = getToken();
+
+      const response = await fetch(
+        `${API_BASE}/exams/${examId}`,
+        {
+          method: "GET",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      );
+
+      const data = await parseJsonSafely(response);
+
+      if (!response.ok) {
+        setError(data?.message || "Không thể tải thông tin bài thi");
+        return;
+      }
+
+      const examData = data?.result || data?.data || data;
+
+      setTitle(examData.title || "");
+      setDescription(examData.description || "");
+      setDurationMinutes(examData.durationMinutes || "");
+      setStatus(examData.status || "Draft");
+      setIsFreePreview(Boolean(examData.isFreePreview));
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi kết nối server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateForm = () => {
+    if (!title.trim()) {
+      return "Vui lòng nhập tên bài thi";
+    }
+
+    if (title.trim().length > 255) {
+      return "Tên bài thi không được vượt quá 255 ký tự";
+    }
+
+    if (description.trim().length > 2000) {
+      return "Mô tả không được vượt quá 2000 ký tự";
+    }
+
+    if (!durationMinutes) {
+      return "Vui lòng nhập thời lượng bài thi";
+    }
+
+    if (Number(durationMinutes) <= 0) {
+      return "Thời lượng bài thi phải lớn hơn 0 phút";
+    }
+
+    if (!status) {
+      return "Vui lòng chọn trạng thái";
+    }
+
+    return "";
+  };
+
+  const buildRequestData = () => {
+    return {
+      examId: Number(examId),
+      courseId: Number(courseId),
+      title: title.trim(),
+      description: description.trim(),
+      durationMinutes: Number(durationMinutes),
+      status,
+      isFreePreview,
+    };
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setError("");
+
+    const validateMessage = validateForm();
+
+    if (validateMessage) {
+      setError(validateMessage);
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const token = getToken();
+
+      const response = await fetch(`${API_BASE}/exams/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(buildRequestData()),
+      });
+
+      const data = await parseJsonSafely(response);
+
+      if (!response.ok) {
+        setError(data?.message || "Cập nhật bài thi thất bại");
+        return;
+      }
+
+      alert("Cập nhật bài thi thành công");
+      navigate(`/teacher/courses/${courseId}/lessons`);
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi hệ thống, vui lòng thử lại");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    loadExamInfo();
+  };
+
+  if (loading) {
+    return (
+      <div className="container lesson-create-page">
+        <div className="text-center py-5 text-muted">
+          <div className="spinner-border text-primary mb-3"></div>
+          <div>Đang tải thông tin bài thi...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container lesson-create-page">
+      <CourseBreadcrumb
+        items={teacherLessonListTrail(courseId, "Chỉnh sửa bài thi")}
+      />
+
+
+
+      {error && (
+        <div className="alert alert-danger d-flex align-items-center gap-2">
+          <i className="bi bi-exclamation-triangle"></i>
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="card border-0 shadow-sm lesson-create-card">
+          <div className="card-header bg-white border-0 pb-0">
+            <h5 className="fw-bold mb-1">
+              <i className="bi bi-clipboard-check text-primary me-2"></i>
+              Thông tin bài thi
+            </h5>
+
+            <small className="text-muted">
+              Các trường có dấu <span className="text-danger">*</span> là bắt
+              buộc
+            </small>
+          </div>
+
+          <div className="card-body">
+            <div className="mb-3">
+              <label className="form-label fw-semibold">
+                Tên bài thi <span className="text-danger">*</span>
+              </label>
+
+              <div className="input-group">
+                <span className="input-group-text bg-light">
+                  <i className="bi bi-clipboard-check"></i>
+                </span>
+
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Nhập tiêu đề bài thi"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Mô tả bài thi</label>
+
+              <textarea
+                className="form-control lesson-description-input"
+                rows="8"
+                placeholder="Nhập mô tả, yêu cầu hoặc hướng dẫn làm bài thi..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              ></textarea>
+
+              <div className="d-flex justify-content-end mt-1">
+                <small className="text-muted">{description.length}/2000</small>
+              </div>
+            </div>
+
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label fw-semibold">
+                  Thời lượng bài thi <span className="text-danger">*</span>
+                </label>
+
+                <div className="input-group">
+                  <span className="input-group-text bg-light">
+                    <i className="bi bi-clock"></i>
+                  </span>
+
+                  <input
+                    type="number"
+                    className="form-control"
+                    min="1"
+                    step="1"
+                    placeholder="Nhập số phút"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
+                  />
+
+                  <span className="input-group-text bg-light">phút</span>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label fw-semibold">Trạng thái</label>
+
+                <select
+                  className="form-select"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Published">Published</option>
+                  <option value="Hidden">Hidden</option>
+                </select>
+              </div>
+
+              <div className="col-md-12">
+                <div className="form-check form-switch mt-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="isFreePreview"
+                    checked={isFreePreview}
+                    onChange={(e) => setIsFreePreview(e.target.checked)}
+                  />
+
+                  <label className="form-check-label fw-semibold" htmlFor="isFreePreview">
+                    Cho học thử miễn phí
+                  </label>
+                </div>
+
+                <small className="text-muted">
+                  Nếu bật, học viên chưa mua khóa học vẫn có thể làm bài thi này.
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lesson-action-bar mt-4">
+          <button
+            type="submit"
+            className="btn btn-primary px-4"
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2"></span>
+                Đang lưu...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-save me-1"></i>
+                Lưu thay đổi
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={handleReset}
+            disabled={saving}
+          >
+            <i className="bi bi-arrow-clockwise me-1"></i>
+            Khôi phục
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-light"
+            onClick={() => navigate(`/teacher/courses/${courseId}/lessons`)}
+            disabled={saving}
+          >
+            Hủy
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default ExamEdit;

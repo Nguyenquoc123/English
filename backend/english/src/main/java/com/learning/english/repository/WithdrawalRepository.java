@@ -18,4 +18,6 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
 
     @Query("SELECT SUM(w.amount) FROM Withdrawal w WHERE w.status = 'PAID'")
     java.math.BigDecimal sumPaidAmount();
+    
+    long countByTeacher_UserIdAndStatus(Long teacherId, String status);
 }

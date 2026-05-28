@@ -91,6 +91,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/grammar/*/lessons", "/grammar/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/grammar/*/admin").hasAnyAuthority("SCOPE_admin")
                 .requestMatchers(HttpMethod.POST,"/video/*/lessons").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT,"/video/*/lessons/edit").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/video/*/lessons", "/video/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/video/*/admin").hasAnyAuthority("SCOPE_admin")
 
@@ -100,6 +101,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi", "/exams/*/chi-tiet").hasAnyAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi-teacher", "/exams/*", "/exams/{examId}/questions/teacher").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exams/create").hasAnyAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT, "/exams/update").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exams/*").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exams/*/attach").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/exam-questions/*/ds").hasAuthority("SCOPE_student")
@@ -109,7 +111,7 @@ public class SecurityConfig {
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAuthority("SCOPE_student")
                 
-                .requestMatchers(HttpMethod.POST, "/chatbot/ask").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.POST, "/personal-practices/ai-generate").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/personal-practices").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/personal-practices/*").hasAuthority("SCOPE_student")
@@ -123,6 +125,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/bank-account/*").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT, "/bank-account/*").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.DELETE, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                
+                // dashboard
+                .requestMatchers(HttpMethod.GET, "/teacher/dashboard").hasAuthority("SCOPE_teacher")
 
                 // Admin area
                 .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("SCOPE_admin")

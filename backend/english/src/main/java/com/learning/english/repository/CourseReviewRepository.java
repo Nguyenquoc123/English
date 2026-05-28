@@ -45,4 +45,18 @@ public interface CourseReviewRepository extends JpaRepository<CourseReview, Long
     Long countReviewsByCourseId(
             @Param("courseId") Long courseId
     );
+    
+    @Query("""
+            SELECT COUNT(r)
+            FROM CourseReview r
+            WHERE r.course.teacher.userId = :teacherId
+            """)
+    long countReviewsByTeacherId(@Param("teacherId") Long teacherId);
+
+    @Query("""
+            SELECT COALESCE(AVG(r.rating), 0)
+            FROM CourseReview r
+            WHERE r.course.teacher.userId = :teacherId
+            """)
+    Double getAverageRatingByTeacherId(@Param("teacherId") Long teacherId);
 }

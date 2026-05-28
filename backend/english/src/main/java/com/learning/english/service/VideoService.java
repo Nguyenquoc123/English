@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.english.dto.request.VideoRequest;
+import com.learning.english.dto.request.VideoUpdateRequest;
 import com.learning.english.dto.response.VideoResponse;
 import com.learning.english.entity.Lesson;
 import com.learning.english.entity.User;
@@ -82,6 +83,48 @@ public class VideoService {
 				.fileUrl(fileUrl)
 				.build();
 
+		Video savedVideo = videoRepository.save(video);
+
+		return videoMapper.toVideoResponse(savedVideo);
+	}
+	
+	@Transactional
+	public VideoResponse updateVideoChoLesson(Long lessonId, VideoUpdateRequest request,
+			MultipartFile thumbnailFile, MultipartFile materialFile) throws IOException {
+
+		if (lessonId == null) {
+			throw new RuntimeException("lessonId không được để trống");
+		}
+
+		if (request.getTitle() == null || request.getTitle().isBlank()) {
+			throw new RuntimeException("Tiêu đề video không được để trống");
+		}
+
+		
+
+		String thumbnailUrl = null;
+		String fileUrl = null;
+
+		if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+			thumbnailUrl = fileService.saveFile(thumbnailFile, "images");
+		}
+		
+		if (materialFile != null && !materialFile.isEmpty()) {
+			fileUrl = fileService.saveFile(materialFile, "files");
+		}
+
+		
+
+		LocalDateTime now = LocalDateTime.now();
+
+		Video video = videoRepository.findById(request.getVideoId()).orElseThrow(() -> new RuntimeException("Không tìm thấy video"));
+		video.setTitle(request.getTitle());
+		video.setStatus(request.getStatus());
+		video.setUpdatedAt(now);
+		if(thumbnailUrl != null)
+			video.setThumbnailUrl(thumbnailUrl);
+		if(fileUrl != null)
+			video.setFileUrl(fileUrl);
 		Video savedVideo = videoRepository.save(video);
 
 		return videoMapper.toVideoResponse(savedVideo);

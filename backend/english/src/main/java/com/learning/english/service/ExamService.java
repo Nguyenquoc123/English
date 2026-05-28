@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.learning.english.dto.request.ExamCreateRequest;
+import com.learning.english.dto.request.ExamUpdateRequest;
 import com.learning.english.dto.response.ChiTietExam;
 import com.learning.english.dto.response.ExamListResponse;
 import com.learning.english.dto.response.ExamResponse;
@@ -99,11 +100,36 @@ public class ExamService {
 	            .lesson(null)
 	            .exam(exam)
 	            .itemOrder(nextItemOrder)
+	            .isFreePreview(request.isFreePreview())
 	            .build();
 		courseItemRepository.save(courseItem);
 
 		return examMapper.toExamResponse(exam);
 	}
+	
+	@Transactional
+	public ExamResponse updateBaiThi(ExamUpdateRequest request) {
+		User user = getCurrentUser();
+		
+		boolean check = courseRepository.existsByCourseIdAndTeacherUserId(request.getCourseId(), user.getUserId());
+		if (!check)
+			throw new RuntimeException("Bạn không sở hữu khóa học này");
+		
+		Exam exam = examRepository.findById(request.getExamId()).orElseThrow(() -> new RuntimeException("Không tìm thấy bài thi"));
+		exam.setTitle(request.getTitle());
+		exam.setDescription(request.getDescription());
+		exam.setDurationMinutes(request.getDurationMinutes());
+		exam.setStatus(request.getStatus());
+		exam = examRepository.save(exam);
+		
+		CourseItem courseItem = courseItemRepository.findByExam_ExamId(exam.getExamId()).orElseThrow(() -> new RuntimeException("Có lỗi xảy ra"));
+		courseItem.setIsFreePreview(request.getIsFreePreview());
+		courseItemRepository.save(courseItem);
+		
+		return examMapper.toExamResponse(exam);
+	}
+	
+	
 	
 	public ChiTietExam layBaiThiByStudent(Long examId) {
 		User user = getCurrentUser();

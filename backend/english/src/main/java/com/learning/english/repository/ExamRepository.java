@@ -66,42 +66,47 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     );
 
     @Query("""
-        SELECT
-            e.examId AS examId,
-            c.courseId AS courseId,
-            c.title AS courseTitle,
-            e.title AS title,
-            e.description AS description,
-            e.durationMinutes AS durationMinutes,
-            COUNT(DISTINCT eq.examQuestionId) AS questionCount,
-            COALESCE(SUM(eq.point), 0) AS totalPoint,
-            e.status AS status,
-            e.createdAt AS createdAt,
-            e.updatedAt AS updatedAt
-        FROM Exam e
-        JOIN e.course c
-        LEFT JOIN ExamQuestion eq
-            ON eq.exam.examId = e.examId
-            AND eq.question.status = 'PUBLISHED'
-        WHERE e.examId = :examId
-          AND c.status <> 'HIDDEN'
-          AND e.status <> 'HIDDEN'
-          AND (:teacherId IS NULL OR c.teacher.userId = :teacherId)
-        GROUP BY
-            e.examId,
-            c.courseId,
-            c.title,
-            e.title,
-            e.description,
-            e.durationMinutes,
-            e.status,
-            e.createdAt,
-            e.updatedAt
-        """)
-    List<Object[]> findExamDetailByTeacher(
-            @Param("examId") Long examId,
-            @Param("teacherId") Long teacherId
-    );
+    	    SELECT
+    	        e.examId AS examId,
+    	        c.courseId AS courseId,
+    	        c.title AS courseTitle,
+    	        e.title AS title,
+    	        e.description AS description,
+    	        e.durationMinutes AS durationMinutes,
+    	        COUNT(DISTINCT eq.examQuestionId) AS questionCount,
+    	        COALESCE(SUM(eq.point), 0) AS totalPoint,
+    	        e.status AS status,
+    	        e.createdAt AS createdAt,
+    	        e.updatedAt AS updatedAt,
+    	        ci.isFreePreview AS isFreePreview
+    	    FROM Exam e
+    	    JOIN e.course c
+    	    JOIN CourseItem ci
+    	        ON ci.exam.examId = e.examId
+    	        AND ci.itemType = 'EXAM'
+    	    LEFT JOIN ExamQuestion eq
+    	        ON eq.exam.examId = e.examId
+    	        AND eq.question.status = 'PUBLISHED'
+    	    WHERE e.examId = :examId
+    	      AND c.status <> 'HIDDEN'
+    	      AND e.status <> 'HIDDEN'
+    	      AND (:teacherId IS NULL OR c.teacher.userId = :teacherId)
+    	    GROUP BY
+    	        e.examId,
+    	        c.courseId,
+    	        c.title,
+    	        e.title,
+    	        e.description,
+    	        e.durationMinutes,
+    	        e.status,
+    	        e.createdAt,
+    	        e.updatedAt,
+    	        ci.isFreePreview
+    	    """)
+    	List<Object[]> findExamDetailByTeacher(
+    	        @Param("examId") Long examId,
+    	        @Param("teacherId") Long teacherId
+    	);
 
     @Query("""
         SELECT e
@@ -216,4 +221,12 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
             @Param("keyword") String keyword,
             @Param("status") String status
     );
+    
+    
+    @Query("""
+            SELECT COUNT(e)
+            FROM Exam e
+            WHERE e.course.teacher.userId = :teacherId
+            """)
+    long countExamsByTeacherId(@Param("teacherId") Long teacherId);
 }

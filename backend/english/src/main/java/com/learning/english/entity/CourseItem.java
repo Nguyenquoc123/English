@@ -27,6 +27,9 @@ public class CourseItem {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lessonid", unique = true)
     private Lesson lesson;
+    
+    @Column(name = "isfreepreview", nullable = false)
+    private Boolean isFreePreview = false;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "examid", unique = true)
