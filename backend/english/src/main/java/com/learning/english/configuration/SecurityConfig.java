@@ -120,36 +120,57 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
-                
-                .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses")
+                        .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+
                 .requestMatchers(HttpMethod.POST, "/personal-practices/ai-generate")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+
                 .requestMatchers(HttpMethod.GET, "/personal-practices", "/personal-practices/*")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+
                 .requestMatchers(HttpMethod.POST, "/student-feedbacks")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
 
-                // Notifications (inbox) — admin, student, teacher
+                // Notifications
                 .requestMatchers(HttpMethod.GET, "/notifications/my", "/notifications/unread-count")
                     .hasAnyAuthority("SCOPE_admin", "SCOPE_student", "SCOPE_teacher")
+
                 .requestMatchers(HttpMethod.PUT, "/notifications/**")
                     .hasAnyAuthority("SCOPE_admin", "SCOPE_student", "SCOPE_teacher")
 
+                // Cart
                 .requestMatchers(HttpMethod.POST, "/gio-hang/them/*", "/gio-hang/xoa/*")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+
                 .requestMatchers(HttpMethod.GET, "/gio-hang/khoa-hoc")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
 
-                // bank — giáo viên
-                .requestMatchers(HttpMethod.GET, "/bank-account", "/bank-account/**").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.POST, "/bank-account", "/bank-account/**").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.PUT, "/bank-account/**").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.PATCH, "/bank-account/**").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.DELETE, "/bank-account/**").hasAuthority("SCOPE_teacher")
+                // Bank account
+                .requestMatchers(HttpMethod.GET, "/bank-account", "/bank-account/**")
+                    .hasAuthority("SCOPE_teacher")
 
-                .requestMatchers(HttpMethod.GET, "/teacher/dashboard").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/bank-account", "/bank-account/**")
+                    .hasAuthority("SCOPE_teacher")
 
+                .requestMatchers(HttpMethod.PUT, "/bank-account/**")
+                    .hasAuthority("SCOPE_teacher")
+
+                .requestMatchers(HttpMethod.PATCH, "/bank-account/**")
+                    .hasAuthority("SCOPE_teacher")
+
+                .requestMatchers(HttpMethod.DELETE, "/bank-account/**")
+                    .hasAuthority("SCOPE_teacher")
+
+                // Teacher dashboard / earnings / withdrawals
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/teacher/dashboard",
+                    "/teacher/earnings",
+                    "/teacher/withdrawals",
+                    "/teacher/withdrawals/history"
+                )
+                    .hasAuthority("SCOPE_teacher")
                 // STK nhận hoàn tiền — học viên
                 .requestMatchers(HttpMethod.GET, "/student-bank-account", "/student-bank-account/**")
                     .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
