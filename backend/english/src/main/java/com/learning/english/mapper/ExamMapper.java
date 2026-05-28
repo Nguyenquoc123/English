@@ -31,7 +31,7 @@ public interface ExamMapper {
 				.courseTitle(toStringValue(row[2])).title(toStringValue(row[3])).description(toStringValue(row[4]))
 				.durationMinutes(toInteger(row[5])).questionCount(toLong(row[6]))
 				.totalPoint(toBigDecimal(row[7])).status(toStringValue(row[8])).createdAt(toLocalDateTime(row[9]))
-				.updatedAt(toLocalDateTime(row[10])).build();
+				.updatedAt(toLocalDateTime(row[10])).isFreePreview((boolean) row[11]).build();
 	}
 
 	default TeacherExamQuestionResponse toTeacherExamQuestionResponse(Object[] row) {

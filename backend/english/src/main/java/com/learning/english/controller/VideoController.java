@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.english.dto.request.VideoRequest;
+import com.learning.english.dto.request.VideoUpdateRequest;
 import com.learning.english.dto.response.VideoResponse;
 import com.learning.english.service.VideoService;
 
@@ -26,6 +27,15 @@ public class VideoController {
 		System.out.println("Đã chạy qua=======================================================");
 		return videoService.themVideoChoLesson(lessonId, request, videoFile, thumbnailFile, materialFile);
 	}
+	
+	@PutMapping("/{lessonId}/lessons/edit")
+	public VideoResponse updateVideoChoLesson(@PathVariable Long lessonId, @RequestPart("data") VideoUpdateRequest request,
+			@RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile,
+			@RequestPart(value = "materialFile", required = false) MultipartFile materialFile) throws IOException {
+		System.out.println("Đã chạy qua=======================================================");
+		return videoService.updateVideoChoLesson(lessonId, request, thumbnailFile, materialFile);
+	}
+
 
 	@GetMapping("/{lessonId}/lessons")
 	public List<VideoResponse> layDanhSachVideoTheoLesson(@PathVariable Long lessonId) {

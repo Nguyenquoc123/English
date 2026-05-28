@@ -2,6 +2,7 @@ package com.learning.english.controller;
 
 import com.learning.english.dto.request.ExamQuestionAttachRequest;
 import com.learning.english.dto.request.ExamQuestionCreateRequest;
+import com.learning.english.dto.request.ExamQuestionManyRequest;
 import com.learning.english.dto.request.ExamSubmitRequest;
 import com.learning.english.dto.request.PracticeSubmitRequest;
 import com.learning.english.dto.response.PracticeSubmitResponse;
@@ -23,7 +24,7 @@ public class ExamQuestionController {
 
 	@Autowired
 	private ExamQuestionService examQuestionService;
-	
+
 	@Autowired
 	PracticeAttemptService practiceAttemptService;
 
@@ -32,6 +33,13 @@ public class ExamQuestionController {
 			@RequestPart("data") ExamQuestionCreateRequest request,
 			@RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
 		return examQuestionService.taoCauHoiMoiVaThemVaoDeThi(examId, request, mediaFile);
+	}
+
+	@PostMapping("/exams/{examId}/many")
+	public List<TeacherExamQuestionResponse> taoNhieuCauHoiMoiVaThemVaoDeThi(@PathVariable Long examId,
+			@RequestBody ExamQuestionManyRequest request) {
+		return examQuestionService.taoNhieuCauHoiMoiVaThemVaoDeThi(examId, request);
+
 	}
 
 	@PostMapping("/exams/{examId}/attach")
@@ -44,11 +52,9 @@ public class ExamQuestionController {
 	public StudentExamQuestionResponse layCauHoiBaiThi(@PathVariable Long examId) {
 		return examQuestionService.layDanhSachCauHoiBaiThiChoHocVien(examId);
 	}
-	
+
 	@PostMapping("/exam-submit")
-    public PracticeSubmitResponse nopBaiOnTap(
-            @RequestBody ExamSubmitRequest request
-    ) {
-        return practiceAttemptService.nopBaiThi(request);
-    }
+	public PracticeSubmitResponse nopBaiOnTap(@RequestBody ExamSubmitRequest request) {
+		return practiceAttemptService.nopBaiThi(request);
+	}
 }

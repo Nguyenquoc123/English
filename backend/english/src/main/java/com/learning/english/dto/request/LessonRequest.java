@@ -15,6 +15,7 @@ public class LessonRequest {
 
     private String description;
     
+    private boolean isFreePreview;
 
     private String status;
 }

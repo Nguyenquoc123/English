@@ -1,5 +1,7 @@
 package com.learning.english.repository;
 
+import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -203,4 +205,58 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 	List<Course> findByStatusOrderByCreatedAtDesc(String status);
 
 	List<Course> findAllByOrderByCreatedAtDesc();
+	
+	
+	@Query("""
+            SELECT c
+            FROM Course c
+            LEFT JOIN FETCH c.level l
+            WHERE c.status IN ('APPROVED', 'PUBLISHED')
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> findPublishedOrApprovedCourses(Pageable pageable);
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            LEFT JOIN FETCH c.level l
+            WHERE c.status IN ('APPROVED', 'PUBLISHED')
+              AND (:budgetMax IS NULL OR c.price <= :budgetMax)
+              AND (
+                    :keyword IS NULL
+                    OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(c.shortDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              )
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> findCandidateCourses(
+            @Param("budgetMax") BigDecimal budgetMax,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            LEFT JOIN FETCH c.level l
+            WHERE c.courseId IN :courseIds
+            """)
+    List<Course> findByCourseIdInWithLevel(@Param("courseIds") Collection<Long> courseIds);
+    
+    long countByTeacher_UserId(Long teacherId);
+
+    long countByTeacher_UserIdAndStatus(Long teacherId, String status);
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            LEFT JOIN FETCH c.level l
+            WHERE c.teacher.userId = :teacherId
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> findRecentCoursesByTeacherId(
+            @Param("teacherId") Long teacherId,
+            Pageable pageable
+    );
 }

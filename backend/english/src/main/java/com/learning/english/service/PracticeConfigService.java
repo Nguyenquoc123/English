@@ -11,10 +11,13 @@ import org.springframework.stereotype.Service;
 import com.learning.english.dto.response.PracticeConfigResponse;
 import com.learning.english.dto.response.PracticeQuestionResponse;
 import com.learning.english.dto.response.StudentPracticeResponse;
+import com.learning.english.entity.Course;
 import com.learning.english.entity.Lesson;
 import com.learning.english.entity.LessonQuestion;
 import com.learning.english.entity.User;
 import com.learning.english.mapper.PracticeConfigMapper;
+import com.learning.english.repository.CourseItemRepository;
+import com.learning.english.repository.CourseRepository;
 import com.learning.english.repository.EnrollmentRepository;
 import com.learning.english.repository.LessonQuestionRepository;
 import com.learning.english.repository.LessonRepository;
@@ -41,31 +44,64 @@ public class PracticeConfigService {
 	@Autowired
 	LessonQuestionRepository lessonQuestionRepository;
 	
+	@Autowired
+	CourseRepository courseRepository;
+	
+	@Autowired
+	CourseItemRepository courseItemRepository;
+	
 
 	public List<PracticeConfigResponse> layCauHinhOnTapChoHocVien(Long lessonId) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (authentication == null || !authentication.isAuthenticated()) {
-			throw new RuntimeException("Người dùng chưa đăng nhập");
-		}
+	    User user = getCurrentUser();
 
-		String username = authentication.getName();
+	    Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(lessonId)
+	            .orElseThrow(() -> new RuntimeException(
+	                    "Không tìm thấy bài học hoặc bài học chưa được xuất bản"
+	            ));
 
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+	    Long courseId = lesson.getCourse().getCourseId();
 
-		Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(lessonId)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
+	    boolean hasAccess = checkHasLessonAccess(
+	            user.getUserId(),
+	            courseId,
+	            lessonId
+	    );
 
-		Long courseId = lesson.getCourse().getCourseId();
+	    if (!hasAccess) {
+	        throw new RuntimeException("Bạn cần mua khóa học để xem bài ôn tập của lesson này");
+	    }
 
-		if (!coQuyenHocLesson(user.getUserId(), courseId, lesson)) {
-			throw new RuntimeException("Bạn cần mua khóa học để xem bài ôn tập của lesson này");
-		}
+	    List<Object[]> rows = practiceConfigRepository
+	            .findStudentPracticeConfigsByLessonId(lessonId, user.getUserId());
 
-		List<Object[]> rows = practiceConfigRepository.findStudentPracticeConfigsByLessonId(lessonId, user.getUserId());
+	    return practiceConfigMapper.toPracticeConfigResponses(rows);
+	}
+	
+	private boolean checkHasLessonAccess(Long userId, Long courseId, Long lessonId) {
 
-		return practiceConfigMapper.toPracticeConfigResponses(rows);
+	    Course course = courseRepository.findById(courseId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
+
+	    if ("FREE".equalsIgnoreCase(course.getCourseType())) {
+	        return true;
+	    }
+
+	    boolean enrolled = enrollmentRepository
+	            .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+	                    userId,
+	                    courseId
+	            );
+
+	    if (enrolled) {
+	        return true;
+	    }
+
+	    return courseItemRepository
+	            .existsByCourseCourseIdAndLessonLessonIdAndIsFreePreviewTrue(
+	                    courseId,
+	                    lessonId
+	            );
 	}
 
 	private boolean coQuyenHocLesson(Long userId, Long courseId, Lesson lesson) {
@@ -87,52 +123,59 @@ public class PracticeConfigService {
             "FLASHCARD"
     );
 
-    public StudentPracticeResponse layDanhSachCauHoiOnTapChoHocVien(
-            Long lessonId,
-            String practiceType
-    ) {
-        User user = getCurrentUser();
+	public StudentPracticeResponse layDanhSachCauHoiOnTapChoHocVien(
+	        Long lessonId,
+	        String practiceType
+	) {
+	    User user = getCurrentUser();
 
-        String normalizedPracticeType = normalizePracticeType(practiceType);
+	    String normalizedPracticeType = normalizePracticeType(practiceType);
 
-        Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(lessonId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
+	    Lesson lesson = lessonRepository.findPublishedLessonWithCourseByLessonId(lessonId)
+	            .orElseThrow(() -> new RuntimeException(
+	                    "Không tìm thấy bài học hoặc bài học chưa được xuất bản"
+	            ));
 
-        Long courseId = lesson.getCourse().getCourseId();
+	    Long courseId = lesson.getCourse().getCourseId();
 
-        if (!coQuyenHocLesson(user.getUserId(), courseId, lesson)) {
-            throw new RuntimeException("Bạn cần mua khóa học để làm bài ôn tập này");
-        }
+	    boolean hasAccess = checkHasLessonAccess(
+	            user.getUserId(),
+	            courseId,
+	            lessonId
+	    );
 
-        
-        if (!"FLASHCARD".equalsIgnoreCase(normalizedPracticeType)) {
-            boolean enabled = practiceConfigRepository
-                    .existsByLessonLessonIdAndPracticeTypeAndIsEnabledTrue(
-                            lessonId,
-                            normalizedPracticeType
-                    );
+	    if (!hasAccess) {
+	        throw new RuntimeException("Bạn cần mua khóa học để làm bài ôn tập này");
+	    }
 
-            if (!enabled) {
-                throw new RuntimeException("Dạng ôn tập này chưa được bật cho lesson");
-            }
-        }
+	    if (!"FLASHCARD".equalsIgnoreCase(normalizedPracticeType)) {
+	        boolean enabled = practiceConfigRepository
+	                .existsByLessonLessonIdAndPracticeTypeAndIsEnabledTrue(
+	                        lessonId,
+	                        normalizedPracticeType
+	                );
 
-        List<LessonQuestion> lessonQuestions =
-                lessonQuestionRepository.findStudentQuestionsByLessonIdAndPracticeType(
-                        lessonId,
-                        normalizedPracticeType
-                );
+	        if (!enabled) {
+	            throw new RuntimeException("Dạng ôn tập này chưa được bật cho lesson");
+	        }
+	    }
 
-        List<PracticeQuestionResponse> questions =
-                practiceConfigMapper.toPracticeQuestionResponses(lessonQuestions);
+	    List<LessonQuestion> lessonQuestions =
+	            lessonQuestionRepository.findStudentQuestionsByLessonIdAndPracticeType(
+	                    lessonId,
+	                    normalizedPracticeType
+	            );
 
-        return StudentPracticeResponse.builder()
-                .lessonId(lesson.getLessonId())
-                .lessonTitle(lesson.getTitle())
-                .practiceType(normalizedPracticeType)
-                .questions(questions)
-                .build();
-    }
+	    List<PracticeQuestionResponse> questions =
+	            practiceConfigMapper.toPracticeQuestionResponses(lessonQuestions);
+
+	    return StudentPracticeResponse.builder()
+	            .lessonId(lesson.getLessonId())
+	            .lessonTitle(lesson.getTitle())
+	            .practiceType(normalizedPracticeType)
+	            .questions(questions)
+	            .build();
+	}
     
     
 

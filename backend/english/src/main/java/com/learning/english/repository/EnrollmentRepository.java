@@ -30,7 +30,13 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
 	Long countByCourseCourseIdAndHasCourseAccessTrue(Long courseId);
 
-	
+	@Query("""
+            SELECT COUNT(e)
+            FROM Enrollment e
+            WHERE e.course.teacher.userId = :teacherId
+              AND e.hasCourseAccess = true
+            """)
+    long countStudentsByTeacherId(@Param("teacherId") Long teacherId);
 
 	
 

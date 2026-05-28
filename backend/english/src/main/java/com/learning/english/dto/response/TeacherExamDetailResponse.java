@@ -33,4 +33,6 @@ public class TeacherExamDetailResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    
+    private Boolean isFreePreview;
 }

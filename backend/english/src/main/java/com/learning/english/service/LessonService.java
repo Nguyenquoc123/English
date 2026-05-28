@@ -157,11 +157,13 @@ public class LessonService {
 
 		Lesson lesson = Lesson.builder().course(course).title(request.getTitle().trim())
 				.description(request.getDescription().trim()).status(request.getStatus()).createdAt(now).updatedAt(now)
+				
 				.build();
 
 		Lesson savedLesson = lessonRepository.save(lesson);
 
 		CourseItem courseItem = CourseItem.builder().course(course).itemType("LESSON").lesson(savedLesson).exam(null)
+				.isFreePreview(request.isFreePreview())
 				.itemOrder(nextItemOrder).build();
 
 		courseItemRepository.save(courseItem);
@@ -181,6 +183,12 @@ public class LessonService {
 		lesson.setDescription(request.getDescription());
 		lesson.setStatus(request.getStatus());
 		lesson = lessonRepository.save(lesson);
+		System.out.println("=========================================");
+		System.out.println(request.getIsFreePreview());
+		
+		CourseItem courseItem = courseItemRepository.findByLesson_LessonId(lesson.getLessonId()).orElseThrow(() -> new RuntimeException("Có lỗi xảy ra"));
+		courseItem.setIsFreePreview(request.getIsFreePreview());
+		courseItemRepository.save(courseItem);;
 		return lessonMapper.toLessonResponse(lesson);
 	}
 
@@ -223,6 +231,12 @@ public class LessonService {
 		return teacherLessonDetailMapper.toTeacherLessonDetailResponse(lesson, videos, vocabularies, grammars,
 				questions);
 	}
+	
+	public LessonResponse layChiTietLessonChoTeacher(Long lessonId) {
+	    return courseItemRepository
+	            .findLessonResponseByLessonId(lessonId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy bài học"));
+	}
 
 	public TeacherLessonDetailResponse getTeacherLessonDetailByAdmin(Long courseId, Long lessonId) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -254,65 +268,90 @@ public class LessonService {
 
 	public List<StudentLessonResponse> layNoiDungKhoaHocChoStudent(Long courseId) {
 
-		User user = getCurrentUser();
+	    User user = getCurrentUser();
 
-		if (!courseRepository.existsById(courseId)) {
-			throw new RuntimeException("Không tìm thấy khóa học");
-		}
+	    Course course = courseRepository.findById(courseId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
 
-		boolean enrolled = enrollmentRepository
-				.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
+	    boolean isFreeCourse = "FREE".equalsIgnoreCase(course.getCourseType());
 
-		List<CourseItem> courseItems = courseItemRepository.findPublishedCourseContentsByCourseId(courseId);
+	    boolean enrolled = enrollmentRepository
+	            .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+	                    user.getUserId(), courseId
+	            );
 
-		List<StudentLessonResponse> responses = new ArrayList<>();
+	    boolean hasFullCourseAccess = isFreeCourse || enrolled;
 
-		boolean previousCompleted = true;
-		boolean foundCurrent = false;
+	    List<CourseItem> courseItems =
+	            courseItemRepository.findPublishedCourseContentsByCourseId(courseId);
 
-		for (CourseItem item : courseItems) {
+	    List<StudentLessonResponse> responses = new ArrayList<>();
 
-			boolean completed = kiemTraCourseItemDaHoanThanh(user.getUserId(), item);
+	    boolean previousCompleted = true;
+	    boolean foundCurrent = false;
 
-			boolean locked = false;
-			boolean current = false;
+	    for (CourseItem item : courseItems) {
 
-			String lockReason = null;
+	        boolean completed = kiemTraCourseItemDaHoanThanh(user.getUserId(), item);
 
-			if (!enrolled) {
+	        boolean isPreview = Boolean.TRUE.equals(item.getIsFreePreview());
 
-				locked = true;
-				lockReason = "Bạn cần mua khóa học";
+	        boolean locked = false;
+	        boolean current = false;
+	        String lockReason = null;
 
-			} else {
+	        if (hasFullCourseAccess) {
 
-				locked = !previousCompleted;
+	            // Người đã mua hoặc khóa FREE: học theo tiến độ
+	            locked = !previousCompleted;
 
-				if (locked) {
+	            if (locked) {
+	                lockReason = "Bạn cần hoàn thành nội dung trước đó";
+	            } else if (!completed && !foundCurrent) {
+	                current = true;
+	                foundCurrent = true;
+	            }
 
-					lockReason = "Bạn cần hoàn thành nội dung trước đó";
+	            previousCompleted = completed;
 
-				} else if (!completed && !foundCurrent) {
+	        } else {
 
-					current = true;
-					foundCurrent = true;
-				}
-			}
+	            // Chưa mua khóa PAID: chỉ mở các item preview
+	            if (isPreview) {
+	                locked = false;
 
-			if ("LESSON".equalsIgnoreCase(item.getItemType())) {
+	                if (!completed && !foundCurrent) {
+	                    current = true;
+	                    foundCurrent = true;
+	                }
+	            } else {
+	                locked = true;
+	                lockReason = "Bạn cần mua khóa học";
+	            }
 
-				responses.add(lessonMapper.toLessonResponse(item, completed, locked, current, lockReason));
-			}
+	            // Quan trọng:
+	            // Chưa mua thì KHÔNG nên dùng completed để mở khóa các bài sau.
+	            // Preview nào được mở là do isFreePreview quyết định.
+	        }
 
-			if ("EXAM".equalsIgnoreCase(item.getItemType())) {
+	        if ("LESSON".equalsIgnoreCase(item.getItemType())) {
+	            responses.add(
+	                    lessonMapper.toLessonResponse(
+	                            item, completed, locked, current, lockReason
+	                    )
+	            );
+	        }
 
-				responses.add(lessonMapper.toExamResponse(item, completed, locked, current, lockReason));
-			}
+	        if ("EXAM".equalsIgnoreCase(item.getItemType())) {
+	            responses.add(
+	                    lessonMapper.toExamResponse(
+	                            item, completed, locked, current, lockReason
+	                    )
+	            );
+	        }
+	    }
 
-			previousCompleted = completed;
-		}
-
-		return responses;
+	    return responses;
 	}
 
 	private boolean kiemTraCourseItemDaHoanThanh(Long userId, CourseItem item) {
@@ -345,50 +384,61 @@ public class LessonService {
 
 	@Transactional
 	public VideoProgressResponse luuTienDoVideo(Long videoId, Integer watchedSeconds) {
-		User user = getCurrentUser();
 
-		Video video = videoRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Không tìm thấy video"));
+	    User user = getCurrentUser();
 
-		Long courseId = video.getLesson().getCourse().getCourseId();
+	    Video video = videoRepository.findById(videoId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy video"));
 
-		boolean enrolled = enrollmentRepository
-				.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
+	    Long courseId = video.getLesson().getCourse().getCourseId();
+	    Long lessonId = video.getLesson().getLessonId();
 
-		if (!enrolled) {
-			throw new RuntimeException("Bạn chưa mua khóa học");
-		}
+	    boolean hasAccess = checkHasLessonAccess(user.getUserId(), courseId, lessonId);
 
-		VideoProgress progress = videoProgressRepository.findByUserUserIdAndVideoVideoId(user.getUserId(), videoId)
-				.orElse(VideoProgress.builder().user(user).video(video).watchedseconds(0).iscompleted(false)
-						.createdAt(LocalDateTime.now()).build());
+	    if (!hasAccess) {
+	        throw new RuntimeException("Bạn cần mua khóa học để xem video này");
+	    }
 
-		
+	    VideoProgress progress = videoProgressRepository
+	            .findByUserUserIdAndVideoVideoId(user.getUserId(), videoId)
+	            .orElse(VideoProgress.builder()
+	                    .user(user)
+	                    .video(video)
+	                    .watchedseconds(0)
+	                    .iscompleted(false)
+	                    .createdAt(LocalDateTime.now())
+	                    .build());
 
-		if (watchedSeconds != null && watchedSeconds > progress.getWatchedseconds()) {
-			progress.setWatchedseconds(watchedSeconds);
-		}
+	    if (watchedSeconds != null && watchedSeconds > progress.getWatchedseconds()) {
+	        progress.setWatchedseconds(watchedSeconds);
+	    }
 
-		double percent = 0;
+	    double percent = 0;
 
-		if (video.getDurationSeconds() != null && video.getDurationSeconds() > 0) {
-			percent = (double) progress.getWatchedseconds() / video.getDurationSeconds();
-		}
+	    if (video.getDurationSeconds() != null && video.getDurationSeconds() > 0) {
+	        percent = (double) progress.getWatchedseconds() / video.getDurationSeconds();
+	    }
 
-		if (percent >= 0.7) {
-			progress.setIscompleted(true);
-		}
+	    if (percent >= 0.7) {
+	        progress.setIscompleted(true);
+	    }
 
-		progress.setUpdatedAt(LocalDateTime.now());
+	    progress.setUpdatedAt(LocalDateTime.now());
 
-		progress = videoProgressRepository.save(progress);
+	    progress = videoProgressRepository.save(progress);
 
-		boolean isVideoCompleted = Boolean.TRUE.equals(progress.getIscompleted());
+	    boolean isVideoCompleted = Boolean.TRUE.equals(progress.getIscompleted());
 
-		boolean lessonCompleted = kiemTraHoanThanhLesson(user.getUserId(), video.getLesson().getLessonId());
-		boolean shouldReloadLessons = lessonCompleted;
+	    boolean lessonCompleted =
+	            kiemTraHoanThanhLesson(user.getUserId(), lessonId);
 
-		return VideoProgressResponse.builder().videoCompleted(isVideoCompleted).lessonCompleted(lessonCompleted)
-				.shouldReloadLessons(shouldReloadLessons).build();
+	    boolean shouldReloadLessons = lessonCompleted;
+
+	    return VideoProgressResponse.builder()
+	            .videoCompleted(isVideoCompleted)
+	            .lessonCompleted(lessonCompleted)
+	            .shouldReloadLessons(shouldReloadLessons)
+	            .build();
 	}
 
 	private User getCurrentUser() {
@@ -427,29 +477,55 @@ public class LessonService {
 	}
 
 	public StudentLessonDetailResponse layChiTietLessonChoHocVien(Long lessonId) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (authentication == null || !authentication.isAuthenticated()) {
-			throw new RuntimeException("Người dùng chưa đăng nhập");
-		}
+	    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		String username = authentication.getName();
+	    if (authentication == null || !authentication.isAuthenticated()
+	            || "anonymousUser".equals(authentication.getName())) {
+	        throw new RuntimeException("Người dùng chưa đăng nhập");
+	    }
 
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+	    String username = authentication.getName();
 
-		Lesson lesson = lessonRepository.findStudentLessonDetailByLessonId(lessonId)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài học hoặc bài học chưa được xuất bản"));
+	    User user = userRepository.findByUsername(username)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
-		Long courseId = lesson.getCourse().getCourseId();
+	    Lesson lesson = lessonRepository.findStudentLessonDetailByLessonId(lessonId)
+	            .orElseThrow(() -> new RuntimeException(
+	                    "Không tìm thấy bài học hoặc bài học chưa được xuất bản"
+	            ));
 
-		boolean hasAccess = checkHasCourseAccess(user.getUserId(), courseId, lesson);
+	    Long courseId = lesson.getCourse().getCourseId();
 
-		if (!hasAccess) {
-			throw new RuntimeException("Bạn cần mua khóa học để xem bài học này");
-		}
+	    boolean hasAccess = checkHasLessonAccess(user.getUserId(), courseId, lessonId);
 
-		return lessonMapper.toStudentLessonDetailResponse(lesson);
+	    if (!hasAccess) {
+	        throw new RuntimeException("Bạn cần mua khóa học để xem bài học này");
+	    }
+
+	    return lessonMapper.toStudentLessonDetailResponse(lesson);
+	}
+	
+	private boolean checkHasLessonAccess(Long userId, Long courseId, Long lessonId) {
+
+	    Course course = courseRepository.findById(courseId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
+
+	    if ("FREE".equalsIgnoreCase(course.getCourseType())) {
+	        return true;
+	    }
+
+	    boolean enrolled = enrollmentRepository
+	            .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+	                    userId, courseId
+	            );
+
+	    if (enrolled) {
+	        return true;
+	    }
+
+	    return courseItemRepository
+	            .existsByCourseCourseIdAndLessonLessonIdAndIsFreePreviewTrue(courseId, lessonId);
 	}
 
 	private boolean checkHasCourseAccess(Long userId, Long courseId, Lesson lesson) {
