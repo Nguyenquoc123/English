@@ -24,6 +24,7 @@ public class TeacherProfileResponse {
     private String experience;
     private String phone;
     private LocalDateTime reviewedAt;
+    private String reviewedByName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<TeacherCertificateResponse> certificates;

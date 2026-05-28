@@ -15,6 +15,7 @@ function StudentProfileUpdate() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phone: "",
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
@@ -71,6 +72,7 @@ function StudentProfileUpdate() {
       setFormData({
         fullName: result.fullName || "",
         email: result.email || "",
+        phone: result.phone || "",
       });
 
       if (result.avatarUrl) {
@@ -186,6 +188,16 @@ function StudentProfileUpdate() {
       return false;
     }
 
+    const phone = formData.phone.trim().replace(/[\s.\-]/g, "");
+    if (!phone) {
+      alert("Số điện thoại không được để trống");
+      return false;
+    }
+    if (!/^(\+84|84|0)[0-9]{9,10}$/.test(phone)) {
+      alert("Số điện thoại không hợp lệ (VD: 0912345678)");
+      return false;
+    }
+
     return true;
   };
 
@@ -209,6 +221,7 @@ function StudentProfileUpdate() {
       const requestData = {
         fullName: formData.fullName.trim(),
         email: formData.email.trim(),
+        phone: formData.phone.trim().replace(/[\s.\-]/g, ""),
       };
 
       submitData.append(
@@ -414,6 +427,27 @@ function StudentProfileUpdate() {
                         placeholder="Nhập email"
                       />
                     </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">
+                      Số điện thoại <span className="text-danger">*</span>
+                    </label>
+                    <div className="input-icon-box">
+                      <i className="bi bi-telephone"></i>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="VD: 0912345678"
+                        maxLength={15}
+                      />
+                    </div>
+                    <small className="text-muted">
+                      Admin dùng số này khi xét duyệt đơn đăng ký giáo viên.
+                    </small>
                   </div>
 
                   <div className="col-md-6">

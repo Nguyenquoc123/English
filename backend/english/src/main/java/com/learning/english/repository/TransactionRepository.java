@@ -94,6 +94,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     List<Transaction> findAllByOrderByCreatedAtDesc();
 
+    List<Transaction> findByUserUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<Transaction> findByStatusIgnoreCaseOrderByUpdatedAtDesc(String status);
+
+    long countByStatusIgnoreCase(String status);
+
     /**
      * sumSuccessAmount — Tính tổng doanh thu từ tất cả giao dịch thành công.
      *
@@ -139,4 +145,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             Long transactionId,
             String status
     );
+
+    Optional<Transaction> findByTransactionIdAndUserUserId(Long transactionId, Long userId);
 }

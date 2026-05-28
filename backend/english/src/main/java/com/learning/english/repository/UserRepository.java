@@ -35,7 +35,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     long countByRole_RoleName(String roleName);
 
-    
+    List<User> findByRole_RoleNameAndStatusIgnoreCase(String roleName, String status);
+
+    List<User> findByStatusIgnoreCase(String status);
+
+    @Query("""
+            SELECT u FROM User u
+            WHERE LOWER(u.status) NOT IN ('pending', 'banned')
+            """)
+    List<User> findEligibleNotificationRecipients();
+
+    @Query("""
+            SELECT u FROM User u
+            WHERE LOWER(u.role.roleName) = LOWER(:roleName)
+            AND LOWER(u.status) NOT IN ('pending', 'banned')
+            """)
+    List<User> findEligibleByRoleName(@Param("roleName") String roleName);
+
     List<User> findAllByOrderByCreatedAtDesc();
 
     

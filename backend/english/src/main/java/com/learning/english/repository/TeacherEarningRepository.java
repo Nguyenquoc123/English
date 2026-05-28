@@ -2,7 +2,6 @@ package com.learning.english.repository;
 
 import com.learning.english.entity.TeacherEarning;
 
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -11,13 +10,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 @Repository
 public interface TeacherEarningRepository extends JpaRepository<TeacherEarning, Long> {
 
     boolean existsByTransactionTransactionId(Long transactionId);
-    
+
     boolean existsByTransactionItemTransactionItemId(Long transactionItemId);
-    
+
+    List<TeacherEarning> findByTransactionTransactionId(Long transactionId);
+
     @Query("""
             SELECT COALESCE(SUM(te.netAmount), 0)
             FROM TeacherEarning te

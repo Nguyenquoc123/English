@@ -33,6 +33,22 @@ public class Transaction {
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
+    @Column(name = "refundreason", columnDefinition = "NVARCHAR(1000)")
+    private String refundReason;
+
+    @Column(name = "refundrequestat")
+    private LocalDateTime refundRequestedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "refundreviewedby")
+    private User refundReviewedBy;
+
+    @Column(name = "refundreviewedat")
+    private LocalDateTime refundReviewedAt;
+
+    @Column(name = "refundrejectreason", columnDefinition = "NVARCHAR(1000)")
+    private String refundRejectReason;
+
     @Column(name = "paidat")
     private LocalDateTime paidAt;
 

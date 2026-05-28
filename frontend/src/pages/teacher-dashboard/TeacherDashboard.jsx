@@ -4,10 +4,27 @@ import { getFileUrl } from "../../utils/fileurl.js";
 
 const API_BASE = "http://localhost:8080";
 
+const EMPTY_DASHBOARD = {
+    totalCourses: 0,
+    publishedCourses: 0,
+    totalStudents: 0,
+    totalQuestions: 0,
+    totalRevenue: 0,
+    availableRevenue: 0,
+    pendingCourses: 0,
+    rejectedCourses: 0,
+    pendingWithdrawals: 0,
+    totalLessons: 0,
+    totalExams: 0,
+    totalReviews: 0,
+    averageRating: 0,
+    recentCourses: [],
+    recentEarnings: [],
+};
+
 function TeacherDashboard() {
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const getToken = () => {
         return localStorage.getItem("english_token") || localStorage.getItem("token");
@@ -26,7 +43,6 @@ function TeacherDashboard() {
     const loadDashboard = async () => {
         try {
             setLoading(true);
-            setError("");
 
             const response = await fetch(`${API_BASE}/teacher/dashboard`, {
                 method: "GET",
@@ -44,14 +60,14 @@ function TeacherDashboard() {
             const result = data?.result || data?.data || data;
 
             if (!response.ok) {
-                setError(data?.message || result?.message || "Không thể tải dashboard giáo viên");
+                setDashboard(EMPTY_DASHBOARD);
                 return;
             }
 
-            setDashboard(result);
+            setDashboard(result || EMPTY_DASHBOARD);
         } catch (err) {
             console.error(err);
-            setError("Lỗi kết nối server khi tải dashboard");
+            setDashboard(EMPTY_DASHBOARD);
         } finally {
             setLoading(false);
         }
@@ -181,13 +197,6 @@ function TeacherDashboard() {
         <div className="teacher-dashboard-page">
             <div className="container-fluid px-0">
                 
-
-                {error && (
-                    <div className="alert alert-danger d-flex align-items-center gap-2">
-                        <i className="bi bi-exclamation-triangle"></i>
-                        <span>{error}</span>
-                    </div>
-                )}
 
                 {loading && !dashboard ? (
                     <div className="dashboard-loading">
