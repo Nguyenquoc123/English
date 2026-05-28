@@ -2,6 +2,7 @@ package com.learning.english.service;
 
 import com.learning.english.dto.request.ExamQuestionAttachRequest;
 import com.learning.english.dto.request.ExamQuestionCreateRequest;
+import com.learning.english.dto.request.ExamQuestionManyRequest;
 import com.learning.english.dto.request.QuestionOptionRequest;
 import com.learning.english.dto.response.PracticeQuestionResponse;
 import com.learning.english.dto.response.QuestionResponse;
@@ -46,6 +47,12 @@ public class ExamQuestionService {
 
 	@Autowired
 	private ExamMapper examMapper;
+	
+	@Autowired
+	CourseRepository courseRepository;
+	
+	@Autowired
+	CourseItemRepository courseItemRepository;
 
 	@Autowired
 	AttemptRepository attemptRepository;
@@ -98,6 +105,76 @@ public class ExamQuestionService {
 		ExamQuestion savedExamQuestion = examQuestionRepository.save(examQuestion);
 
 		return buildTeacherExamQuestionResponse(savedExamQuestion);
+	}
+	
+	@Transactional
+	public List<TeacherExamQuestionResponse> taoNhieuCauHoiMoiVaThemVaoDeThi(
+	        Long examId,
+	        ExamQuestionManyRequest request
+	) {
+	    User teacher = getCurrentUser();
+
+	    if (request == null || request.getQuestions() == null || request.getQuestions().isEmpty()) {
+	        throw new RuntimeException("Danh sách câu hỏi không được để trống");
+	    }
+
+	    Exam exam = examRepository.findExamForTeacherAction(examId, teacher.getUserId())
+	            .orElseThrow(() -> new RuntimeException(
+	                    "Không tìm thấy bài thi hoặc bạn không có quyền thêm câu hỏi"
+	            ));
+
+	    LocalDateTime now = LocalDateTime.now();
+
+	    Integer nextOrder = getNextQuestionOrder(examId);
+
+	    List<TeacherExamQuestionResponse> responses = new ArrayList<>();
+
+	    for (ExamQuestionCreateRequest questionRequest : request.getQuestions()) {
+
+	        validateCreateRequest(examId, questionRequest);
+
+	        Question question = Question.builder()
+	                .questionType(questionRequest.getQuestionType().trim().toUpperCase())
+	                .content(questionRequest.getContent().trim())
+	                .correctText(normalizeBlankToNull(questionRequest.getCorrectText()))
+	                .explanation(normalizeBlankToNull(questionRequest.getExplanation()))
+	                .mediaUrl(null)
+	                .defaultPoint(questionRequest.getDefaultPoint() == null
+	                        ? BigDecimal.ONE
+	                        : questionRequest.getDefaultPoint())
+	                .status(questionRequest.getStatus() == null || questionRequest.getStatus().isBlank()
+	                        ? "Published"
+	                        : questionRequest.getStatus())
+	                .sourceType(questionRequest.getSourceType() == null || questionRequest.getSourceType().isBlank()
+	                        ? "TEACHER_CREATED"
+	                        : questionRequest.getSourceType())
+	                .createdBy(teacher)
+	                .createdAt(now)
+	                .updatedAt(now)
+	                .build();
+
+	        Question savedQuestion = questionRepository.save(question);
+
+	        if (isChoiceType(savedQuestion.getQuestionType())) {
+	            saveQuestionOptions(savedQuestion, questionRequest.getOptions());
+	        }
+
+	        ExamQuestion examQuestion = ExamQuestion.builder()
+	                .exam(exam)
+	                .question(savedQuestion)
+	                .questionOrder(nextOrder++)
+	                .point(questionRequest.getPoint() == null
+	                        ? BigDecimal.ONE
+	                        : questionRequest.getPoint())
+	                .createdAt(now)
+	                .build();
+
+	        ExamQuestion savedExamQuestion = examQuestionRepository.save(examQuestion);
+
+	        responses.add(buildTeacherExamQuestionResponse(savedExamQuestion));
+	    }
+
+	    return responses;
 	}
 
 	@Transactional
@@ -343,47 +420,107 @@ public class ExamQuestionService {
 		return examMapper.toTeacherExamQuestionResponses(rows);
 	}
 
+//	public StudentExamQuestionResponse layDanhSachCauHoiBaiThiChoHocVien(Long examId) {
+//
+//		User user = getCurrentUser();
+//
+//		Exam exam = examRepository.findPublishedExamForStudent(examId)
+//				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài thi"));
+//
+//		Long courseId = exam.getCourse().getCourseId();
+//
+//		/*
+//		 * Check học viên đã mua khóa học chưa
+//		 */
+//		if (!enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId)) {
+//			throw new RuntimeException("Bạn cần thanh toán để làm bài thi này");
+//		}
+//
+//		
+//
+//		List<ExamQuestion> examQuestions = examQuestionRepository.findStudentQuestionsByExamId(examId);
+//
+//		List<PracticeQuestionResponse> questions = practiceConfigMapper.toExamQuestionResponses(examQuestions);
+//
+//		return StudentExamQuestionResponse.builder()
+//
+//				.examId(exam.getExamId())
+//
+//				.courseId(courseId)
+//
+//				.courseTitle(exam.getCourse().getTitle())
+//
+//				.title(exam.getTitle())
+//
+//				.description(exam.getDescription())
+//
+//				.durationMinutes(exam.getDurationMinutes())
+//
+//
+//				.questionCount(questions.size())
+//
+//				.questions(questions)
+//
+//				.build();
+//	}
+	
+	
 	public StudentExamQuestionResponse layDanhSachCauHoiBaiThiChoHocVien(Long examId) {
 
-		User user = getCurrentUser();
+	    User user = getCurrentUser();
 
-		Exam exam = examRepository.findPublishedExamForStudent(examId)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài thi"));
+	    Exam exam = examRepository.findPublishedExamForStudent(examId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy bài thi"));
 
-		Long courseId = exam.getCourse().getCourseId();
+	    Long courseId = exam.getCourse().getCourseId();
 
-		/*
-		 * Check học viên đã mua khóa học chưa
-		 */
-		if (!enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId)) {
-			throw new RuntimeException("Bạn cần thanh toán để làm bài thi này");
-		}
+	    boolean hasAccess = checkHasExamAccess(user.getUserId(), courseId, examId);
 
-		
+	    if (!hasAccess) {
+	        throw new RuntimeException("Bạn cần thanh toán để làm bài thi này");
+	    }
 
-		List<ExamQuestion> examQuestions = examQuestionRepository.findStudentQuestionsByExamId(examId);
+	    List<ExamQuestion> examQuestions =
+	            examQuestionRepository.findStudentQuestionsByExamId(examId);
 
-		List<PracticeQuestionResponse> questions = practiceConfigMapper.toExamQuestionResponses(examQuestions);
+	    List<PracticeQuestionResponse> questions =
+	            practiceConfigMapper.toExamQuestionResponses(examQuestions);
 
-		return StudentExamQuestionResponse.builder()
+	    return StudentExamQuestionResponse.builder()
+	            .examId(exam.getExamId())
+	            .courseId(courseId)
+	            .courseTitle(exam.getCourse().getTitle())
+	            .title(exam.getTitle())
+	            .description(exam.getDescription())
+	            .durationMinutes(exam.getDurationMinutes())
+	            .questionCount(questions.size())
+	            .questions(questions)
+	            .build();
+	}
+	
+	private boolean checkHasExamAccess(Long userId, Long courseId, Long examId) {
 
-				.examId(exam.getExamId())
+	    Course course = courseRepository.findById(courseId)
+	            .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
 
-				.courseId(courseId)
+	    if ("FREE".equalsIgnoreCase(course.getCourseType())) {
+	        return true;
+	    }
 
-				.courseTitle(exam.getCourse().getTitle())
+	    boolean enrolled = enrollmentRepository
+	            .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
+	                    userId,
+	                    courseId
+	            );
 
-				.title(exam.getTitle())
+	    if (enrolled) {
+	        return true;
+	    }
 
-				.description(exam.getDescription())
-
-				.durationMinutes(exam.getDurationMinutes())
-
-
-				.questionCount(questions.size())
-
-				.questions(questions)
-
-				.build();
+	    return courseItemRepository
+	            .existsByCourseCourseIdAndExamExamIdAndIsFreePreviewTrue(
+	                    courseId,
+	                    examId
+	            );
 	}
 }

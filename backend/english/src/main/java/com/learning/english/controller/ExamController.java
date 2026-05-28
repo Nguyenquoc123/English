@@ -1,6 +1,7 @@
 package com.learning.english.controller;
 
 import com.learning.english.dto.request.ExamCreateRequest;
+import com.learning.english.dto.request.ExamUpdateRequest;
 import com.learning.english.dto.response.ChiTietExam;
 import com.learning.english.dto.response.ExamListResponse;
 import com.learning.english.dto.response.ExamResponse;
@@ -52,6 +53,11 @@ public class ExamController {
 	@PostMapping("/create")
 	public ResponseEntity<ExamResponse> taoBaiThi(@RequestBody ExamCreateRequest request) {
 		return ResponseEntity.ok(examService.taoBaiThi(request));
+	}
+	
+	@PutMapping("/update")
+	public ResponseEntity<ExamResponse> updateBaiThi(@RequestBody ExamUpdateRequest request) {
+		return ResponseEntity.ok(examService.updateBaiThi(request));
 	}
 
 	@GetMapping("/{examId}")

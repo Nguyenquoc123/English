@@ -86,6 +86,11 @@ import TeacherProfilePage from "./pages/teacher-profile/TeacherProfilePage.jsx";
 import TeacherProfileUpdatePage from "./pages/teacher-profile/TeacherProfileUpdatePage.jsx";
 import TeacherBankAccountsPage from "./pages/teacher-bank-account/TeacherBankAccountsPage.jsx";
 import TeacherDashboard from "./pages/teacher-dashboard/TeacherDashboard.jsx";
+import CourseItemsSorter from "./pages/course-items-sort/CourseItemsSorter.jsx";
+import TeacherLessonEdit from "./pages/teacher/TeacherLessonEdit.jsx";
+import ExamEdit from "./pages/exam/ExamEdit.jsx";
+import TeacherVideoEdit from "./pages/teacher/TeacherVideoEdit.jsx";
+import TeacherGrammarEdit from "./pages/teacher/TeacherGrammarEdit.jsx";
 
 
 function ProtectedAdminRoute({ children }) {
@@ -258,8 +263,16 @@ function App() {
           <Route path="courses/:courseId" element={<TeacherCourseDetail />} />
           <Route path="courses/:courseId/edit" element={<TeacherCourseUpdate />} />
           <Route path="courses/:courseId/lessons" element={<TeacherLessonList />} />
+          <Route
+            path="courses/:courseId/items/sort"
+            element={<CourseItemsSorter />}
+          />
           <Route path="courses/:courseId/lessons/create" element={<TeacherLessonCreate />} />
           <Route path="courses/:courseId/lessons/:lessonId" element={<TeacherLessonDetail />} />
+          <Route
+            path="courses/:courseId/lessons/:lessonId/edit"
+            element={<TeacherLessonEdit />}
+          />
           <Route
             path="courses/:courseId/lessons/:lessonId/vocabularies/create"
             element={<TeacherVocabularyCreate />}
@@ -268,10 +281,21 @@ function App() {
             path="courses/:courseId/lessons/:lessonId/grammar/create"
             element={<TeacherGrammarCreate />}
           />
+
+          <Route
+            path="courses/:courseId/lessons/:lessonId/grammars/:grammarId/edit"
+            element={<TeacherGrammarEdit />}
+          />
+
           <Route
             path="courses/:courseId/lessons/:lessonId/videos/create"
             element={<TeacherVideoCreate />}
           />
+          <Route
+            path="courses/:courseId/lessons/:lessonId/videos/:videoId/edit"
+            element={<TeacherVideoEdit />}
+          />
+
           <Route
             path="courses/:courseId/lessons/:lessonId/questions/create"
             element={<TeacherQuestionCreate />}
@@ -309,11 +333,15 @@ function App() {
           <Route path="exams/create" element={<TeacherExamCreate />} />
           <Route path="courses/:courseId/exams/:examId" element={<TeacherExamDetail />} />
           <Route
+            path="courses/:courseId/exams/:examId/edit"
+            element={<ExamEdit />}
+          />
+          <Route
             path="exams/:examId/questions/create"
             element={<TeacherExamQuestionCreate />}
           />
 
-          
+
           <Route path="profile" element={<TeacherProfilePage />} />
           <Route path="profile/update" element={<TeacherProfileUpdatePage />} />
           <Route path="bank" element={<TeacherBankAccountsPage />} />

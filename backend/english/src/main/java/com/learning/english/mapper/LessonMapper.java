@@ -18,8 +18,8 @@ import com.learning.english.entity.Lesson;
 @Mapper(componentModel = "spring")
 public interface LessonMapper {
 	@Mapping(source = "lessonId", target = "lessonId")
-	@Mapping(source = "course.courseId", target = "courseId")
-	@Mapping(source = "course.title", target = "courseTitle")
+	
+	
 	LessonResponse toLessonResponse(Lesson lesson);
 
 	public default StudentLessonResponse toLessonResponse(

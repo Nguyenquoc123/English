@@ -9,40 +9,6 @@ function TeacherExamQuestionCreate() {
     const { examId } = useParams();
 
     return (
-        // <QuestionCreateComponent
-        //     title="Thêm câu hỏi vào kỳ thi"
-        //     targetLabel="Tạo câu hỏi mới hoặc chọn từ ngân hàng để thêm vào kỳ thi."
-        //     breadcrumb={
-        //         <CourseBreadcrumb
-        //             items={[
-        //                 teacherExams,
-        //                 teacherExamDetail(examId),
-        //                 { label: "Thêm câu hỏi" },
-        //             ]}
-        //         />
-        //     }
-        //     allowAttachExisting={true}
-        //     showExamPoint={true}
-        //     createEndpoint={`${API_BASE}/exam-questions/exams/${examId}`}
-        //     attachEndpoint={`${API_BASE}/exam-questions/exams/${examId}/attach`}
-        //     buildCreatePayload={({ basePayload, examPoint }) => ({
-        //         ...basePayload,
-        //         examId: Number(examId),
-        //         point: Number(examPoint),
-        //     })}
-        //     buildAttachPayload={({ questionType, questionIds, examPoint }) => ({
-        //         examId: Number(examId),
-        //         questionType,
-        //         questionIds,
-        //         point: Number(examPoint),
-        //     })}
-        //     submitNewText="Tạo và thêm vào kỳ thi"
-        //     submitExistingText="Thêm câu hỏi đã chọn vào kỳ thi"
-        //     successCreateMessage="Thêm câu hỏi vào kỳ thi thành công"
-        //     successAttachMessage="Gắn câu hỏi vào kỳ thi thành công"
-        //     cancelPath={`/teacher/exams/${examId}`}
-        //     redirectPath={`/teacher/exams/${examId}`}
-        // />
 
         <QuestionCreateComponent
             title="Thêm câu hỏi vào kỳ thi"
@@ -51,7 +17,7 @@ function TeacherExamQuestionCreate() {
             showExamPoint={true}
             createEndpoint={`${API_BASE}/exam-questions/exams/${examId}`}
             attachEndpoint={`${API_BASE}/exam-questions/exams/${examId}/attach`}
-            bulkCreateEndpoint={`${API_BASE}/exam-questions/exams/${examId}/bulk`}
+            bulkCreateEndpoint={`${API_BASE}/exam-questions/exams/${examId}/many`}
             buildCreatePayload={({ basePayload, examPoint }) => ({
                 ...basePayload,
                 examId: Number(examId),
@@ -63,11 +29,12 @@ function TeacherExamQuestionCreate() {
                 questionIds,
                 point: Number(examPoint),
             })}
-            buildBulkCreatePayload={({ questionType, questions, examPoint }) => ({
-                examId: Number(examId),
-                questionType,
-                point: Number(examPoint),
-                questions,
+            buildBulkCreatePayload={({ questions, examPoint }) => ({
+                questions: questions.map((question) => ({
+                    ...question,
+                    examId: Number(examId),
+                    point: question.defaultPoint,
+                })),
             })}
             submitNewText="Tạo và thêm vào kỳ thi"
             submitExistingText="Thêm câu hỏi đã chọn vào kỳ thi"

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./TeacherDashboard.css";
+import { getFileUrl } from "../../utils/fileurl.js";
 
 const API_BASE = "http://localhost:8080";
 
@@ -179,32 +180,7 @@ function TeacherDashboard() {
     return (
         <div className="teacher-dashboard-page">
             <div className="container-fluid px-0">
-                <div className="dashboard-hero mb-4">
-                    <div>
-                        <span className="dashboard-eyebrow">Teacher Dashboard</span>
-                        <h2 className="fw-bold mb-2">Tổng quan giáo viên</h2>
-                        <p className="mb-0">
-                            Theo dõi khóa học, học viên, doanh thu và hoạt động giảng dạy của bạn.
-                        </p>
-                    </div>
-
-                    <div className="d-flex gap-2 flex-wrap">
-                        <button
-                            type="button"
-                            className="btn btn-light"
-                            onClick={loadDashboard}
-                            disabled={loading}
-                        >
-                            <i className="bi bi-arrow-clockwise me-2"></i>
-                            Tải lại
-                        </button>
-
-                        <a href="/teacher/courses/create" className="btn btn-primary">
-                            <i className="bi bi-plus-circle me-2"></i>
-                            Tạo khóa học
-                        </a>
-                    </div>
-                </div>
+                
 
                 {error && (
                     <div className="alert alert-danger d-flex align-items-center gap-2">
@@ -318,7 +294,7 @@ function TeacherDashboard() {
                                                                         <div className="course-thumb">
                                                                             {course.thumbnailUrl ? (
                                                                                 <img
-                                                                                    src={course.thumbnailUrl}
+                                                                                    src={getFileUrl(course.thumbnailUrl)}
                                                                                     alt={course.title}
                                                                                 />
                                                                             ) : (

@@ -1382,7 +1382,7 @@ function QuestionCreateComponent({
                                                     </label>
                                                 </div>
 
-                                                {showExamPoint && (
+                                                {/* {showExamPoint && (
                                                     <div className="mb-4">
                                                         <label className="form-label fw-semibold">
                                                             Điểm trong kỳ thi <span className="text-danger">*</span>
@@ -1397,7 +1397,7 @@ function QuestionCreateComponent({
                                                             onChange={(e) => setExamPoint(e.target.value)}
                                                         />
                                                     </div>
-                                                )}
+                                                )} */}
 
                                                 {excelQuestions.length > 0 && (
                                                     <div className="excel-preview-list">

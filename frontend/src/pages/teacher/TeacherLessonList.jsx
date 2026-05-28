@@ -57,8 +57,17 @@ function TeacherLessonList() {
     }
   };
 
-  const handleEdit = (lessonId) => {
-    navigate(`/teacher/courses/${courseId}/lessons/${lessonId}/edit`);
+  const handleEdit = (item) => {
+    if (item.type === "LESSON") {
+      navigate(`/teacher/courses/${courseId}/lessons/${item.id}/edit`);
+      return;
+    }
+
+    if (item.type === "EXAM") {
+      navigate(`/teacher/courses/${courseId}/exams/${item.id}/edit`);
+      return;
+    }
+    
   };
 
   const handleDelete = async (lessonId) => {

@@ -18,6 +18,8 @@ public class ExamCreateRequest {
     private String description;
 
     private Integer durationMinutes;
+    
+    private boolean isFreePreview;
 
     private String status;
 }

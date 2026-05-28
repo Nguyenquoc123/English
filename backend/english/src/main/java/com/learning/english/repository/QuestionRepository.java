@@ -114,4 +114,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 			    ORDER BY eq.questionOrder ASC
 			""")
 	List<Question> findPublishedQuestionsByExamId(@Param("examId") Long examId);
+	
+	
+	long countByCreatedBy_UserIdAndStatusNot(Long teacherId, String status);
 }

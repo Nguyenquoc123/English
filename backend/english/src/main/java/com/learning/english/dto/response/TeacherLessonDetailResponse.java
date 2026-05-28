@@ -33,6 +33,8 @@ public class TeacherLessonDetailResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    
+    private boolean isFreePreview;
 
     private List<LessonVideoResponse> videos;
 

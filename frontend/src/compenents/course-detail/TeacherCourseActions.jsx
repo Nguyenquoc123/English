@@ -11,7 +11,7 @@ function TeacherCourseActions({
       <button
         className="btn btn-outline-secondary"
         onClick={() =>
-          navigate(`/teacher/courses/${course.courseId}/lessons/sort`)
+          navigate(`/teacher/courses/${course.courseId}/items/sort`)
         }
       >
         <i className="bi bi-sort-down me-1"></i>
