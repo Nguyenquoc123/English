@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { STUDENT_HOME_PATH } from "../../utils/authUser";
 import "./TeacherSidebar.css";
 
 function TeacherSidebar({ isOpen, onClose }) {
@@ -48,6 +49,11 @@ function TeacherSidebar({ isOpen, onClose }) {
       <div className="p-3 sidebar-content">
         <p className="sidebar-title">Tài khoản</p>
 
+        <NavLink to={STUDENT_HOME_PATH} className="sidebar-link" onClick={onClose}>
+          <i className="bi bi-mortarboard"></i>
+          Chuyển sang trang học viên
+        </NavLink>
+
         <NavLink to="/teacher/profile" className="sidebar-link" onClick={onClose}>
           <i className="bi bi-person"></i>
           Hồ sơ giáo viên
@@ -60,14 +66,9 @@ function TeacherSidebar({ isOpen, onClose }) {
 
         <p className="sidebar-title">Khóa học</p>
 
-        <NavLink
-          to="/teacher/courses"
-          end
-          className="sidebar-link"
-          onClick={onClose}
-        >
-          <i className="bi bi-house-door"></i>
-          Trang chủ
+        <NavLink to="/teacher/courses" className="sidebar-link" onClick={onClose}>
+          <i className="bi bi-journal-bookmark"></i>
+          Khóa học của tôi
         </NavLink>
 
         <NavLink
@@ -78,57 +79,6 @@ function TeacherSidebar({ isOpen, onClose }) {
           <i className="bi bi-plus-circle"></i>
           Tạo khóa học
         </NavLink>
-
-        {/* <p className="sidebar-title">Nội dung học</p> */}
-
-        {/* <NavLink to="/teacher/lessons" className="sidebar-link" onClick={onClose}>
-          <i className="bi bi-file-earmark-text"></i>
-          Quản lý lesson
-        </NavLink>
-
-        <NavLink to="/teacher/videos" className="sidebar-link" onClick={onClose}>
-          <i className="bi bi-camera-video"></i>
-          Video bài học
-        </NavLink>
-
-        <NavLink
-          to="/teacher/vocabularies"
-          className="sidebar-link"
-          onClick={onClose}
-        >
-          <i className="bi bi-card-text"></i>
-          Từ vựng
-        </NavLink>
-
-        <NavLink to="/teacher/grammar" className="sidebar-link" onClick={onClose}>
-          <i className="bi bi-pencil-square"></i>
-          Ngữ pháp
-        </NavLink>
-
-        <NavLink
-          to="/teacher/practice-questions"
-          className="sidebar-link"
-          onClick={onClose}
-        >
-          <i className="bi bi-question-circle"></i>
-          Câu hỏi ôn tập
-        </NavLink>
-
-        <p className="sidebar-title">Kỳ thi</p>
-
-        <NavLink to="/teacher/exams" className="sidebar-link" onClick={onClose}>
-          <i className="bi bi-clipboard-check"></i>
-          Quản lý kỳ thi
-        </NavLink>
-
-        <NavLink
-          to="/teacher/exam-results"
-          className="sidebar-link"
-          onClick={onClose}
-        >
-          <i className="bi bi-bar-chart"></i>
-          Kết quả thi
-        </NavLink> */}
 
         <p className="sidebar-title">Doanh thu</p>
 

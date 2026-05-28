@@ -6,6 +6,13 @@ import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb
 import { studentHome } from "../../utils/breadcrumbPaths";
 import { getTeacherApplicationSummary } from "../../api/teacherProfileApi";
 import { getTeacherApplicationStatusMeta } from "../../utils/teacherApplicationStatus";
+import { createStudentFeedbackTask } from "../../api/studentFeedbackApi";
+import {
+    getAuthUser,
+    isTeacherAccount,
+    isTeacherFromProfile,
+    TEACHER_HOME_PATH,
+} from "../../utils/authUser";
 
 function StudentProfile() {
     const navigate = useNavigate();
@@ -16,6 +23,9 @@ function StudentProfile() {
     const [teacherApplication, setTeacherApplication] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [feedbackTitle, setFeedbackTitle] = useState("");
+    const [feedbackContent, setFeedbackContent] = useState("");
+    const [sendingFeedback, setSendingFeedback] = useState(false);
 
     const getToken = () => {
         return localStorage.getItem("english_token") || localStorage.getItem("token");
@@ -109,6 +119,9 @@ function StudentProfile() {
         return role || "--";
     };
 
+    const canSwitchToTeacher =
+        isTeacherFromProfile(profile) || isTeacherAccount(getAuthUser());
+
     const getStatusBadge = (status) => {
         const value = String(status || "").toLowerCase();
 
@@ -140,6 +153,34 @@ function StudentProfile() {
             parts[0].charAt(0).toUpperCase() +
             parts[parts.length - 1].charAt(0).toUpperCase()
         );
+    };
+
+    const handleSendFeedback = async () => {
+        if (!feedbackTitle.trim()) {
+            alert("Vui lòng nhập tiêu đề feedback");
+            return;
+        }
+        if (!feedbackContent.trim()) {
+            alert("Vui lòng nhập nội dung feedback");
+            return;
+        }
+
+        try {
+            setSendingFeedback(true);
+            await createStudentFeedbackTask(feedbackTitle.trim(), feedbackContent.trim());
+            alert("Đã gửi feedback thành công. Admin sẽ xử lý sớm.");
+            setFeedbackTitle("");
+            setFeedbackContent("");
+        } catch (err) {
+            console.error(err);
+            const message =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                "Gửi feedback thất bại. Vui lòng thử lại.";
+            alert(message);
+        } finally {
+            setSendingFeedback(false);
+        }
     };
 
     if (loading) {
@@ -384,7 +425,7 @@ function StudentProfile() {
                                     Đăng ký trở thành giáo viên
                                 </button>
                             )}
-                            {teacherApplication?.registered && (
+                            {teacherApplication?.registered && String(profile?.role || "").toLowerCase() !== "teacher" && (
                                 <button
                                     type="button"
                                     className="btn btn-purple profile-action-btn"
@@ -400,11 +441,71 @@ function StudentProfile() {
                                         : "Xem kết quả đăng ký"}
                                 </button>
                             )}
+                            {canSwitchToTeacher && (
+                                <button
+                                    type="button"
+                                    className="btn btn-purple profile-action-btn"
+                                    onClick={() => navigate(TEACHER_HOME_PATH)}
+                                >
+                                    <i className="bi bi-easel2 me-2"></i>
+                                    Chuyển sang trang giảng viên
+                                </button>
+                            )}
 
                         </div>
                     </div>
 
-                    
+                    <div className="student-profile-info-card mt-4">
+                        <div className="profile-info-header">
+                            <div>
+                                <h4>Feedback cho hệ thống</h4>
+                                <p>Gửi góp ý hoặc vấn đề bạn gặp phải để admin xử lý.</p>
+                            </div>
+                            <span className="student-profile-badge badge-pending">Tác vụ mới</span>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label fw-semibold">Tiêu đề feedback</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Ví dụ: Lỗi phát video bài học"
+                                value={feedbackTitle}
+                                onChange={(e) => setFeedbackTitle(e.target.value)}
+                                maxLength={255}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label fw-semibold">Nội dung</label>
+                            <textarea
+                                className="form-control"
+                                rows={4}
+                                placeholder="Mô tả chi tiết vấn đề hoặc góp ý của bạn..."
+                                value={feedbackContent}
+                                onChange={(e) => setFeedbackContent(e.target.value)}
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleSendFeedback}
+                            disabled={sendingFeedback}
+                        >
+                            {sendingFeedback ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                    Đang gửi...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-send me-2"></i>
+                                    Gửi feedback
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

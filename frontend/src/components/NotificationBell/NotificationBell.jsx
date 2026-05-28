@@ -19,7 +19,7 @@ function formatDateTime(value) {
   });
 }
 
-export default function NotificationBell({ variant = "light" }) {
+export default function NotificationBell({ variant = "light", title = "Thông báo" }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -132,8 +132,8 @@ export default function NotificationBell({ variant = "light" }) {
         type="button"
         className="notification-bell-btn"
         onClick={toggleOpen}
-        aria-label="Thông báo từ admin"
-        title="Thông báo từ admin"
+        aria-label={title}
+        title={title}
         aria-expanded={open}
       >
         <i className="bi bi-bell" />

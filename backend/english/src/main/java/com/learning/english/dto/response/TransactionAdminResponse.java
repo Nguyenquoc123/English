@@ -15,6 +15,8 @@ public class TransactionAdminResponse {
 
     private Long transactionId;
 
+    private Long refundRequestId;
+
     private Long userId;
 
     private String username;
@@ -30,6 +32,22 @@ public class TransactionAdminResponse {
     private BigDecimal amount;
 
     private String status;
+
+    private String refundReason;
+
+    private String refundBankName;
+
+    private String refundAccountNumber;
+
+    private String refundAccountName;
+
+    private String refundRejectReason;
+
+    private String refundReviewedByUsername;
+
+    private LocalDateTime refundRequestedAt;
+
+    private LocalDateTime refundReviewedAt;
 
     private LocalDateTime createdAt;
 

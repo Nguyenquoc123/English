@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.english.dto.request.TeacherProfileUpdateRequest;
 import com.learning.english.dto.request.TeacherRegisterRequest;
+import com.learning.english.dto.response.TeacherApplicationSummaryResponse;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.entity.Role;
 import com.learning.english.entity.TeacherCertificate;
@@ -158,6 +159,30 @@ public class TeacherProfileService {
 		TeacherProfile teacherProfile = teacherProfileRepository.findByUser(user)
 				.orElseThrow(() -> new RuntimeException());
 		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
+	}
+
+	public TeacherApplicationSummaryResponse getApplicationSummary() {
+		User user = getCurrentUser();
+
+		Optional<TeacherProfile> profileOpt = teacherProfileRepository.findByUser(user);
+		if (profileOpt.isEmpty()) {
+			return TeacherApplicationSummaryResponse.builder()
+					.registered(false)
+					.approvalStatus("NOT_REGISTERED")
+					.phone(user.getPhone())
+					.build();
+		}
+
+		TeacherProfile profile = profileOpt.get();
+		String profilePhone = profile.getPhone() != null && !profile.getPhone().isBlank()
+				? profile.getPhone()
+				: user.getPhone();
+
+		return TeacherApplicationSummaryResponse.builder()
+				.registered(true)
+				.approvalStatus(profile.getApprovalStatus())
+				.phone(profilePhone)
+				.build();
 	}
 
 	public TeacherProfileResponse duyetDangKyLamGiaoVien(Long teacherProfileId, String approvalStatus,

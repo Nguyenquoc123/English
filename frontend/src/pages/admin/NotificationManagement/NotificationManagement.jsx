@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { getAllNotifications, createNotification } from "../../../api/adminApi";
 import "./NotificationManagement.css";
 
+const ROLE_OPTIONS = [
+  { value: "student", label: "Học viên (student)" },
+  { value: "teacher", label: "Giảng viên (teacher)" },
+  { value: "admin", label: "Quản trị viên (admin)" },
+];
+
 function NotificationManagement() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,13 +45,8 @@ function NotificationManagement() {
       return;
     }
 
-    if (formTargetType !== "ALL" && !formTargetValue.trim()) {
-      alert("Vui lòng nhập đối tượng nhận thông báo");
-      return;
-    }
-
-    if (formTargetType === "USER" && isNaN(Number(formTargetValue.trim()))) {
-      alert("ID người dùng phải là số nguyên (ví dụ: 42)");
+    if (formTargetType === "ROLE" && !formTargetValue.trim()) {
+      alert("Vui lòng chọn vai trò nhận thông báo");
       return;
     }
 
@@ -62,9 +63,10 @@ function NotificationManagement() {
       if (formTargetType === "ALL") {
         successMessage = "Đã gửi thông báo đến toàn bộ hệ thống";
       } else if (formTargetType === "ROLE") {
-        successMessage = `Đã gửi thông báo thành công đến ${count} người (vai trò ${formTargetValue.trim()})!`;
-      } else {
-        successMessage = `Đã gửi thông báo thành công đến ${count} người (người dùng #${formTargetValue.trim()})!`;
+        const roleLabel =
+          ROLE_OPTIONS.find((item) => item.value === formTargetValue.trim())?.label ||
+          formTargetValue.trim();
+        successMessage = `Đã gửi thông báo thành công đến ${count} người (${roleLabel})!`;
       }
       alert(successMessage);
 
@@ -84,8 +86,13 @@ function NotificationManagement() {
   const getTargetTypeLabel = (type) => {
     if (type === "ALL") return "Toàn bộ hệ thống";
     if (type === "ROLE") return "Theo vai trò";
-    if (type === "USER") return "Người dùng cụ thể";
     return type;
+  };
+
+  const getRoleLabel = (value) => {
+    if (!value) return "";
+    const role = ROLE_OPTIONS.find((item) => item.value === String(value).toLowerCase());
+    return role ? role.label : value;
   };
 
   const formatDateTime = (value) => {
@@ -149,31 +156,29 @@ function NotificationManagement() {
             >
               <option value="ALL">Toàn bộ hệ thống</option>
               <option value="ROLE">Theo vai trò</option>
-              <option value="USER">Người dùng cụ thể</option>
             </select>
           </div>
 
-          {formTargetType !== "ALL" && (
+          {formTargetType === "ROLE" && (
             <div className="mb-3">
               <label className="form-label fw-semibold">
-                {formTargetType === "ROLE" ? "Tên vai trò" : "ID người dùng"}
+                Vai trò nhận
                 <span className="text-danger"> *</span>
               </label>
-              <input
-                className="form-control"
-                type="text"
-                placeholder={
-                  formTargetType === "ROLE"
-                    ? "Nhập tên vai trò: student / teacher / admin"
-                    : "Nhập ID người dùng (số nguyên)"
-                }
+              <select
+                className="form-select"
                 value={formTargetValue}
                 onChange={(e) => setFormTargetValue(e.target.value)}
-              />
+              >
+                <option value="">-- Chọn vai trò --</option>
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
               <small className="text-muted">
-                {formTargetType === "ROLE"
-                  ? "Ví dụ: student, teacher, admin"
-                  : "Ví dụ: 42 (userId của người dùng cần gửi)"}
+                Hệ thống sẽ gửi tới toàn bộ tài khoản đang hoạt động thuộc vai trò đã chọn.
               </small>
             </div>
           )}
@@ -222,7 +227,9 @@ function NotificationManagement() {
 
                     <span className="badge rounded-pill bg-primary-subtle text-primary flex-shrink-0">
                       {getTargetTypeLabel(n.targetType)}
-                      {n.targetValue && `: ${n.targetValue}`}
+                      {n.targetType === "ROLE" && n.targetValue
+                        ? `: ${getRoleLabel(n.targetValue)}`
+                        : ""}
                     </span>
                   </div>
 

@@ -36,6 +36,23 @@
   color: #6366f1;
 }
 
+.notification-bell--admin .notification-bell-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  background: #fff;
+  color: #4338ca;
+  font-size: 18px;
+  box-shadow: 0 1px 4px rgba(67, 56, 202, 0.12);
+}
+
+.notification-bell--admin .notification-bell-btn:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
 .notification-bell-badge {
   position: absolute;
   top: 2px;

@@ -1,7 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import OurAdminSidebar from "./OurAdminSidebar";
-import NotificationBell from "../../../components/NotificationBell/NotificationBell";
 import { BreadcrumbSuppressInline } from "../../../context/BreadcrumbContext";
 import "../../../layouts/admin/AdminLayout.css";
 
@@ -40,10 +39,6 @@ function AdminLayout() {
               <small className="text-muted">
                 Quản lý hệ thống English LMS
               </small>
-            </div>
-
-            <div className="ms-auto">
-              <NotificationBell variant="light" />
             </div>
           </div>
         </div>
