@@ -127,7 +127,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/bank-account/*").hasAuthority("SCOPE_teacher")
                 
                 // dashboard
-                .requestMatchers(HttpMethod.GET, "/teacher/dashboard").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/teacher/dashboard", "/teacher/earnings", "/teacher/withdrawals").hasAuthority("SCOPE_teacher")
 
                 // Admin area
                 .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("SCOPE_admin")

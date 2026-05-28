@@ -124,16 +124,16 @@ function TeacherSidebar({ isOpen, onClose }) {
 
         <NavLink to="/teacher/revenue" className="sidebar-link" onClick={onClose}>
           <i className="bi bi-cash-stack"></i>
-          Dashboard doanh thu
+          Dashboard
         </NavLink>
 
         <NavLink
-          to="/teacher/withdrawals/create"
+          to="/teacher/earnings"
           className="sidebar-link"
           onClick={onClose}
         >
           <i className="bi bi-wallet2"></i>
-          Tạo yêu cầu rút tiền
+          Danh sách giao dịch
         </NavLink>
 
         <NavLink
