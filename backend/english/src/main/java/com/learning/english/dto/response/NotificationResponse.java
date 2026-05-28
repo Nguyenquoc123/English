@@ -24,4 +24,7 @@ public class NotificationResponse {
     private String createdByUsername;
 
     private LocalDateTime createdAt;
+
+    /** Số người nhận thực tế (bản ghi notification_receivers). */
+    private Integer recipientCount;
 }

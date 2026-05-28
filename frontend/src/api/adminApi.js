@@ -66,6 +66,15 @@ export const createNotification = (title, message, targetType, targetValue) =>
 
 export const getAllTransactions = () => axiosClient.get("/admin/transactions");
 
+export const getPendingRefundRequests = () =>
+  axiosClient.get("/admin/refund-requests/pending");
+
+export const reviewRefund = (transactionId, approve, note) =>
+  axiosClient.put(`/admin/transactions/${transactionId}/refund-review`, {
+    approve,
+    note,
+  });
+
 export const getAllReviews = () => axiosClient.get("/admin/reviews");
 
 export const deleteReview = (reviewId) =>

@@ -215,11 +215,6 @@ function UserManagement() {
             trạng thái và khoá hoặc mở khoá tài khoản.
           </p>
         </div>
-
-        <button className="btn btn-outline-secondary" onClick={loadUsers}>
-          <i className="bi bi-arrow-clockwise me-1"></i>
-          Tải lại
-        </button>
       </div>
 
       <div className="user-stats">

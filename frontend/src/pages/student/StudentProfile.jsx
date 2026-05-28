@@ -4,6 +4,15 @@ import "./StudentProfile.css";
 import { getFileUrl } from "../../utils/fileurl";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { studentHome } from "../../utils/breadcrumbPaths";
+import { getTeacherApplicationSummary } from "../../api/teacherProfileApi";
+import { getTeacherApplicationStatusMeta } from "../../utils/teacherApplicationStatus";
+import { createStudentFeedbackTask } from "../../api/studentFeedbackApi";
+import {
+    getAuthUser,
+    isTeacherAccount,
+    isTeacherFromProfile,
+    TEACHER_HOME_PATH,
+} from "../../utils/authUser";
 
 function StudentProfile() {
     const navigate = useNavigate();
@@ -11,9 +20,12 @@ function StudentProfile() {
     const API_BASE = "http://localhost:8080";
 
     const [profile, setProfile] = useState(null);
-    const [registered, setRegistered] = useState(null);
+    const [teacherApplication, setTeacherApplication] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [feedbackTitle, setFeedbackTitle] = useState("");
+    const [feedbackContent, setFeedbackContent] = useState("");
+    const [sendingFeedback, setSendingFeedback] = useState(false);
 
     const getToken = () => {
         return localStorage.getItem("english_token") || localStorage.getItem("token");
@@ -70,43 +82,12 @@ function StudentProfile() {
 
     const checkProfileTeacher = async () => {
         try {
-            setLoading(true);
-            setError("");
-
-            const token = getToken();
-
-            if (!token) {
-                navigate("/dang-nhap");
-                return;
-            }
-
-            const response = await fetch(`${API_BASE}/teacher-profile/profile-registered`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            let data = null;
-
-            try {
-                data = await response.json();
-            } catch {
-                data = null;
-            }
-
-            if (!response.ok) {
-                setError(data?.message || "Lỗi hệ thống");
-                return;
-            }
-
-            const result = data.result || data.data || data;
-            setRegistered(Boolean(data));
+            const res = await getTeacherApplicationSummary();
+            const summary = res.data?.result ?? res.data?.data ?? res.data;
+            setTeacherApplication(summary || { registered: false });
         } catch (err) {
             console.error(err);
-            setError("Lỗi kết nối server");
-        } finally {
-            setLoading(false);
+            setTeacherApplication({ registered: false });
         }
     };
 
@@ -137,6 +118,9 @@ function StudentProfile() {
 
         return role || "--";
     };
+
+    const canSwitchToTeacher =
+        isTeacherFromProfile(profile) || isTeacherAccount(getAuthUser());
 
     const getStatusBadge = (status) => {
         const value = String(status || "").toLowerCase();
@@ -169,6 +153,34 @@ function StudentProfile() {
             parts[0].charAt(0).toUpperCase() +
             parts[parts.length - 1].charAt(0).toUpperCase()
         );
+    };
+
+    const handleSendFeedback = async () => {
+        if (!feedbackTitle.trim()) {
+            alert("Vui lòng nhập tiêu đề feedback");
+            return;
+        }
+        if (!feedbackContent.trim()) {
+            alert("Vui lòng nhập nội dung feedback");
+            return;
+        }
+
+        try {
+            setSendingFeedback(true);
+            await createStudentFeedbackTask(feedbackTitle.trim(), feedbackContent.trim());
+            alert("Đã gửi feedback thành công. Admin sẽ xử lý sớm.");
+            setFeedbackTitle("");
+            setFeedbackContent("");
+        } catch (err) {
+            console.error(err);
+            const message =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                "Gửi feedback thất bại. Vui lòng thử lại.";
+            alert(message);
+        } finally {
+            setSendingFeedback(false);
+        }
     };
 
     if (loading) {
@@ -315,6 +327,14 @@ function StudentProfile() {
 
                             <div className="profile-info-item">
                                 <div className="info-label">
+                                    <i className="bi bi-telephone"></i>
+                                    Số điện thoại
+                                </div>
+                                <strong>{profile.phone || teacherApplication?.phone || "--"}</strong>
+                            </div>
+
+                            <div className="profile-info-item">
+                                <div className="info-label">
                                     <i className="bi bi-person-badge"></i>
                                     Vai trò
                                 </div>
@@ -350,6 +370,33 @@ function StudentProfile() {
                             </div>
                         </div>
 
+                        {teacherApplication && (() => {
+                            const appMeta = getTeacherApplicationStatusMeta(
+                                teacherApplication.approvalStatus,
+                                teacherApplication.registered
+                            );
+                            return (
+                                <div className="profile-teacher-application-card mb-3">
+                                    <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                        <div>
+                                            <h6 className="mb-1 fw-bold">Đơn đăng ký giáo viên</h6>
+                                            <p className="text-muted small mb-0">{appMeta.description}</p>
+                                        </div>
+                                        <span className={`badge ${appMeta.className}`}>
+                                            {appMeta.label}
+                                        </span>
+                                    </div>
+                                    {(teacherApplication.phone || profile.phone) && (
+                                        <p className="small mb-0 mt-2">
+                                            <i className="bi bi-telephone me-1" />
+                                            SĐT trên hồ sơ:{" "}
+                                            <strong>{teacherApplication.phone || profile.phone}</strong>
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
                         <div className="profile-action-area">
                             <button
                                 type="button"
@@ -368,27 +415,97 @@ function StudentProfile() {
                                 <i className="bi bi-lock me-2"></i>
                                 Đổi mật khẩu
                             </button>
-                            {!registered && <button
-                                type="button"
-                                className="btn btn-purple profile-action-btn"
-                                onClick={() => navigate("/student/teacher-register")}
-                            >
-                                <i className="bi bi-mortarboard me-2"></i>
-                                Đăng ký trở thành giáo viên
-                            </button>}
-                            {registered && <button
-                                type="button"
-                                className="btn btn-purple profile-action-btn"
-                                onClick={() => navigate("/student/teacher-register/result")}
-                            >
-                                <i className="bi bi-clipboard-check me-2"></i>
-                                Xem kết quả đăng ký
-                            </button>}
+                            {!teacherApplication?.registered && (
+                                <button
+                                    type="button"
+                                    className="btn btn-purple profile-action-btn"
+                                    onClick={() => navigate("/student/teacher-register")}
+                                >
+                                    <i className="bi bi-mortarboard me-2"></i>
+                                    Đăng ký trở thành giáo viên
+                                </button>
+                            )}
+                            {teacherApplication?.registered && String(profile?.role || "").toLowerCase() !== "teacher" && (
+                                <button
+                                    type="button"
+                                    className="btn btn-purple profile-action-btn"
+                                    onClick={() =>
+                                        teacherApplication.approvalStatus === "REJECTED"
+                                            ? navigate("/student/teacher-register")
+                                            : navigate("/student/teacher-register/result")
+                                    }
+                                >
+                                    <i className="bi bi-clipboard-check me-2"></i>
+                                    {teacherApplication.approvalStatus === "REJECTED"
+                                        ? "Cập nhật đơn đăng ký"
+                                        : "Xem kết quả đăng ký"}
+                                </button>
+                            )}
+                            {canSwitchToTeacher && (
+                                <button
+                                    type="button"
+                                    className="btn btn-purple profile-action-btn"
+                                    onClick={() => navigate(TEACHER_HOME_PATH)}
+                                >
+                                    <i className="bi bi-easel2 me-2"></i>
+                                    Chuyển sang trang giảng viên
+                                </button>
+                            )}
 
                         </div>
                     </div>
 
-                    
+                    <div className="student-profile-info-card mt-4">
+                        <div className="profile-info-header">
+                            <div>
+                                <h4>Feedback cho hệ thống</h4>
+                                <p>Gửi góp ý hoặc vấn đề bạn gặp phải để admin xử lý.</p>
+                            </div>
+                            <span className="student-profile-badge badge-pending">Tác vụ mới</span>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label fw-semibold">Tiêu đề feedback</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Ví dụ: Lỗi phát video bài học"
+                                value={feedbackTitle}
+                                onChange={(e) => setFeedbackTitle(e.target.value)}
+                                maxLength={255}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label fw-semibold">Nội dung</label>
+                            <textarea
+                                className="form-control"
+                                rows={4}
+                                placeholder="Mô tả chi tiết vấn đề hoặc góp ý của bạn..."
+                                value={feedbackContent}
+                                onChange={(e) => setFeedbackContent(e.target.value)}
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleSendFeedback}
+                            disabled={sendingFeedback}
+                        >
+                            {sendingFeedback ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                    Đang gửi...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-send me-2"></i>
+                                    Gửi feedback
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

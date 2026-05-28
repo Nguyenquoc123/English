@@ -5,6 +5,27 @@
 
 .admin-main {
   min-height: 100vh;
+  min-width: 0;
+  width: 100%;
+}
+
+.panel-menu-toggle {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.panel-menu-toggle:hover,
+.panel-menu-toggle[aria-expanded="true"] {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #0d6efd;
 }
 
 .admin-mini-bar {
