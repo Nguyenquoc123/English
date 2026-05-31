@@ -91,6 +91,8 @@ import TeacherLessonEdit from "./pages/teacher/TeacherLessonEdit.jsx";
 import ExamEdit from "./pages/exam/ExamEdit.jsx";
 import TeacherVideoEdit from "./pages/teacher/TeacherVideoEdit.jsx";
 import TeacherGrammarEdit from "./pages/teacher/TeacherGrammarEdit.jsx";
+import TeacherEarningsPage from "./pages/teacher-earning/TeacherEarningsPage.jsx";
+import TeacherWithdrawalPage from "./pages/teacher-withdraw/TeacherWithdrawalPage.jsx";
 
 
 function ProtectedAdminRoute({ children }) {
@@ -362,6 +364,12 @@ function App() {
           <Route path="revenue" element={<TeacherDashboard />} />
           <Route path="withdrawals/create" element={<TeacherWithdrawCreate />} />
           <Route path="withdrawals" element={<TeacherWithdrawHistory />} />
+          <Route path="earnings" element={<TeacherEarningsPage />} />
+          <Route
+            path="earnings/withdrawals"
+            element={<TeacherWithdrawalPage />}
+          />
+          <Route path="withdrawals" element={<h1>Lịch sử rút tiền</h1>} />
         </Route>
 
         <Route

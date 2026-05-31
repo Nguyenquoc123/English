@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @SpringBootApplication
+@EnableScheduling
 public class EnglishApplication {
 
 	public static void main(String[] args) {

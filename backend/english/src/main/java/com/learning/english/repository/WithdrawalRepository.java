@@ -43,10 +43,54 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
     List<Withdrawal> findByTeacher_UserIdOrderByRequestedAtDesc(Long teacherId);
 
     @Query("""
+    
+    @Query("""
+            SELECT w
+            FROM Withdrawal w
+            JOIN FETCH w.bankAccount ba
+            WHERE w.teacher.userId = :teacherId
+            ORDER BY w.requestedAt DESC
+        """)
+        List<Withdrawal> findHistoryByTeacherId(@Param("teacherId") Long teacherId);
+
+        @Query("""
+            SELECT COALESCE(SUM(w.amount), 0)
+            FROM Withdrawal w
+            WHERE w.teacher.userId = :teacherId
+        """)
+        BigDecimal sumTotalRequestedAmount(@Param("teacherId") Long teacherId);
+
+        @Query("""
             SELECT COALESCE(SUM(w.amount), 0)
             FROM Withdrawal w
             WHERE w.teacher.userId = :teacherId
               AND w.status = 'PENDING'
             """)
     BigDecimal sumPendingAmountByTeacherId(@Param("teacherId") Long teacherId);
+        """)
+        BigDecimal sumPendingAmount(@Param("teacherId") Long teacherId);
+
+        @Query("""
+            SELECT COALESCE(SUM(w.amount), 0)
+            FROM Withdrawal w
+            WHERE w.teacher.userId = :teacherId
+              AND w.status = 'APPROVED'
+        """)
+        BigDecimal sumApprovedAmount(@Param("teacherId") Long teacherId);
+
+        @Query("""
+            SELECT COALESCE(SUM(w.amount), 0)
+            FROM Withdrawal w
+            WHERE w.teacher.userId = :teacherId
+              AND w.status = 'PAID'
+        """)
+        BigDecimal sumPaidAmount(@Param("teacherId") Long teacherId);
+
+        @Query("""
+            SELECT COALESCE(SUM(w.amount), 0)
+            FROM Withdrawal w
+            WHERE w.teacher.userId = :teacherId
+              AND w.status = 'REJECTED'
+        """)
+        BigDecimal sumRejectedAmount(@Param("teacherId") Long teacherId);
 }
