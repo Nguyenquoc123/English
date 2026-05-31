@@ -48,6 +48,9 @@ public class TeacherEarning {
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
+    @Column(name = "hold_release_at")
+    private LocalDateTime holdReleaseAt;
+
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;
 }

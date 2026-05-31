@@ -90,6 +90,7 @@ function KhoaHocDaMua() {
     setRefundModalCourse({
       courseId: course.courseId,
       title: course.title || "Khóa học",
+      eligibility: refundMap[course.courseId] || null,
     });
   };
 
@@ -99,13 +100,13 @@ function KhoaHocDaMua() {
     setRefundError("");
   };
 
-  const handleRefundSubmit = async (reason) => {
+  const handleRefundSubmit = async (payload) => {
     if (!refundModalCourse) return;
 
     try {
       setRefundingCourseId(refundModalCourse.courseId);
       setRefundError("");
-      await requestCourseRefund(refundModalCourse.courseId, reason);
+      await requestCourseRefund(refundModalCourse.courseId, payload);
       setRefundModalCourse(null);
       await loadCourses();
       alert("Đã gửi yêu cầu hoàn tiền. Admin sẽ xem xét sớm.");
@@ -206,15 +207,21 @@ function KhoaHocDaMua() {
                     Vào học
                   </button>
 
-                  {refundMap[course.courseId]?.canRequestRefund && (
-                    <button
-                      type="button"
-                      className="detail-btn course-refund-btn"
-                      onClick={() => openRefundModal(course)}
-                      disabled={Boolean(refundingCourseId)}
-                    >
-                      Yêu cầu hoàn tiền
+                  {refundMap[course.courseId]?.accessStatus === "refund_pending_locked" ? (
+                    <button type="button" className="detail-btn course-refund-btn" disabled>
+                      Đang chờ duyệt hoàn tiền
                     </button>
+                  ) : (
+                    refundMap[course.courseId]?.canRequestRefund && (
+                      <button
+                        type="button"
+                        className="detail-btn course-refund-btn"
+                        onClick={() => openRefundModal(course)}
+                        disabled={Boolean(refundingCourseId)}
+                      >
+                        Yêu cầu hoàn tiền
+                      </button>
+                    )
                   )}
                 </div>
               </div>
@@ -226,6 +233,7 @@ function KhoaHocDaMua() {
       <RefundRequestModal
         show={Boolean(refundModalCourse)}
         courseTitle={refundModalCourse?.title}
+        eligibility={refundModalCourse?.eligibility}
         submitting={Boolean(refundingCourseId)}
         error={refundError}
         onClose={closeRefundModal}

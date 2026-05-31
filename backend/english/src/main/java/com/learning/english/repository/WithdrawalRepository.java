@@ -14,6 +14,23 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
 
     List<Withdrawal> findByStatusOrderByRequestedAtDesc(String status);
 
+    @Query("""
+            SELECT w FROM Withdrawal w
+            JOIN FETCH w.teacher
+            JOIN FETCH w.bankAccount
+            WHERE w.status = :status
+            ORDER BY w.requestedAt DESC
+            """)
+    List<Withdrawal> findByStatusWithDetailsOrderByRequestedAtDesc(@Param("status") String status);
+
+    @Query("""
+            SELECT w FROM Withdrawal w
+            JOIN FETCH w.teacher
+            JOIN FETCH w.bankAccount
+            ORDER BY w.requestedAt DESC
+            """)
+    List<Withdrawal> findAllWithDetailsOrderByRequestedAtDesc();
+
     List<Withdrawal> findAllByOrderByRequestedAtDesc();
 
     long countByStatus(String status);
@@ -22,6 +39,10 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
     java.math.BigDecimal sumPaidAmount();
     
     long countByTeacher_UserIdAndStatus(Long teacherId, String status);
+
+    List<Withdrawal> findByTeacher_UserIdOrderByRequestedAtDesc(Long teacherId);
+
+    @Query("""
     
     @Query("""
             SELECT w
@@ -44,6 +65,8 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
             FROM Withdrawal w
             WHERE w.teacher.userId = :teacherId
               AND w.status = 'PENDING'
+            """)
+    BigDecimal sumPendingAmountByTeacherId(@Param("teacherId") Long teacherId);
         """)
         BigDecimal sumPendingAmount(@Param("teacherId") Long teacherId);
 

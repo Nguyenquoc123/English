@@ -69,10 +69,11 @@ export const getAllTransactions = () => axiosClient.get("/admin/transactions");
 export const getPendingRefundRequests = () =>
   axiosClient.get("/admin/refund-requests/pending");
 
-export const reviewRefund = (transactionId, approve, note) =>
+export const reviewRefund = (transactionId, approve, note, internalNote) =>
   axiosClient.put(`/admin/transactions/${transactionId}/refund-review`, {
     approve,
     note,
+    internalNote,
   });
 
 export const getAllReviews = () => axiosClient.get("/admin/reviews");

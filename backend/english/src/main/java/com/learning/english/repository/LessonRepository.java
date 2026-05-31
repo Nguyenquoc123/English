@@ -195,4 +195,12 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
             WHERE l.course.teacher.userId = :teacherId
             """)
     long countLessonsByTeacherId(@Param("teacherId") Long teacherId);
+
+    @Query("""
+            SELECT COUNT(l)
+            FROM Lesson l
+            WHERE l.course.courseId = :courseId
+              AND l.status NOT IN ('Deleted', 'HIDDEN', 'Hidden')
+            """)
+    long countRefundableLessonsByCourseId(@Param("courseId") Long courseId);
 }

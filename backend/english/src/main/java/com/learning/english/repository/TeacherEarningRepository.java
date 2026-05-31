@@ -5,6 +5,7 @@ import com.learning.english.entity.TeacherEarning;
 import jakarta.persistence.LockModeType;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -50,6 +51,23 @@ public interface TeacherEarningRepository extends JpaRepository<TeacherEarning, 
             Pageable pageable
     );
 
+    List<TeacherEarning> findByTeacher_UserIdAndStatusOrderByCreatedAtAsc(
+            Long teacherId,
+            String status
+    );
+
+    @Query("""
+            SELECT COALESCE(SUM(te.netAmount), 0)
+            FROM TeacherEarning te
+            WHERE te.teacher.userId = :teacherId
+              AND te.status = 'HOLD'
+            """)
+    BigDecimal sumHeldRevenueByTeacherId(@Param("teacherId") Long teacherId);
+
+    List<TeacherEarning> findByStatusAndHoldReleaseAtLessThanEqual(String status, LocalDateTime releaseTime);
+
+    boolean existsByTransactionTransactionIdAndStatus(Long transactionId, String status);
+}
     @Query("""
         SELECT te
         FROM TeacherEarning te

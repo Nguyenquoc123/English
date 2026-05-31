@@ -1,4 +1,6 @@
-.admin-transaction-page {
+.admin-user-link:hover {
+  text-decoration: underline !important;
+}
   max-width: 1400px;
   margin: 0 auto;
   color: #111827;

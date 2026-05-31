@@ -14,5 +14,10 @@ export const getPurchasedCourses = () =>
 export const getMyRefundStatus = () =>
   axiosClient.get("/khoa-hoc/refund-status");
 
-export const requestCourseRefund = (courseId, reason) =>
-  axiosClient.post(`/khoa-hoc/${courseId}/yeu-cau-hoan-tien`, { reason });
+export const getRefundReasons = () => axiosClient.get("/refund-reasons");
+
+export const getRefundEligibility = (courseId) =>
+  axiosClient.get(`/khoa-hoc/${courseId}/refund-eligibility`);
+
+export const requestCourseRefund = (courseId, payload) =>
+  axiosClient.post(`/khoa-hoc/${courseId}/yeu-cau-hoan-tien`, payload);

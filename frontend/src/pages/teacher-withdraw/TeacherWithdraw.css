@@ -1,0 +1,84 @@
+.teacher-withdraw-page {
+  padding: 24px;
+}
+
+.teacher-withdraw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.teacher-withdraw-header h2 {
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.teacher-withdraw-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.teacher-withdraw-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.teacher-withdraw-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: #64748b;
+}
+
+.balance-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.balance-item:last-child {
+  border-bottom: none;
+}
+
+.balance-item.highlight {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: none;
+}
+
+.teacher-withdraw-note {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.teacher-withdraw-empty {
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.teacher-withdraw-empty i {
+  font-size: 42px;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.teacher-withdraw-empty p {
+  color: #64748b;
+  margin-bottom: 16px;
+}

@@ -1,3 +1,10 @@
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 spring:
   servlet:
     multipart:
@@ -45,12 +52,12 @@ jwt:
 
 sepay:
   bank:
-    account: "103877010278"
+    account: "103877010565"
     name: "VietinBank"
-    account-name: "NGUYEN CONG QUOC"
+    account-name: "TRAN DAI DUC"
 
   webhook:
-    secret: "your_sepay_webhook_secret"
+    secret: "whsec_WqhFrd1SCKQyJxcRbDPMAmzZrtiTUEAG"
     
 gemini:
   api:

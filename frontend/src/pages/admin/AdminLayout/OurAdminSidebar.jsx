@@ -10,8 +10,9 @@ function OurAdminSidebar({ isOpen, onClose }) {
 
     localStorage.removeItem("token");
     localStorage.removeItem("english_token");
+    localStorage.removeItem("user");
     onClose();
-    navigate("/admin/login", { replace: true });
+    navigate("/dang-nhap", { replace: true });
   };
 
   return (

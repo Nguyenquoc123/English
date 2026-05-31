@@ -66,6 +66,10 @@ public class Course {
     @Column(name = "rejectreason", length = 1000)
     private String rejectReason;
 
+    @Column(name = "certificate_enabled", nullable = false)
+    @Builder.Default
+    private Boolean certificateEnabled = true;
+
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;
 

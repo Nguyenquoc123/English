@@ -138,12 +138,30 @@ public class SePayWebhookController {
             String signature,
             String secret
     ) throws Exception {
-        String expected = "sha256=" + hmacSha256Hex(timestamp, rawBody, secret);
+        if (secret == null || secret.isBlank()) {
+            return false;
+        }
 
-        return MessageDigest.isEqual(
-                expected.getBytes(StandardCharsets.UTF_8),
-                signature.getBytes(StandardCharsets.UTF_8)
-        );
+        String normalizedSignature = signature == null ? "" : signature.trim().toLowerCase();
+
+        for (String candidate : signingSecretCandidates(secret)) {
+            String expected = ("sha256=" + hmacSha256Hex(timestamp, rawBody, candidate)).toLowerCase();
+            if (MessageDigest.isEqual(
+                    expected.getBytes(StandardCharsets.UTF_8),
+                    normalizedSignature.getBytes(StandardCharsets.UTF_8)
+            )) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String[] signingSecretCandidates(String secret) {
+        if (secret.startsWith("whsec_") && secret.length() > 6) {
+            return new String[] { secret, secret.substring(6) };
+        }
+        return new String[] { secret };
     }
 
     private String hmacSha256Hex(

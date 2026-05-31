@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import JoditEditor from "jodit-react";
+import { API_BASE, appendJsonPart, getAuthHeaders } from "../../api/http";
 import "./TeacherCourseCreate.css";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { teacherCourses } from "../../utils/breadcrumbPaths";
@@ -8,8 +9,6 @@ import { teacherCourses } from "../../utils/breadcrumbPaths";
 function TeacherCourseCreate() {
   const navigate = useNavigate();
   const editor = useRef(null);
-
-  const API_BASE = "http://localhost:8080";
 
   const [levels, setLevels] = useState([]);
 
@@ -194,13 +193,7 @@ function TeacherCourseCreate() {
       };
 
       const formData = new FormData();
-
-      formData.append(
-        "data",
-        new Blob([JSON.stringify(courseData)], {
-          type: "application/json;charset=UTF-8",
-        })
-      );
+      appendJsonPart(formData, "data", courseData);
 
       if (thumbnailFile) {
         formData.append("thumbnailFile", thumbnailFile);
@@ -208,9 +201,7 @@ function TeacherCourseCreate() {
 
       const response = await fetch(`${API_BASE}/khoa-hoc/tao-khoa-hoc`, {
         method: "POST",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: getAuthHeaders(),
         body: formData,
       });
 

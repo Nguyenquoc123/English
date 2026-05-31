@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { getAllUsers, updateUserStatus, updateUserRole, createUser } from "../../../api/adminApi";
+import { useSearchParams } from "react-router-dom";
+import { getAllUsers, getUserDetail, updateUserStatus, updateUserRole, createUser } from "../../../api/adminApi";
 import "./UserManagement.css";
 import { getFileUrl } from "../../../utils/fileurl";
 
 function UserManagement() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,6 +29,35 @@ function UserManagement() {
     loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const userId = searchParams.get("userId");
+    if (!userId) {
+      return;
+    }
+
+    const openUserFromQuery = async () => {
+      try {
+        const res = await getUserDetail(userId);
+        const user = res.data?.result ?? res.data?.data ?? res.data;
+        if (user?.userId) {
+          setSelectedUser(user);
+          setModalRoleName(user.roleName || "");
+          setShowModal(true);
+        }
+      } catch {
+        const found = users.find((u) => String(u.userId) === String(userId));
+        if (found) {
+          setSelectedUser(found);
+          setModalRoleName(found.roleName || "");
+          setShowModal(true);
+        }
+      }
+    };
+
+    openUserFromQuery();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.get("userId"), users.length]);
 
   const loadUsers = async () => {
     try {
@@ -98,6 +129,9 @@ function UserManagement() {
     setShowModal(false);
     setSelectedUser(null);
     setModalRoleName("");
+    if (searchParams.get("userId")) {
+      setSearchParams({});
+    }
   };
 
   const handleRoleChange = async (userId, newRole) => {

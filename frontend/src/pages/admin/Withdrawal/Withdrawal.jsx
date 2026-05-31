@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPendingWithdrawals, getAllWithdrawals, reviewWithdrawal } from "../../../api/adminApi";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "./Withdrawal.css";
 
 function Withdrawal() {
@@ -24,9 +25,16 @@ function Withdrawal() {
         ? await getPendingWithdrawals()
         : await getAllWithdrawals();
 
-      setWithdrawals(res.data || []);
-    } catch {
-      setError("Lỗi tải dữ liệu");
+      const data = res.data?.result ?? res.data?.data ?? res.data;
+      setWithdrawals(Array.isArray(data) ? data : []);
+    } catch (err) {
+      const status = err.response?.status;
+      setError(
+        err.response?.data?.message ||
+          (status === 401 || status === 403
+            ? "Phiên đăng nhập admin hết hạn — vui lòng đăng nhập lại"
+            : "Lỗi tải dữ liệu yêu cầu rút tiền")
+      );
     } finally {
       setLoading(false);
     }
@@ -54,8 +62,8 @@ function Withdrawal() {
       setSelected(null);
       setRejectReason("");
       loadData();
-    } catch {
-      alert("Thao tác thất bại");
+    } catch (err) {
+      alert(err.response?.data?.message || "Thao tác thất bại");
     } finally {
       setActionLoading(false);
     }
@@ -66,6 +74,19 @@ function Withdrawal() {
     if (status === "PAID") return "badge rounded-pill text-bg-success";
     if (status === "REJECTED") return "badge rounded-pill text-bg-danger";
     return "badge rounded-pill text-bg-secondary";
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "PENDING":
+        return "Chờ duyệt";
+      case "PAID":
+        return "Đã thanh toán";
+      case "REJECTED":
+        return "Từ chối";
+      default:
+        return status || "--";
+    }
   };
 
   const formatPrice = (amount) => {
@@ -143,6 +164,7 @@ function Withdrawal() {
                 <th>Số tiền</th>
                 <th>Trạng thái</th>
                 <th>Ngày yêu cầu</th>
+                <th>Ngày xử lý</th>
                 <th className="text-end">Hành động</th>
               </tr>
             </thead>
@@ -150,7 +172,7 @@ function Withdrawal() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-5">
+                  <td colSpan="10" className="text-center text-muted py-5">
                     <div className="spinner-border spinner-border-sm text-primary me-2"></div>
                     Đang tải danh sách yêu cầu rút tiền...
                   </td>
@@ -163,7 +185,9 @@ function Withdrawal() {
                     <td>{idx + 1}</td>
 
                     <td>
-                      <div className="withdrawal-teacher-name">{w.teacherName || "--"}</div>
+                      <AdminUserLink userId={w.teacherId} className="d-inline-block">
+                        <span className="withdrawal-teacher-name">{w.teacherName || "--"}</span>
+                      </AdminUserLink>
                       <div className="withdrawal-teacher-email text-muted small">
                         {w.teacherEmail || "--"}
                       </div>
@@ -177,11 +201,12 @@ function Withdrawal() {
 
                     <td>
                       <span className={getStatusBadge(w.status)}>
-                        {w.status}
+                        {getStatusLabel(w.status)}
                       </span>
                     </td>
 
                     <td>{formatDateTime(w.requestedAt)}</td>
+                    <td>{formatDateTime(w.reviewedAt || w.paidAt)}</td>
 
                     <td>
                       <div className="d-flex justify-content-end gap-1">
@@ -245,7 +270,7 @@ function Withdrawal() {
 
               {!loading && withdrawals.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-5">
+                  <td colSpan="10" className="text-center text-muted py-5">
                     Không có yêu cầu rút tiền nào.
                   </td>
                 </tr>

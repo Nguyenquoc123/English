@@ -113,12 +113,14 @@ public class SePayWebhookService {
                     .user(student)
                     .course(course)
                     .hasCourseAccess(true)
+                    .accessStatus(com.learning.english.constant.EnrollmentAccessStatus.ACTIVE)
                     .courseTransactionItem(item)
                     .createdAt(now)
                     .updatedAt(now)
                     .build();
         } else {
             enrollment.setHasCourseAccess(true);
+            enrollment.setAccessStatus(com.learning.english.constant.EnrollmentAccessStatus.ACTIVE);
             enrollment.setCourseTransactionItem(item);
             enrollment.setUpdatedAt(now);
         }
@@ -151,6 +153,7 @@ public class SePayWebhookService {
 
         BigDecimal platformFee = grossAmount.multiply(platformFeeRate);
         BigDecimal netAmount = grossAmount.subtract(platformFee);
+        LocalDateTime holdReleaseAt = now.plusHours(168);
 
         TeacherEarning earning = TeacherEarning.builder()
                 .teacher(teacher)
@@ -160,7 +163,8 @@ public class SePayWebhookService {
                 .grossAmount(grossAmount)
                 .platformFee(platformFee)
                 .netAmount(netAmount)
-                .status("AVAILABLE")
+                .status("HOLD")
+                .holdReleaseAt(holdReleaseAt)
                 .createdAt(now)
                 .build();
 

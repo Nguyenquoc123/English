@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getAllTransactions, reviewRefund } from "../../../api/adminApi";
 import RefundBankInfo from "../../../components/RefundBankInfo/RefundBankInfo";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "./TransactionManagement.css";
 
 function TransactionManagement() {
@@ -318,7 +320,15 @@ function TransactionManagement() {
                       <span className="transaction-id-cell">#{t.transactionId}</span>
                     </td>
 
-                    <td className="fw-semibold">{t.username || "--"}</td>
+                    <td>
+                      {t.userId ? (
+                        <AdminUserLink userId={t.userId} className="fw-semibold d-inline-block">
+                          {t.username || "--"}
+                        </AdminUserLink>
+                      ) : (
+                        <span className="fw-semibold">{t.username || "--"}</span>
+                      )}
+                    </td>
 
                     <td>
                       <span className="text-muted small">{t.email || "--"}</span>
@@ -331,7 +341,18 @@ function TransactionManagement() {
                     </td>
 
                     <td>
-                      <div className="transaction-product-cell">{t.targetName || "--"}</div>
+                      {t.targetType === "COURSE" && t.targetId ? (
+                        <Link
+                          to={`/admin/courses/${t.targetId}/review`}
+                          className="transaction-product-cell text-decoration-none text-primary"
+                          title="Xem chi tiết khóa học"
+                        >
+                          {t.targetName || "Khóa học"}
+                          <i className="bi bi-box-arrow-up-right ms-1 small opacity-75" />
+                        </Link>
+                      ) : (
+                        <div className="transaction-product-cell">{t.targetName || "--"}</div>
+                      )}
                     </td>
 
                     <td className="fw-semibold">{formatPrice(t.amount)}</td>

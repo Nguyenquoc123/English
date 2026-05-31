@@ -82,6 +82,8 @@ import Navbar from "./components/layout/Navbar/Navbar.jsx";
 import TeacherProfilePage from "./pages/teacher-profile/TeacherProfilePage.jsx";
 import TeacherProfileUpdatePage from "./pages/teacher-profile/TeacherProfileUpdatePage.jsx";
 import TeacherBankAccountsPage from "./pages/teacher-bank-account/TeacherBankAccountsPage.jsx";
+import TeacherWithdrawCreate from "./pages/teacher-withdraw/TeacherWithdrawCreate.jsx";
+import TeacherWithdrawHistory from "./pages/teacher-withdraw/TeacherWithdrawHistory.jsx";
 import StudentBankAccountsPage from "./pages/student-bank-account/StudentBankAccountsPage.jsx";
 import TeacherDashboard from "./pages/teacher-dashboard/TeacherDashboard.jsx";
 import CourseItemsSorter from "./pages/course-items-sort/CourseItemsSorter.jsx";
@@ -360,6 +362,8 @@ function App() {
           <Route path="exams" element={<h1>Quản lý kỳ thi</h1>} />
           <Route path="exam-results" element={<h1>Kết quả thi học viên</h1>} />
           <Route path="revenue" element={<TeacherDashboard />} />
+          <Route path="withdrawals/create" element={<TeacherWithdrawCreate />} />
+          <Route path="withdrawals" element={<TeacherWithdrawHistory />} />
           <Route path="earnings" element={<TeacherEarningsPage />} />
           <Route
             path="earnings/withdrawals"

@@ -7,7 +7,8 @@ import com.learning.english.entity.*;
 import com.learning.english.mapper.CourseMapper;
 import com.learning.english.mapper.LessonMapper;
 import com.learning.english.mapper.TeacherProfileMapper;
-import com.learning.english.service.CoursePaymentService;
+import com.learning.english.constant.RefundReasonCode;
+import com.learning.english.constant.RefundPolicyConstants;
 import com.learning.english.dto.request.NotificationRequest;
 import com.learning.english.dto.request.AdminCreateUserRequest;
 import com.learning.english.repository.*;
@@ -84,6 +85,12 @@ public class AdminService {
 
     @Autowired
     StudentBankAccountRepository studentBankAccountRepository;
+
+    @Autowired
+    WithdrawalService withdrawalService;
+
+    @Autowired
+    RefundService refundService;
 
     public AdminDashboardResponse getDashboard() {
         long totalUsers = userRepository.count();
@@ -276,45 +283,28 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<WithdrawalResponse> getPendingWithdrawals() {
-        return withdrawalRepository.findByStatusOrderByRequestedAtDesc("PENDING")
+        return withdrawalRepository.findByStatusWithDetailsOrderByRequestedAtDesc("PENDING")
                 .stream()
-                .map(this::toWithdrawalResponse)
+                .map(withdrawalService::toWithdrawalResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<WithdrawalResponse> getAllWithdrawals() {
-        return withdrawalRepository.findAllByOrderByRequestedAtDesc()
+        return withdrawalRepository.findAllWithDetailsOrderByRequestedAtDesc()
                 .stream()
-                .map(this::toWithdrawalResponse)
+                .map(withdrawalService::toWithdrawalResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public WithdrawalResponse reviewWithdrawalByUsername(Long withdrawalId, String status, String rejectReason, String adminUsername) {
-        Withdrawal withdrawal = withdrawalRepository.findById(withdrawalId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu rút tiền"));
-
-        if (!"PENDING".equals(withdrawal.getStatus()))
-            throw new RuntimeException("Yêu cầu này không ở trạng thái chờ duyệt");
-
         User admin = userRepository.findByUsername(adminUsername)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
 
-        withdrawal.setStatus(status);
-        withdrawal.setReviewedAt(LocalDateTime.now());
-        withdrawal.setReviewedBy(admin);
-
-        if ("REJECTED".equals(status)) {
-            if (rejectReason == null || rejectReason.isBlank())
-                throw new RuntimeException("Vui lòng nhập lý do từ chối");
-            withdrawal.setRejectReason(rejectReason);
-        } else if ("PAID".equals(status)) {
-            withdrawal.setPaidAt(LocalDateTime.now());
-        }
-
-        withdrawal = withdrawalRepository.save(withdrawal);
-        return toWithdrawalResponse(withdrawal);
+        return withdrawalService.reviewWithdrawal(withdrawalId, status, rejectReason, admin);
     }
 
     // ==================== LESSON FREE MANAGEMENT ====================
@@ -481,7 +471,7 @@ public class AdminService {
     private RefundRequestEntity ensureRefundRequestForTransaction(Transaction tx) {
         if (refundRequestRepository.existsByTransactionTransactionIdAndStatusIn(
                 tx.getTransactionId(),
-                of("PENDING", "APPROVED")
+                of("PENDING")
         )) {
             return refundRequestRepository
                     .findFirstByTransactionTransactionIdAndStatusOrderByCreatedAtDesc(
@@ -563,8 +553,14 @@ public class AdminService {
     }
 
     @Transactional
-    public void reviewRefund(Long transactionId, boolean approve, String note, String adminUsername) {
-        coursePaymentService.reviewRefund(transactionId, approve, note, adminUsername);
+    public void reviewRefund(
+            Long transactionId,
+            boolean approve,
+            String note,
+            String internalNote,
+            String adminUsername
+    ) {
+        refundService.reviewRefund(transactionId, approve, note, internalNote, adminUsername);
     }
 
     private RefundRequestAdminResponse toRefundRequestAdminResponse(RefundRequestEntity rr) {
@@ -572,11 +568,23 @@ public class AdminService {
         Course course = rr.getCourse();
         Transaction tx = rr.getTransaction();
         var bank = rr.getStudentBankAccount();
+        User teacher = course != null ? course.getTeacher() : null;
+        String reasonCode = rr.getReasonCode();
+        String reasonLabel = RefundReasonCode.fromCode(reasonCode)
+                .map(RefundReasonCode::getLabel)
+                .orElse(null);
+        Long remainingSeconds = null;
+        if (rr.getRefundDeadlineAt() != null && rr.getCreatedAt() != null) {
+            long elapsed = java.time.Duration.between(rr.getPurchaseAt() != null ? rr.getPurchaseAt() : rr.getCreatedAt(), rr.getCreatedAt()).getSeconds();
+            remainingSeconds = Math.max(0, RefundPolicyConstants.REFUND_WINDOW_SECONDS - elapsed);
+        }
         return RefundRequestAdminResponse.builder()
                 .refundRequestId(rr.getRefundRequestId())
                 .transactionId(tx != null ? tx.getTransactionId() : null)
                 .courseId(course != null ? course.getCourseId() : null)
                 .courseTitle(course != null ? course.getTitle() : null)
+                .teacherId(teacher != null ? teacher.getUserId() : null)
+                .teacherName(teacher != null ? teacher.getFullName() : null)
                 .studentId(student != null ? student.getUserId() : null)
                 .studentUsername(student != null ? student.getUsername() : null)
                 .studentFullName(student != null ? student.getFullName() : null)
@@ -586,10 +594,20 @@ public class AdminService {
                 .refundAccountNumber(bank != null ? bank.getAccountNumber() : null)
                 .refundAccountName(bank != null ? bank.getAccountName() : null)
                 .amount(tx != null ? tx.getTotalAmount() : null)
+                .reasonCode(reasonCode)
+                .reasonLabel(reasonLabel)
                 .reason(rr.getReason())
+                .detailDescription(rr.getDetailDescription())
                 .status(rr.getStatus())
+                .purchaseAt(rr.getPurchaseAt())
+                .refundDeadlineAt(rr.getRefundDeadlineAt())
+                .remainingSecondsAtRequest(remainingSeconds)
+                .progressPercent(rr.getProgressPercent())
+                .completedLessons(rr.getCompletedLessons())
+                .totalLessons(rr.getTotalLessons())
                 .createdAt(rr.getCreatedAt())
                 .reviewedAt(rr.getReviewedAt())
+                .rejectReason(rr.getRejectReason())
                 .build();
     }
 
@@ -769,27 +787,5 @@ public class AdminService {
         admin.setPassword(encoder.encode(newPassword));
         admin.setUpdatedAt(LocalDateTime.now());
         userRepository.save(admin);
-    }
-
-    private WithdrawalResponse toWithdrawalResponse(Withdrawal w) {
-        TeacherBankAccount bank = w.getBankAccount();
-        return WithdrawalResponse.builder()
-                .withdrawalId(w.getWithdrawalId())
-                .teacherId(w.getTeacher() != null ? w.getTeacher().getUserId() : null)
-                .teacherName(w.getTeacher() != null ? w.getTeacher().getFullName() : null)
-                .teacherEmail(w.getTeacher() != null ? w.getTeacher().getEmail() : null)
-                .bankAccountId(bank != null ? bank.getBankAccountId() : null)
-                .bankName(bank != null ? bank.getBankName() : null)
-                .accountNumber(bank != null ? bank.getAccountNumber() : null)
-                .accountHolder(bank != null ? bank.getAccountName() : null)
-                .amount(w.getAmount())
-                .status(w.getStatus())
-                .proofImageUrl(w.getProofImageUrl())
-                .requestedAt(w.getRequestedAt())
-                .reviewedAt(w.getReviewedAt())
-                .reviewedBy(w.getReviewedBy() != null ? w.getReviewedBy().getUserId() : null)
-                .rejectReason(w.getRejectReason())
-                .paidAt(w.getPaidAt())
-                .build();
     }
 }
