@@ -62,13 +62,10 @@ import UserManagement from "./pages/admin/UserManagement/UserManagement";
 import TeacherApproval from "./pages/admin/TeacherApproval/TeacherApproval";
 import CourseApproval from "./pages/admin/CourseApproval/CourseApproval";
 import Withdrawal from "./pages/admin/Withdrawal/Withdrawal";
-import LessonFree from "./pages/admin/LessonFree/LessonFree";
-import ExamApproval from "./pages/admin/ExamApproval/ExamApproval";
 import NotificationManagement from "./pages/admin/NotificationManagement/NotificationManagement";
 import TransactionManagement from "./pages/admin/TransactionManagement/TransactionManagement";
-import ReviewManagement from "./pages/admin/ReviewManagement/ReviewManagement";
+import RefundManagement from "./pages/admin/RefundManagement/RefundManagement";
 import ChangePassword from "./pages/admin/ChangePassword/ChangePassword";
-import AdminProfile from "./pages/admin/AdminProfile/AdminProfile";
 import Statistics from "./pages/admin/Statistics/Statistics";
 
 import AiChatWidget from "./pages/chataiwidget/AiChatWidget.jsx";
@@ -85,6 +82,7 @@ import Navbar from "./components/layout/Navbar/Navbar.jsx";
 import TeacherProfilePage from "./pages/teacher-profile/TeacherProfilePage.jsx";
 import TeacherProfileUpdatePage from "./pages/teacher-profile/TeacherProfileUpdatePage.jsx";
 import TeacherBankAccountsPage from "./pages/teacher-bank-account/TeacherBankAccountsPage.jsx";
+import StudentBankAccountsPage from "./pages/student-bank-account/StudentBankAccountsPage.jsx";
 import TeacherDashboard from "./pages/teacher-dashboard/TeacherDashboard.jsx";
 import CourseItemsSorter from "./pages/course-items-sort/CourseItemsSorter.jsx";
 import TeacherLessonEdit from "./pages/teacher/TeacherLessonEdit.jsx";
@@ -245,6 +243,13 @@ function App() {
           </>
         } />
 
+        <Route path="/student/bank-account" element={
+          <>
+            <Navbar />
+            <StudentBankAccountsPage />
+          </>
+        } />
+
         <Route path="/gio-hang" element={
           <>
             <Navbar />
@@ -391,13 +396,10 @@ function App() {
           <Route path="course-approval" element={<CourseApproval />} />
 
           <Route path="withdrawals" element={<Withdrawal />} />
-          <Route path="lessons-free" element={<LessonFree />} />
-          <Route path="exams" element={<ExamApproval />} />
           <Route path="notifications" element={<NotificationManagement />} />
+          <Route path="refunds" element={<RefundManagement />} />
           <Route path="transactions" element={<TransactionManagement />} />
-          <Route path="reviews" element={<ReviewManagement />} />
           <Route path="change-password" element={<ChangePassword />} />
-          <Route path="profile" element={<AdminProfile />} />
           <Route path="statistics" element={<Statistics />} />
         </Route>
 

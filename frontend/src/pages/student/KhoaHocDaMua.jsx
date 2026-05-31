@@ -2,13 +2,22 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
 import { getFileUrl } from "../../utils/fileurl.js";
-import { getPurchasedCourses } from "../../api/courseApi.js";
+import {
+  getMyRefundStatus,
+  getPurchasedCourses,
+  requestCourseRefund,
+} from "../../api/courseApi.js";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
+import RefundRequestModal from "../../components/RefundRequestModal/RefundRequestModal.jsx";
 import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
 
 function KhoaHocDaMua() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
+  const [refundMap, setRefundMap] = useState({});
+  const [refundingCourseId, setRefundingCourseId] = useState(null);
+  const [refundModalCourse, setRefundModalCourse] = useState(null);
+  const [refundError, setRefundError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,8 +36,17 @@ function KhoaHocDaMua() {
     try {
       setLoading(true);
       setError("");
-      const res = await getPurchasedCourses();
-      setCourses(res.data || []);
+      const [coursesRes, refundRes] = await Promise.all([
+        getPurchasedCourses(),
+        getMyRefundStatus(),
+      ]);
+      setCourses(coursesRes.data?.content || coursesRes.data || []);
+      const statuses = refundRes.data || [];
+      const nextMap = {};
+      statuses.forEach((item) => {
+        nextMap[item.courseId] = item;
+      });
+      setRefundMap(nextMap);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         navigate("/dang-nhap");
@@ -51,6 +69,53 @@ function KhoaHocDaMua() {
 
   const handleViewDetail = (courseId) => {
     navigate(`/khoa-hoc/${courseId}`);
+  };
+
+  const getRefundMeta = (courseId) => {
+    const status = (refundMap[courseId]?.status || "").toUpperCase();
+    if (status === "REFUND_REQUESTED") {
+      return { label: "Đang chờ duyệt hoàn tiền", badge: "badge text-bg-warning" };
+    }
+    if (status === "REFUNDED") {
+      return { label: "Đã hoàn tiền", badge: "badge text-bg-success" };
+    }
+    if (status === "REFUND_REJECTED") {
+      return { label: "Yêu cầu hoàn tiền bị từ chối", badge: "badge text-bg-danger" };
+    }
+    return null;
+  };
+
+  const openRefundModal = (course) => {
+    setRefundError("");
+    setRefundModalCourse({
+      courseId: course.courseId,
+      title: course.title || "Khóa học",
+    });
+  };
+
+  const closeRefundModal = () => {
+    if (refundingCourseId) return;
+    setRefundModalCourse(null);
+    setRefundError("");
+  };
+
+  const handleRefundSubmit = async (reason) => {
+    if (!refundModalCourse) return;
+
+    try {
+      setRefundingCourseId(refundModalCourse.courseId);
+      setRefundError("");
+      await requestCourseRefund(refundModalCourse.courseId, reason);
+      setRefundModalCourse(null);
+      await loadCourses();
+      alert("Đã gửi yêu cầu hoàn tiền. Admin sẽ xem xét sớm.");
+    } catch (err) {
+      setRefundError(
+        err.response?.data?.message || "Không thể gửi yêu cầu hoàn tiền"
+      );
+    } finally {
+      setRefundingCourseId(null);
+    }
   };
 
   return (
@@ -101,39 +166,71 @@ function KhoaHocDaMua() {
               </div>
 
               <div className="course-body">
-                <div className="teacher-info">
-                  <span>{course.teacherName}</span>
+                <div className="course-card-content">
+                  <div className="teacher-info">
+                    <span>{course.teacherName}</span>
+                  </div>
+
+                  <h2>{course.title}</h2>
+
+                  <p className="course-description">
+                    {course.shortDescription || course.description}
+                  </p>
+
+                  <div className="course-price-row">
+                    <span
+                      className={
+                        !course.price || course.price === 0
+                          ? "course-price free"
+                          : "course-price"
+                      }
+                    >
+                      {formatPrice(course.price)}
+                    </span>
+                  </div>
+
+                  <div className="course-card-status">
+                    {getRefundMeta(course.courseId) && (
+                      <span className={getRefundMeta(course.courseId).badge}>
+                        {getRefundMeta(course.courseId).label}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <h2>{course.title}</h2>
-
-                <p className="course-description">
-                  {course.shortDescription || course.description}
-                </p>
-
-                <div className="course-price-row">
-                  <span
-                    className={
-                      !course.price || course.price === 0
-                        ? "course-price free"
-                        : "course-price"
-                    }
+                <div className="course-card-actions">
+                  <button
+                    className="detail-btn"
+                    onClick={() => handleViewDetail(course.courseId)}
                   >
-                    {formatPrice(course.price)}
-                  </span>
-                </div>
+                    Vào học
+                  </button>
 
-                <button
-                  className="detail-btn"
-                  onClick={() => handleViewDetail(course.courseId)}
-                >
-                  Vào học
-                </button>
+                  {refundMap[course.courseId]?.canRequestRefund && (
+                    <button
+                      type="button"
+                      className="detail-btn course-refund-btn"
+                      onClick={() => openRefundModal(course)}
+                      disabled={Boolean(refundingCourseId)}
+                    >
+                      Yêu cầu hoàn tiền
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </section>
       </main>
+
+      <RefundRequestModal
+        show={Boolean(refundModalCourse)}
+        courseTitle={refundModalCourse?.title}
+        submitting={Boolean(refundingCourseId)}
+        error={refundError}
+        onClose={closeRefundModal}
+        onSubmit={handleRefundSubmit}
+      />
     </div>
   );
 }

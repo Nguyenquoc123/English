@@ -17,5 +17,7 @@ public class AdminDashboardResponse {
     private long pendingTeachers;
     private long pendingCourses;
     private long pendingWithdrawals;
+    private long pendingStudentFeedbacks;
+    private long pendingRefunds;
     private BigDecimal totalRevenue;
 }

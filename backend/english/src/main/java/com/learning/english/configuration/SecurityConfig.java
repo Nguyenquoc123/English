@@ -52,15 +52,23 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/**", "/uploads/**", "/files/**", "/khoa-hoc/chi-tiet-khoa-hoc-student/*", "/danh-gia/ds-danh-gia/*").permitAll()
 
                 // Student
-                .requestMatchers(HttpMethod.GET, "/hosocanhan").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.PUT, "/hosocanhan").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.PUT, "/doi-mat-khau").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/hosocanhan", "/hosocanhan/bank-accounts", "/hosocanhan/bank-accounts/**")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/hosocanhan/bank-accounts")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT, "/hosocanhan", "/hosocanhan/bank-accounts/**")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.PATCH, "/hosocanhan/bank-accounts/**")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.DELETE, "/hosocanhan/bank-accounts/**")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT, "/doi-mat-khau").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/teacher-profile/register", "/teacher-profile/update").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.PUT, "/teacher-profile/update").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-registered").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-registered").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/teacher-profile/profile-register").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/check-mua").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/video-progress").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/check-mua").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/video-progress").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 
                 // Admin — teacher approval & course approval
@@ -71,16 +79,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/chi-tiet-khoa-hoc/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/duyet", "/khoa-hoc/*/tu-choi").hasAuthority("SCOPE_admin")
                 .requestMatchers(HttpMethod.PUT, "/khoa-hoc/*/gui-duyet", "/khoa-hoc/cap-nhat-khoa-hoc/*").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/danh-sach-khoa-hoc-da-mua").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/tao-thanh-toan", "/khoa-hoc/dang-ky-khoa-hoc-free/*").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/danh-sach-khoa-hoc-da-mua").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/tao-thanh-toan", "/khoa-hoc/dang-ky-khoa-hoc-free/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/yeu-cau-hoan-tien").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/refund-status").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 
 
                 // Lessons
                 .requestMatchers(HttpMethod.GET, "/lesson/course/*", "/lesson/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/lesson/*/admin").hasAnyAuthority("SCOPE_admin")
-                .requestMatchers(HttpMethod.GET, "/lesson/all-lesson/*", "/lesson/*/student-detail").hasAnyAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/lesson/all-lesson/*", "/lesson/*/student-detail").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/lesson/them-lesson", "/lesson/*/teacher/*", "/lesson/update-lesson").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT,"/lesson/update-lesson").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
 
@@ -97,18 +107,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/video/*/admin").hasAnyAuthority("SCOPE_admin")
 
                 // Practice & exams
-                .requestMatchers(HttpMethod.GET, "/practice-configs/*", "/practice-configs/{lessonId}/practice/{practiceType}/student", "/practice-attempts/*/result").hasAnyAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/practice-attempts/submit").hasAnyAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi", "/exams/*/chi-tiet").hasAnyAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/practice-configs/*", "/practice-configs/{lessonId}/practice/{practiceType}/student", "/practice-attempts/*/result").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/practice-attempts/submit").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi", "/exams/*/chi-tiet").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/exams/all-bai-thi-teacher", "/exams/*", "/exams/{examId}/questions/teacher").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exams/create").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT, "/exams/update").hasAnyAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exams/*").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exams/*/attach").hasAuthority("SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/exam-questions/*/ds").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/exam-questions/exam-submit").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/exam-questions/*/ds").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/exam-questions/exam-submit").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
-                .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai/*").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAuthority("SCOPE_student")
                 
@@ -160,6 +170,7 @@ public class SecurityConfig {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.addAllowedOrigin("http://localhost:5173");
         corsConfiguration.addAllowedOrigin("http://localhost:5174");
+        corsConfiguration.addAllowedOrigin("http://localhost:5175");
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
 

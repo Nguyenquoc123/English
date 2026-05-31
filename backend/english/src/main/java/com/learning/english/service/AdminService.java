@@ -7,6 +7,7 @@ import com.learning.english.entity.*;
 import com.learning.english.mapper.CourseMapper;
 import com.learning.english.mapper.LessonMapper;
 import com.learning.english.mapper.TeacherProfileMapper;
+import com.learning.english.service.CoursePaymentService;
 import com.learning.english.dto.request.NotificationRequest;
 import com.learning.english.dto.request.AdminCreateUserRequest;
 import com.learning.english.repository.*;
@@ -16,8 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static java.util.Set.of;
 
 @Service
 public class AdminService {
@@ -59,7 +65,25 @@ public class AdminService {
     NotificationRepository notificationRepository;
 
     @Autowired
+    NotificationService notificationService;
+
+    @Autowired
     CourseReviewRepository courseReviewRepository;
+
+    @Autowired
+    TransactionItemRepository transactionItemRepository;
+
+    @Autowired
+    CoursePaymentService coursePaymentService;
+
+    @Autowired
+    StudentFeedbackTaskRepository studentFeedbackTaskRepository;
+
+    @Autowired
+    RefundRequestRepository refundRequestRepository;
+
+    @Autowired
+    StudentBankAccountRepository studentBankAccountRepository;
 
     public AdminDashboardResponse getDashboard() {
         long totalUsers = userRepository.count();
@@ -69,6 +93,8 @@ public class AdminService {
         long pendingTeachers = teacherProfileRepository.countByApprovalStatus("PENDING");
         long pendingCourses = courseRepository.countByStatus("PENDING");
         long pendingWithdrawals = withdrawalRepository.countByStatus("PENDING");
+        long pendingStudentFeedbacks = safeCountPendingStudentFeedbacks();
+        long pendingRefunds = safeCountPendingRefunds();
         BigDecimal totalRevenue = transactionRepository.sumSuccessAmount();
         if (totalRevenue == null) totalRevenue = BigDecimal.ZERO;
 
@@ -80,8 +106,26 @@ public class AdminService {
                 .pendingTeachers(pendingTeachers)
                 .pendingCourses(pendingCourses)
                 .pendingWithdrawals(pendingWithdrawals)
+                .pendingStudentFeedbacks(pendingStudentFeedbacks)
+                .pendingRefunds(pendingRefunds)
                 .totalRevenue(totalRevenue)
                 .build();
+    }
+
+    private long safeCountPendingRefunds() {
+        try {
+            return getPendingRefundRequests().size();
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    private long safeCountPendingStudentFeedbacks() {
+        try {
+            return studentFeedbackTaskRepository.countByStatus("OPEN");
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     public List<UserAdminResponse> getAllUsers(String keyword, String roleName, String status) {
@@ -364,32 +408,11 @@ public class AdminService {
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest req, String adminUsername) {
-        if (req.getTitle() == null || req.getTitle().isBlank())
-            throw new RuntimeException("Tiêu đề thông báo không được rỗng");
-        if (req.getMessage() == null || req.getMessage().isBlank())
-            throw new RuntimeException("Nội dung thông báo không được rỗng");
-
-        User admin = userRepository.findByUsername(adminUsername)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
-
-        Notification notification = Notification.builder()
-                .title(req.getTitle())
-                .message(req.getMessage())
-                .targetType(req.getTargetType() != null ? req.getTargetType() : "ALL")
-                .targetValue(req.getTargetValue())
-                .createdBy(admin)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        notification = notificationRepository.save(notification);
-        return toNotificationResponse(notification);
+        return notificationService.createBroadcast(req, adminUsername);
     }
 
     public List<NotificationResponse> getAllNotifications() {
-        return notificationRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(this::toNotificationResponse)
-                .collect(Collectors.toList());
+        return notificationService.getAllBroadcasts();
     }
 
     private NotificationResponse toNotificationResponse(Notification n) {
@@ -406,6 +429,7 @@ public class AdminService {
 
     // ==================== TRANSACTION MANAGEMENT ====================
 
+    @Transactional(readOnly = true)
     public List<TransactionAdminResponse> getAllTransactions() {
         return transactionRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -413,16 +437,241 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public List<RefundRequestAdminResponse> getPendingRefundRequests() {
+        List<RefundRequestAdminResponse> results = new ArrayList<>();
+        Set<Long> seenTransactionIds = new HashSet<>();
+
+        List<RefundRequestEntity> pending = loadPendingRefundEntities();
+        for (RefundRequestEntity rr : pending) {
+            syncTransactionForPendingRefund(rr);
+            results.add(toRefundRequestAdminResponse(rr));
+            if (rr.getTransaction() != null) {
+                seenTransactionIds.add(rr.getTransaction().getTransactionId());
+            }
+        }
+
+        List<Transaction> refundRequestedTx =
+                transactionRepository.findByStatusIgnoreCaseOrderByUpdatedAtDesc("REFUND_REQUESTED");
+        for (Transaction tx : refundRequestedTx) {
+            if (seenTransactionIds.contains(tx.getTransactionId())) {
+                continue;
+            }
+            RefundRequestEntity backfilled = ensureRefundRequestForTransaction(tx);
+            results.add(toRefundRequestAdminResponse(backfilled));
+            seenTransactionIds.add(tx.getTransactionId());
+        }
+
+        return results;
+    }
+
+    private List<RefundRequestEntity> loadPendingRefundEntities() {
+        try {
+            List<RefundRequestEntity> withDetails =
+                    refundRequestRepository.findByStatusWithDetails("PENDING");
+            if (!withDetails.isEmpty()) {
+                return withDetails;
+            }
+        } catch (Exception ex) {
+            System.err.println("findByStatusWithDetails failed: " + ex.getMessage());
+        }
+        return refundRequestRepository.findAllByStatusIgnoreCase("PENDING");
+    }
+
+    private RefundRequestEntity ensureRefundRequestForTransaction(Transaction tx) {
+        if (refundRequestRepository.existsByTransactionTransactionIdAndStatusIn(
+                tx.getTransactionId(),
+                of("PENDING", "APPROVED")
+        )) {
+            return refundRequestRepository
+                    .findFirstByTransactionTransactionIdAndStatusOrderByCreatedAtDesc(
+                            tx.getTransactionId(),
+                            "PENDING"
+                    )
+                    .orElseGet(() -> refundRequestRepository
+                            .findFirstByTransactionTransactionIdOrderByCreatedAtDesc(tx.getTransactionId())
+                            .orElseThrow());
+        }
+
+        RefundRequestEntity existing = refundRequestRepository
+                .findFirstByTransactionTransactionIdOrderByCreatedAtDesc(tx.getTransactionId())
+                .orElse(null);
+        if (existing != null && "PENDING".equalsIgnoreCase(existing.getStatus())) {
+            return existing;
+        }
+
+        User student = tx.getUser();
+        Course course = resolveCourseForTransaction(tx);
+        LocalDateTime requestedAt = tx.getRefundRequestedAt() != null
+                ? tx.getRefundRequestedAt()
+                : LocalDateTime.now();
+        String reason = tx.getRefundReason() != null && !tx.getRefundReason().isBlank()
+                ? tx.getRefundReason()
+                : "Yêu cầu hoàn tiền";
+
+        StudentBankAccount defaultBank = student != null
+                ? studentBankAccountRepository
+                        .findByStudentUserIdAndIsDefaultTrue(student.getUserId())
+                        .orElse(null)
+                : null;
+
+        RefundRequestEntity created = RefundRequestEntity.builder()
+                .transaction(tx)
+                .course(course)
+                .student(student)
+                .studentBankAccount(defaultBank)
+                .reason(reason)
+                .status("PENDING")
+                .reviewNote(null)
+                .reviewedBy(null)
+                .reviewedAt(null)
+                .paidAt(null)
+                .createdAt(requestedAt)
+                .updatedAt(LocalDateTime.now())
+                .build();
+        return refundRequestRepository.save(created);
+    }
+
+    private Course resolveCourseForTransaction(Transaction tx) {
+        List<TransactionItem> items =
+                transactionItemRepository.findByTransactionTransactionId(tx.getTransactionId());
+        if (items.isEmpty()) {
+            return null;
+        }
+        return items.get(0).getCourse();
+    }
+
+    private void syncTransactionForPendingRefund(RefundRequestEntity rr) {
+        Transaction tx = rr.getTransaction();
+        if (tx == null) {
+            return;
+        }
+        String status = tx.getStatus() == null ? "" : tx.getStatus();
+        if ("SUCCESS".equalsIgnoreCase(status) || "REFUND_REQUESTED".equalsIgnoreCase(status)) {
+            if (!"REFUND_REQUESTED".equalsIgnoreCase(status)) {
+                tx.setStatus("REFUND_REQUESTED");
+            }
+            if (tx.getRefundReason() == null || tx.getRefundReason().isBlank()) {
+                tx.setRefundReason(rr.getReason());
+            }
+            if (tx.getRefundRequestedAt() == null) {
+                tx.setRefundRequestedAt(rr.getCreatedAt());
+            }
+            tx.setUpdatedAt(LocalDateTime.now());
+            transactionRepository.save(tx);
+        }
+    }
+
+    @Transactional
+    public void reviewRefund(Long transactionId, boolean approve, String note, String adminUsername) {
+        coursePaymentService.reviewRefund(transactionId, approve, note, adminUsername);
+    }
+
+    private RefundRequestAdminResponse toRefundRequestAdminResponse(RefundRequestEntity rr) {
+        User student = rr.getStudent();
+        Course course = rr.getCourse();
+        Transaction tx = rr.getTransaction();
+        var bank = rr.getStudentBankAccount();
+        return RefundRequestAdminResponse.builder()
+                .refundRequestId(rr.getRefundRequestId())
+                .transactionId(tx != null ? tx.getTransactionId() : null)
+                .courseId(course != null ? course.getCourseId() : null)
+                .courseTitle(course != null ? course.getTitle() : null)
+                .studentId(student != null ? student.getUserId() : null)
+                .studentUsername(student != null ? student.getUsername() : null)
+                .studentFullName(student != null ? student.getFullName() : null)
+                .studentEmail(student != null ? student.getEmail() : null)
+                .studentPhone(student != null ? student.getPhone() : null)
+                .refundBankName(bank != null ? bank.getBankName() : null)
+                .refundAccountNumber(bank != null ? bank.getAccountNumber() : null)
+                .refundAccountName(bank != null ? bank.getAccountName() : null)
+                .amount(tx != null ? tx.getTotalAmount() : null)
+                .reason(rr.getReason())
+                .status(rr.getStatus())
+                .createdAt(rr.getCreatedAt())
+                .reviewedAt(rr.getReviewedAt())
+                .build();
+    }
+
+    private String resolveDisplayStatus(Transaction t, RefundRequestEntity latestRefund) {
+        if (latestRefund != null) {
+            String refundStatus = latestRefund.getStatus();
+            if (refundStatus == null) {
+                return t.getStatus();
+            }
+            if ("PENDING".equalsIgnoreCase(refundStatus) || "APPROVED".equalsIgnoreCase(refundStatus)) {
+                return "REFUND_REQUESTED";
+            }
+            if ("REJECTED".equalsIgnoreCase(refundStatus)) {
+                return "REFUND_REJECTED";
+            }
+            if ("PAID".equalsIgnoreCase(refundStatus)) {
+                return "REFUNDED";
+            }
+        }
+        return t.getStatus();
+    }
+
     private TransactionAdminResponse toTransactionAdminResponse(Transaction t) {
         User user = t.getUser();
+        List<TransactionItem> items = transactionItemRepository.findByTransactionTransactionId(t.getTransactionId());
+        TransactionItem firstItem = items.isEmpty() ? null : items.get(0);
+        String targetType = firstItem != null ? firstItem.getItemType() : null;
+        Long targetId = firstItem != null && firstItem.getCourse() != null ? firstItem.getCourse().getCourseId() : null;
+        String targetName = firstItem != null && firstItem.getCourse() != null ? firstItem.getCourse().getTitle() : null;
+
+        String refundReason = t.getRefundReason();
+        String refundRejectReason = t.getRefundRejectReason();
+        LocalDateTime refundRequestedAt = t.getRefundRequestedAt();
+        LocalDateTime refundReviewedAt = t.getRefundReviewedAt();
+        String refundReviewedByUsername =
+                t.getRefundReviewedBy() != null ? t.getRefundReviewedBy().getUsername() : null;
+        Long refundRequestId = null;
+
+        RefundRequestEntity latestRefund = refundRequestRepository
+                .findFirstByTransactionTransactionIdOrderByCreatedAtDesc(t.getTransactionId())
+                .orElse(null);
+        if (latestRefund != null) {
+            refundRequestId = latestRefund.getRefundRequestId();
+            refundReason = latestRefund.getReason();
+            refundRequestedAt = latestRefund.getCreatedAt();
+            refundReviewedAt = latestRefund.getReviewedAt();
+            if (latestRefund.getReviewedBy() != null) {
+                refundReviewedByUsername = latestRefund.getReviewedBy().getUsername();
+            }
+            if ("REJECTED".equalsIgnoreCase(latestRefund.getStatus())) {
+                refundRejectReason = latestRefund.getReviewNote();
+            }
+            if (latestRefund.getCourse() != null) {
+                targetId = latestRefund.getCourse().getCourseId();
+                targetName = latestRefund.getCourse().getTitle();
+                targetType = "COURSE";
+            }
+        }
+
+        String displayStatus = resolveDisplayStatus(t, latestRefund);
+        StudentBankAccount refundBank =
+                latestRefund != null ? latestRefund.getStudentBankAccount() : null;
+
         return TransactionAdminResponse.builder()
                 .transactionId(t.getTransactionId())
+                .refundRequestId(refundRequestId)
                 .userId(user != null ? user.getUserId() : null)
                 .username(user != null ? user.getUsername() : null)
                 .email(user != null ? user.getEmail() : null)
-
+                .targetType(targetType)
+                .targetId(targetId)
+                .targetName(targetName)
                 .amount(t.getTotalAmount())
-                .status(t.getStatus())
+                .status(displayStatus)
+                .refundBankName(refundBank != null ? refundBank.getBankName() : null)
+                .refundAccountNumber(refundBank != null ? refundBank.getAccountNumber() : null)
+                .refundAccountName(refundBank != null ? refundBank.getAccountName() : null)
+                .refundReason(refundReason)
+                .refundRejectReason(refundRejectReason)
+                .refundRequestedAt(refundRequestedAt)
+                .refundReviewedAt(refundReviewedAt)
+                .refundReviewedByUsername(refundReviewedByUsername)
                 .createdAt(t.getCreatedAt())
                 .updatedAt(t.getUpdatedAt())
                 .build();

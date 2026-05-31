@@ -23,10 +23,13 @@ function AdminLayout() {
       <div className="admin-main">
         <div className="admin-mini-bar">
           <button
-            className="btn btn-light shadow-sm"
-            onClick={() => setSidebarOpen(true)}
+            type="button"
+            className="btn btn-light shadow-sm panel-menu-toggle"
+            onClick={() => setSidebarOpen((open) => !open)}
+            aria-label={sidebarOpen ? "Đóng menu" : "Mở menu chức năng"}
+            aria-expanded={sidebarOpen}
           >
-            <i className="bi bi-list fs-5"></i>
+            <i className="bi bi-three-dots-vertical fs-5"></i>
           </button>
 
           <div>

@@ -24,12 +24,14 @@ import com.learning.english.dto.request.CourseDuyetRequest;
 import com.learning.english.dto.request.CourseRejectRequest;
 import com.learning.english.dto.request.CourseRequest;
 import com.learning.english.dto.request.MultiCoursePaymentRequest;
+import com.learning.english.dto.request.RefundRequest;
 import com.learning.english.dto.request.TeacherDuyetRequest;
 import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CoursePaymentResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
+import com.learning.english.dto.response.StudentRefundStatusResponse;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.service.CoursePaymentService;
 import com.learning.english.service.CourseService;
@@ -199,5 +201,19 @@ public class CourseController {
                 .checkHasCourseAccess(transactionCode);
 
         return ResponseEntity.ok(hasAccess);
+    }
+
+    @GetMapping("/refund-status")
+    public ResponseEntity<List<StudentRefundStatusResponse>> getMyRefundStatus() {
+        return ResponseEntity.ok(coursePaymentService.getMyCourseRefundStatuses());
+    }
+
+    @PostMapping("/{courseId}/yeu-cau-hoan-tien")
+    public ResponseEntity<String> requestRefund(
+            @PathVariable Long courseId,
+            @RequestBody RefundRequest request
+    ) {
+        coursePaymentService.requestRefundForCourse(courseId, request.getReason());
+        return ResponseEntity.ok("Đã gửi yêu cầu hoàn tiền");
     }
 }

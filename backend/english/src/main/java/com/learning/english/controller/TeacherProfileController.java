@@ -3,6 +3,7 @@ package com.learning.english.controller;
 import com.learning.english.dto.request.TeacherDuyetRequest;
 import com.learning.english.dto.request.TeacherProfileUpdateRequest;
 import com.learning.english.dto.request.TeacherRegisterRequest;
+import com.learning.english.dto.response.TeacherApplicationSummaryResponse;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.service.TeacherProfileService;
 
@@ -49,8 +50,8 @@ public class TeacherProfileController {
     }
 
     @GetMapping("/profile-registered")
-    public ResponseEntity<Boolean> checkProfileTeacher() {
-        return ResponseEntity.ok(teacherProfileService.daDangKyLamGiaoVien());
+    public ResponseEntity<TeacherApplicationSummaryResponse> checkProfileTeacher() {
+        return ResponseEntity.ok(teacherProfileService.getApplicationSummary());
     }
 
     @PutMapping("/{teacherProfileId}/approve")

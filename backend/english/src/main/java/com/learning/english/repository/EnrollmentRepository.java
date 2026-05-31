@@ -30,6 +30,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
 	Optional<Enrollment> findByUserUserIdAndCourseCourseId(Long userId, Long courseId);
 
+	List<Enrollment> findByCourseTransactionItem_Transaction_TransactionId(Long transactionId);
+
 	Long countByCourseCourseIdAndHasCourseAccessTrue(Long courseId);
 
 	@Query("""

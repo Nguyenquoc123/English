@@ -12,6 +12,31 @@
 
 .teacher-register-heading {
   margin-bottom: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.application-status-not-sent {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.application-status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.application-status-approved {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.application-status-rejected {
+  background: #f8d7da;
+  color: #842029;
 }
 
 .teacher-register-back-link {

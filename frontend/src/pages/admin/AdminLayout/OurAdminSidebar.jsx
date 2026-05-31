@@ -9,8 +9,9 @@ function OurAdminSidebar({ isOpen, onClose }) {
     if (!ok) return;
 
     localStorage.removeItem("token");
+    localStorage.removeItem("english_token");
     onClose();
-    navigate("/dang-nhap");
+    navigate("/admin/login", { replace: true });
   };
 
   return (
@@ -26,7 +27,12 @@ function OurAdminSidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        <button className="btn btn-sm btn-light" onClick={onClose}>
+        <button
+          type="button"
+          className="btn btn-sm btn-light admin-sidebar-close"
+          onClick={onClose}
+          aria-label="Đóng menu"
+        >
           <i className="bi bi-x-lg"></i>
         </button>
       </div>
@@ -93,30 +99,6 @@ function OurAdminSidebar({ isOpen, onClose }) {
           Duyệt khoá học
         </NavLink>
 
-        <p className="admin-sidebar-title">Học liệu</p>
-        <NavLink
-          to="/admin/lessons-free"
-          className={({ isActive }) =>
-            "admin-sidebar-link" + (isActive ? " active" : "")
-          }
-          onClick={onClose}
-        >
-          <i className="bi bi-book"></i>
-          Lesson miễn phí
-        </NavLink>
-
-        <p className="admin-sidebar-title">Kỳ thi</p>
-        <NavLink
-          to="/admin/exams"
-          className={({ isActive }) =>
-            "admin-sidebar-link" + (isActive ? " active" : "")
-          }
-          onClick={onClose}
-        >
-          <i className="bi bi-file-earmark-text"></i>
-          Quản lý kỳ thi
-        </NavLink>
-
         <p className="admin-sidebar-title">Tài chính</p>
         <NavLink
           to="/admin/withdrawals"
@@ -130,6 +112,17 @@ function OurAdminSidebar({ isOpen, onClose }) {
         </NavLink>
 
         <NavLink
+          to="/admin/refunds"
+          className={({ isActive }) =>
+            "admin-sidebar-link" + (isActive ? " active" : "")
+          }
+          onClick={onClose}
+        >
+          <i className="bi bi-cash-coin"></i>
+          Hoàn tiền
+        </NavLink>
+
+        <NavLink
           to="/admin/transactions"
           className={({ isActive }) =>
             "admin-sidebar-link" + (isActive ? " active" : "")
@@ -138,18 +131,6 @@ function OurAdminSidebar({ isOpen, onClose }) {
         >
           <i className="bi bi-receipt"></i>
           Giao dịch
-        </NavLink>
-
-        <p className="admin-sidebar-title">Nội dung</p>
-        <NavLink
-          to="/admin/reviews"
-          className={({ isActive }) =>
-            "admin-sidebar-link" + (isActive ? " active" : "")
-          }
-          onClick={onClose}
-        >
-          <i className="bi bi-star-half"></i>
-          Đánh giá khóa học
         </NavLink>
 
         <p className="admin-sidebar-title">Thông báo</p>
@@ -176,18 +157,30 @@ function OurAdminSidebar({ isOpen, onClose }) {
           Thống kê &amp; Báo cáo
         </NavLink>
 
-        <p className="admin-sidebar-title">Hệ thống</p>
+        <p className="admin-sidebar-title">Trải nghiệm giao diện</p>
         <NavLink
-          to="/admin/profile"
+          to="/teacher/courses"
           className={({ isActive }) =>
             "admin-sidebar-link" + (isActive ? " active" : "")
           }
           onClick={onClose}
         >
-          <i className="bi bi-person-circle"></i>
-          Hồ sơ của tôi
+          <i className="bi bi-easel2"></i>
+          Xem giao diện giảng viên
         </NavLink>
 
+        <NavLink
+          to="/danh-sach-khoa-hoc"
+          className={({ isActive }) =>
+            "admin-sidebar-link" + (isActive ? " active" : "")
+          }
+          onClick={onClose}
+        >
+          <i className="bi bi-mortarboard"></i>
+          Xem giao diện học viên
+        </NavLink>
+
+        <p className="admin-sidebar-title">Hệ thống</p>
         <NavLink
           to="/admin/change-password"
           className={({ isActive }) =>

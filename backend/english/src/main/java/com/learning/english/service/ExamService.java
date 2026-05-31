@@ -123,7 +123,7 @@ public class ExamService {
 		exam = examRepository.save(exam);
 		
 		CourseItem courseItem = courseItemRepository.findByExam_ExamId(exam.getExamId()).orElseThrow(() -> new RuntimeException("Có lỗi xảy ra"));
-		courseItem.setIsFreePreview(request.getIsFreePreview());
+		courseItem.setIsFreePreview(request.isFreePreview());
 		courseItemRepository.save(courseItem);
 		
 		return examMapper.toExamResponse(exam);

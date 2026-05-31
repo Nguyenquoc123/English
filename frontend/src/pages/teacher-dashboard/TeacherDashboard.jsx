@@ -93,7 +93,6 @@ function TeacherDashboard() {
     const loadDashboard = async (range = "7D") => {
         try {
             setLoading(true);
-            setError("");
 
             const [summaryData, chartsData, coursesData] = await Promise.all([
                 requestJson(

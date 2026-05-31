@@ -10,4 +10,6 @@ import com.learning.english.entity.TransactionItem;
 @Repository
 public interface TransactionItemRepository extends JpaRepository<TransactionItem, Long>{
 	List<TransactionItem> findByTransactionTransactionId(Long transactionId);
+
+	List<TransactionItem> findByTransactionUserUserIdAndCourseCourseIdOrderByCreatedAtDesc(Long userId, Long courseId);
 }

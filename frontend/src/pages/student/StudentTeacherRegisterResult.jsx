@@ -3,19 +3,15 @@ import { useNavigate } from "react-router-dom";
 import "./StudentTeacherRegisterResult.css";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { studentHome, studentProfile } from "../../utils/breadcrumbPaths";
+import { getTeacherProfile } from "../../api/teacherProfileApi";
+import { getFileUrl } from "../../utils/fileurl";
 
 function StudentTeacherRegisterResult() {
   const navigate = useNavigate();
 
-  const API_BASE = "http://localhost:8080";
-
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const getToken = () => {
-    return localStorage.getItem("english_token") || localStorage.getItem("token");
-  };
 
   useEffect(() => {
     loadRegisterResult();
@@ -26,56 +22,22 @@ function StudentTeacherRegisterResult() {
       setLoading(true);
       setError("");
 
-      const token = getToken();
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      const response = await fetch(`${API_BASE}/teacher-profile/profile-register`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      let data = null;
-
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
-
-      const body = data?.result || data?.data || data;
-
-      if (!response.ok) {
-        setError(body?.message || "Không thể tải kết quả đăng ký giáo viên");
-        return;
-      }
-
+      const res = await getTeacherProfile();
+      const body = res.data?.result ?? res.data?.data ?? res.data;
       setResult(body);
     } catch (err) {
-      console.error(err);
-      setError("Lỗi kết nối server");
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Không thể tải kết quả đăng ký giáo viên";
+      if (err.response?.status === 401) {
+        navigate("/dang-nhap");
+        return;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const getFileUrl = (url) => {
-    if (!url) return "";
-
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      return url;
-    }
-
-    if (url.startsWith("/")) {
-      return API_BASE + url;
-    }
-
-    return `${API_BASE}/${url}`;
   };
 
   const formatDateTime = (value) => {
@@ -322,6 +284,9 @@ function StudentTeacherRegisterResult() {
               <p>
                 Bạn đã có thể sử dụng các chức năng dành cho giáo viên như tạo
                 khóa học, quản lý bài học, bài thi và doanh thu.
+              </p>
+              <p className="text-warning small mb-0">
+                <strong>Lưu ý:</strong> Đăng xuất và đăng nhập lại để hệ thống cập nhật quyền giáo viên trên tài khoản.
               </p>
 
               <button

@@ -19,44 +19,38 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TeacherEarningRepository extends JpaRepository<TeacherEarning, Long> {
 
-	boolean existsByTransactionTransactionId(Long transactionId);
+    boolean existsByTransactionTransactionId(Long transactionId);
 
-	boolean existsByTransactionItemTransactionItemId(Long transactionItemId);
+    boolean existsByTransactionItemTransactionItemId(Long transactionItemId);
 
-	@Query("""
-			SELECT COALESCE(SUM(te.netAmount), 0)
-			FROM TeacherEarning te
-			WHERE te.teacher.userId = :teacherId
-			""")
-	BigDecimal sumTotalRevenueByTeacherId(@Param("teacherId") Long teacherId);
+    List<TeacherEarning> findByTransactionTransactionId(Long transactionId);
 
-	@Query("""
-			SELECT COALESCE(SUM(te.netAmount), 0)
-			FROM TeacherEarning te
-			WHERE te.teacher.userId = :teacherId
-			  AND te.status = 'AVAILABLE'
-			""")
-	BigDecimal sumAvailableRevenueByTeacherId(@Param("teacherId") Long teacherId);
+    @Query("""
+        SELECT COALESCE(SUM(te.netAmount), 0)
+        FROM TeacherEarning te
+        WHERE te.teacher.userId = :teacherId
+    """)
+    BigDecimal sumTotalRevenueByTeacherId(@Param("teacherId") Long teacherId);
 
-	@Query("""
-			SELECT te
-			FROM TeacherEarning te
-			JOIN FETCH te.course c
-			WHERE te.teacher.userId = :teacherId
-			ORDER BY te.createdAt DESC
-			""")
-	List<TeacherEarning> findRecentEarningsByTeacherId(@Param("teacherId") Long teacherId, Pageable pageable);
+    @Query("""
+        SELECT COALESCE(SUM(te.netAmount), 0)
+        FROM TeacherEarning te
+        WHERE te.teacher.userId = :teacherId
+          AND te.status = 'AVAILABLE'
+    """)
+    BigDecimal sumAvailableRevenueByTeacherId(@Param("teacherId") Long teacherId);
 
-	@Query("""
-			    SELECT te
-			    FROM TeacherEarning te
-			    JOIN FETCH te.course c
-			    JOIN FETCH te.transaction t
-			    JOIN FETCH te.transactionItem ti
-			    WHERE te.teacher.userId = :teacherId
-			    ORDER BY te.createdAt DESC
-			""")
-	List<TeacherEarning> findEarningsByTeacherId(@Param("teacherId") Long teacherId);
+    @Query("""
+        SELECT te
+        FROM TeacherEarning te
+        JOIN FETCH te.course c
+        WHERE te.teacher.userId = :teacherId
+        ORDER BY te.createdAt DESC
+    """)
+    List<TeacherEarning> findRecentEarningsByTeacherId(
+            @Param("teacherId") Long teacherId,
+            Pageable pageable
+    );
 
 	@Query("""
 			    SELECT COALESCE(SUM(te.withdrawableAmount), 0)
@@ -66,20 +60,21 @@ public interface TeacherEarningRepository extends JpaRepository<TeacherEarning, 
 			""")
 	BigDecimal sumAvailableAmountByTeacherId(@Param("teacherId") Long teacherId);
 
-	@Query("""
-			    SELECT COALESCE(SUM(te.netAmount), 0)
-			    FROM TeacherEarning te
-			    WHERE te.teacher.userId = :teacherId
-			      AND te.status = 'PENDING'
-			""")
-	BigDecimal sumPendingAmountByTeacherId(@Param("teacherId") Long teacherId);
+    @Query("""
+        SELECT COALESCE(SUM(te.netAmount), 0)
+        FROM TeacherEarning te
+        WHERE te.teacher.userId = :teacherId
+          AND te.status = 'AVAILABLE'
+    """)
+    BigDecimal sumAvailableAmountByTeacherId(@Param("teacherId") Long teacherId);
 
-	@Query("""
-			    SELECT COALESCE(SUM(te.netAmount), 0)
-			    FROM TeacherEarning te
-			    WHERE te.teacher.userId = :teacherId
-			""")
-	BigDecimal sumTotalAmountByTeacherId(@Param("teacherId") Long teacherId);
+    @Query("""
+        SELECT COALESCE(SUM(te.netAmount), 0)
+        FROM TeacherEarning te
+        WHERE te.teacher.userId = :teacherId
+          AND te.status = 'PENDING'
+    """)
+    BigDecimal sumPendingAmountByTeacherId(@Param("teacherId") Long teacherId);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("""
