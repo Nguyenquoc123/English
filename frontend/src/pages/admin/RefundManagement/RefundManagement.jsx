@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   getPendingRefundRequests,
   reviewRefund,
 } from "../../../api/adminApi";
 import RefundBankInfo from "../../../components/RefundBankInfo/RefundBankInfo";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "../TransactionManagement/TransactionManagement.css";
-
 function RefundManagement() {
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -60,9 +61,13 @@ function RefundManagement() {
     );
     if (note === null) return;
 
+    const internalNote = approve
+      ? window.prompt("Ghi chú nội bộ admin (không bắt buộc):") || ""
+      : "";
+
     try {
       setReviewingId(transactionId);
-      await reviewRefund(transactionId, approve, note.trim());
+      await reviewRefund(transactionId, approve, note.trim(), internalNote.trim());
       await loadRefunds();
       alert(approve ? "Đã duyệt hoàn tiền" : "Đã từ chối hoàn tiền");
     } catch (err) {
@@ -78,8 +83,8 @@ function RefundManagement() {
         <div>
           <h2>Yêu cầu hoàn tiền</h2>
           <p>
-            Danh sách học viên gửi yêu cầu hoàn tiền — xem đủ STK ngân hàng để
-            chuyển khoản hoàn, sau đó bấm Duyệt.
+            Danh sách học viên gửi yêu cầu hoàn tiền — kiểm tra tiến độ học, lý do,
+            STK ngân hàng rồi duyệt hoặc từ chối.
           </p>
         </div>
         <button
@@ -114,41 +119,77 @@ function RefundManagement() {
                 <th>Mã YC</th>
                 <th>ID GD</th>
                 <th>Học viên</th>
-                <th>Khóa học</th>
+                <th>Khóa học / GV</th>
                 <th>Số tiền</th>
-                <th>Thông tin chuyển khoản hoàn</th>
+                <th>Tiến độ</th>
+                <th>STK hoàn</th>
                 <th>Lý do</th>
                 <th>Thời gian</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {loading && (
+              {loading ? (
                 <tr>
-                  <td colSpan="10" className="text-center text-muted py-5">
+                  <td colSpan="11" className="text-center text-muted py-5">
                     Đang tải...
                   </td>
                 </tr>
-              )}
-
-              {!loading &&
+              ) : refunds.length === 0 ? null : (
                 refunds.map((r, idx) => (
                   <tr key={r.refundRequestId}>
                     <td>{idx + 1}</td>
                     <td>#{r.refundRequestId}</td>
                     <td>#{r.transactionId}</td>
                     <td>
-                      <div className="fw-semibold">
+                      <AdminUserLink
+                        userId={r.studentId}
+                        className="fw-semibold d-inline-block"
+                      >
                         {r.studentFullName || r.studentUsername}
-                      </div>
+                      </AdminUserLink>
                       <small className="text-muted d-block">@{r.studentUsername}</small>
                       <small className="text-muted d-block">{r.studentEmail}</small>
-                      {r.studentPhone && (
+                      {r.studentPhone ? (
                         <small className="text-muted d-block">SĐT: {r.studentPhone}</small>
-                      )}
+                      ) : null}
                     </td>
-                    <td>{r.courseTitle || "--"}</td>
+                    <td>
+                      {r.courseId ? (
+                        <Link
+                          to={`/admin/courses/${r.courseId}/review`}
+                          className="text-decoration-none text-primary fw-semibold"
+                          title="Xem chi tiết khóa học"
+                        >
+                          {r.courseTitle || "Khóa học"}
+                          <i className="bi bi-box-arrow-up-right ms-1 small opacity-75" />
+                        </Link>
+                      ) : (
+                        <div>{r.courseTitle || "--"}</div>
+                      )}
+                      {r.teacherName ? (
+                        <small className="text-muted d-block">GV: {r.teacherName}</small>
+                      ) : null}
+                      {r.courseId ? (
+                        <small className="text-muted d-block">ID khóa: {r.courseId}</small>
+                      ) : null}
+                    </td>
                     <td className="fw-semibold">{formatPrice(r.amount)}</td>
+                    <td>
+                      <div>
+                        {r.completedLessons ?? 0}/{r.totalLessons ?? 0} bài
+                      </div>
+                      {r.progressPercent != null ? (
+                        <small className="text-muted d-block">
+                          {Number(r.progressPercent).toFixed(1)}%
+                        </small>
+                      ) : null}
+                      {r.purchaseAt ? (
+                        <small className="text-muted d-block">
+                          Mua: {formatDateTime(r.purchaseAt)}
+                        </small>
+                      ) : null}
+                    </td>
                     <td style={{ minWidth: 220 }}>
                       <RefundBankInfo
                         bankName={r.refundBankName}
@@ -160,9 +201,23 @@ function RefundManagement() {
                       />
                     </td>
                     <td>
-                      <span className="text-muted small">{r.reason || "--"}</span>
+                      <div className="fw-semibold small">
+                        {r.reasonLabel || r.reasonCode || "--"}
+                      </div>
+                      {r.detailDescription ? (
+                        <span className="text-muted small d-block">{r.detailDescription}</span>
+                      ) : r.reason ? (
+                        <span className="text-muted small d-block">{r.reason}</span>
+                      ) : null}
                     </td>
-                    <td>{formatDateTime(r.createdAt)}</td>
+                    <td>
+                      <div>{formatDateTime(r.createdAt)}</div>
+                      {r.refundDeadlineAt ? (
+                        <small className="text-muted d-block">
+                          Hạn: {formatDateTime(r.refundDeadlineAt)}
+                        </small>
+                      ) : null}
+                    </td>
                     <td>
                       <div className="d-flex gap-2">
                         <button
@@ -184,7 +239,8 @@ function RefundManagement() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>

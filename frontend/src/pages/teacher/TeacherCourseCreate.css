@@ -235,6 +235,7 @@
 .jodit-wysiwyg {
   min-height: 260px !important;
   padding: 16px !important;
+  font-family: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.7;
 }

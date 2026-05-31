@@ -5,6 +5,7 @@ import { getFileUrl } from "../../utils/fileurl";
 import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb";
 import { studentHome, studentCourses } from "../../utils/breadcrumbPaths";
 import StudentExamListSection from "./exam/components/StudentExamListSection";
+import CertificateSection from "../../components/certificate/CertificateSection";
 
 function StudentCourseDetail() {
     const navigate = useNavigate();
@@ -1527,6 +1528,15 @@ function StudentCourseDetail() {
                                             </div>
                                         );
                                     })}
+
+                                    {course?.isEnrolled && (
+                                        <CertificateSection
+                                            courseId={Number(courseId)}
+                                            courseTitle={course?.title}
+                                            isEnrolled={course?.isEnrolled}
+                                            lessons={lessons}
+                                        />
+                                    )}
 
                                     {lessons.length === 0 && (
                                         <div className="text-center text-muted py-4">

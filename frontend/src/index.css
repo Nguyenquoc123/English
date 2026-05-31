@@ -21,8 +21,35 @@
 }
 
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.course-description-html,
+.jodit-wysiwyg,
+.jodit-wysiwyg * {
+  font-family: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+}
+
+.course-description-html {
+  color: #374151;
+  line-height: 1.8;
+  word-break: break-word;
+}
+
+.course-description-html p {
+  margin-bottom: 10px;
+}
+
+.course-description-html ul,
+.course-description-html ol {
+  padding-left: 1.35rem;
+  margin-bottom: 10px;
+}
+
+.course-description-html li {
+  margin-bottom: 6px;
 }
 
 h1,

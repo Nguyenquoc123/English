@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDashboard } from "../../../api/adminApi";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
 import {
   getAdminStudentFeedbackTasks,
   reviewAdminStudentFeedbackTask,
@@ -313,8 +314,10 @@ function Dashboard() {
                   {feedbackTasks.map((item) => (
                     <tr key={item.feedbackTaskId}>
                       <td>
-                        <div className="fw-semibold">{item.studentFullName || item.studentUsername}</div>
-                        <small className="text-muted">@{item.studentUsername}</small>
+                        <AdminUserLink userId={item.studentId} className="fw-semibold d-inline-block">
+                          {item.studentFullName || item.studentUsername}
+                        </AdminUserLink>
+                        <small className="text-muted d-block">@{item.studentUsername}</small>
                       </td>
                       <td className="fw-semibold">{item.title}</td>
                       <td style={{ maxWidth: 320 }}>

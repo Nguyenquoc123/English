@@ -192,7 +192,13 @@ public class AdminController {
             @RequestBody RefundReviewRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminUsername = auth.getName();
-        adminService.reviewRefund(transactionId, request.isApprove(), request.getNote(), adminUsername);
+        adminService.reviewRefund(
+                transactionId,
+                request.isApprove(),
+                request.getNote(),
+                request.getInternalNote(),
+                adminUsername
+        );
         return ResponseEntity.ok(request.isApprove() ? "Đã duyệt hoàn tiền" : "Đã từ chối hoàn tiền");
     }
 

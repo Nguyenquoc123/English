@@ -1,51 +1,90 @@
 import { useEffect, useState } from "react";
+import { getRefundReasons } from "../../api/courseApi";
 import "./RefundRequestModal.css";
 
-const MIN_REASON_LENGTH = 10;
-const MAX_REASON_LENGTH = 1000;
+const MIN_DETAIL_LENGTH = 10;
+const MAX_DETAIL_LENGTH = 1000;
 
 function RefundRequestModal({
   show,
   courseTitle,
+  eligibility = null,
   submitting = false,
   error = "",
   onClose,
   onSubmit,
 }) {
-  const [reason, setReason] = useState("");
+  const [reasonOptions, setReasonOptions] = useState([]);
+  const [reasonCode, setReasonCode] = useState("");
+  const [detailDescription, setDetailDescription] = useState("");
   const [localError, setLocalError] = useState("");
+  const [loadingReasons, setLoadingReasons] = useState(false);
 
   useEffect(() => {
-    if (show) {
-      setReason("");
-      setLocalError("");
+    if (!show) {
+      return;
     }
+
+    setReasonCode("");
+    setDetailDescription("");
+    setLocalError("");
+
+    const loadReasons = async () => {
+      try {
+        setLoadingReasons(true);
+        const res = await getRefundReasons();
+        const data = res.data?.result ?? res.data?.data ?? res.data ?? [];
+        setReasonOptions(Array.isArray(data) ? data : []);
+      } catch {
+        setReasonOptions([]);
+      } finally {
+        setLoadingReasons(false);
+      }
+    };
+
+    loadReasons();
   }, [show, courseTitle]);
 
   if (!show) {
     return null;
   }
 
+  const selectedOption = reasonOptions.find((item) => item.code === reasonCode);
+  const requiresDetail = reasonCode === "OTHER";
+  const detailTrimmed = detailDescription.trim();
+
+  const formatCountdown = (seconds) => {
+    if (seconds == null) return null;
+    const total = Math.max(0, Number(seconds));
+    const days = Math.floor(total / 86400);
+    const hours = Math.floor((total % 86400) / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    if (days > 0) return `${days} ngày ${hours} giờ`;
+    if (hours > 0) return `${hours} giờ ${minutes} phút`;
+    return `${minutes} phút`;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const trimmed = reason.trim();
 
-    if (!trimmed) {
-      setLocalError("Vui lòng nhập lý do hoàn tiền");
+    if (!reasonCode) {
+      setLocalError("Vui lòng chọn lý do hoàn tiền");
       return;
     }
 
-    if (trimmed.length < MIN_REASON_LENGTH) {
-      setLocalError(`Lý do cần ít nhất ${MIN_REASON_LENGTH} ký tự`);
+    if (requiresDetail && detailTrimmed.length < MIN_DETAIL_LENGTH) {
+      setLocalError(`Vui lòng mô tả chi tiết ít nhất ${MIN_DETAIL_LENGTH} ký tự`);
       return;
     }
 
     setLocalError("");
-    onSubmit(trimmed);
+    onSubmit({
+      reasonCode,
+      detailDescription: detailTrimmed || null,
+    });
   };
 
   const displayError = localError || error;
-  const charCount = reason.trim().length;
 
   return (
     <>
@@ -72,7 +111,7 @@ function RefundRequestModal({
                   <p className="refund-modal-subtitle mb-0">
                     {courseTitle
                       ? `Khóa học: ${courseTitle}`
-                      : "Vui lòng mô tả lý do bạn muốn hoàn tiền"}
+                      : "Chọn lý do và gửi yêu cầu hoàn tiền"}
                   </p>
                 </div>
                 <button
@@ -85,6 +124,25 @@ function RefundRequestModal({
               </div>
 
               <div className="modal-body px-4 pt-0 pb-2">
+                {eligibility && (
+                  <div className="alert alert-light border mb-3 py-2">
+                    <div className="small">
+                      Tiến độ học:{" "}
+                      <strong>
+                        {eligibility.completedLessons ?? 0}/{eligibility.totalLessons ?? 0} bài
+                        {eligibility.progressPercent != null
+                          ? ` (${Number(eligibility.progressPercent).toFixed(1)}%)`
+                          : ""}
+                      </strong>
+                    </div>
+                    {eligibility.remainingSeconds != null && (
+                      <div className="small text-muted">
+                        Còn {formatCountdown(eligibility.remainingSeconds)} trong thời hạn hoàn tiền 7 ngày
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {displayError && (
                   <div className="alert alert-danger py-2 d-flex align-items-start gap-2 mb-3">
                     <i className="bi bi-exclamation-triangle-fill mt-1" />
@@ -92,36 +150,67 @@ function RefundRequestModal({
                   </div>
                 )}
 
-                <label htmlFor="refundReason" className="form-label fw-semibold">
+                <label htmlFor="refundReasonCode" className="form-label fw-semibold">
                   Lý do hoàn tiền <span className="text-danger">*</span>
                 </label>
-                <textarea
-                  id="refundReason"
-                  className="refund-modal-textarea"
-                  rows={12}
-                  placeholder="Ví dụ: Nội dung khóa học không đúng mô tả, không phù hợp trình độ..."
-                  value={reason}
+                <select
+                  id="refundReasonCode"
+                  className="form-select mb-3"
+                  value={reasonCode}
                   onChange={(e) => {
-                    setReason(e.target.value.slice(0, MAX_REASON_LENGTH));
+                    setReasonCode(e.target.value);
                     if (localError) setLocalError("");
                   }}
-                  disabled={submitting}
-                  autoFocus
-                />
-                <div className="d-flex justify-content-between align-items-center mt-2">
-                  <small className="text-muted">
-                    Tối thiểu {MIN_REASON_LENGTH} ký tự. Admin sẽ xem xét trong thời gian sớm nhất.
-                  </small>
-                  <small
-                    className={
-                      charCount > MAX_REASON_LENGTH * 0.9
-                        ? "text-warning"
-                        : "text-muted"
-                    }
-                  >
-                    {charCount}/{MAX_REASON_LENGTH}
-                  </small>
-                </div>
+                  disabled={submitting || loadingReasons}
+                >
+                  <option value="">
+                    {loadingReasons ? "Đang tải danh sách lý do..." : "— Chọn lý do —"}
+                  </option>
+                  {reasonOptions.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                {(requiresDetail || detailDescription) && (
+                  <>
+                    <label htmlFor="refundDetail" className="form-label fw-semibold">
+                      Mô tả chi tiết
+                      {requiresDetail && <span className="text-danger"> *</span>}
+                    </label>
+                    <textarea
+                      id="refundDetail"
+                      className="refund-modal-textarea"
+                      rows={8}
+                      placeholder={
+                        selectedOption
+                          ? `Mô tả thêm về: ${selectedOption.label}`
+                          : "Mô tả chi tiết lý do hoàn tiền..."
+                      }
+                      value={detailDescription}
+                      onChange={(e) => {
+                        setDetailDescription(e.target.value.slice(0, MAX_DETAIL_LENGTH));
+                        if (localError) setLocalError("");
+                      }}
+                      disabled={submitting}
+                    />
+                    <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
+                      <small className="text-muted">
+                        {requiresDetail
+                          ? `Bắt buộc tối thiểu ${MIN_DETAIL_LENGTH} ký tự khi chọn "Lý do khác".`
+                          : "Mô tả thêm giúp admin xử lý nhanh hơn (không bắt buộc)."}
+                      </small>
+                      <small className="text-muted">
+                        {detailTrimmed.length}/{MAX_DETAIL_LENGTH}
+                      </small>
+                    </div>
+                  </>
+                )}
+
+                <small className="text-muted d-block">
+                  Sau khi gửi, quyền học khóa học sẽ tạm khóa cho đến khi admin duyệt hoặc từ chối.
+                </small>
               </div>
 
               <div className="modal-footer px-4 py-3 border-0">
@@ -136,7 +225,7 @@ function RefundRequestModal({
                 <button
                   type="submit"
                   className="btn refund-modal-submit"
-                  disabled={submitting}
+                  disabled={submitting || loadingReasons}
                 >
                   {submitting ? (
                     <>

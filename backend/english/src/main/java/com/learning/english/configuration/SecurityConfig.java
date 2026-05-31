@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/register", "/login", "/xacminh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-public", "/images/**", "/videos/**", "/level/*", "/audios/**", "/files/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/webhooks/sepay").permitAll()
-                .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/**", "/uploads/**", "/files/**", "/khoa-hoc/chi-tiet-khoa-hoc-student/*", "/danh-gia/ds-danh-gia/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/verify/**", "/uploads/**", "/files/**", "/khoa-hoc/chi-tiet-khoa-hoc-student/*", "/khoa-hoc/certificate-api-health", "/danh-gia/ds-danh-gia/*").permitAll()
 
                 // Student
                 .requestMatchers(HttpMethod.GET, "/hosocanhan", "/hosocanhan/bank-accounts", "/hosocanhan/bank-accounts/**")
@@ -82,7 +82,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/danh-sach-khoa-hoc-da-mua").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/tao-thanh-toan", "/khoa-hoc/tao-thanh-toan", "/khoa-hoc/dang-ky-khoa-hoc-free/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/yeu-cau-hoan-tien").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
-                .requestMatchers(HttpMethod.GET, "/khoa-hoc/refund-status").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/refund-status", "/khoa-hoc/*/refund-eligibility").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/certificate/status", "/khoa-hoc/*/certificate")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/khoa-hoc/*/certificate")
+                    .hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/refund-reasons").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/khoa-hoc/*/tao-thanh-toan").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 
@@ -149,6 +154,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/bank-account/**").hasAuthority("SCOPE_teacher")
 
                 .requestMatchers(HttpMethod.GET, "/teacher/dashboard").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/teacher/withdrawals", "/teacher/withdrawals/**").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/teacher/withdrawals").hasAuthority("SCOPE_teacher")
 
                 // STK nhận hoàn tiền — học viên
                 .requestMatchers(HttpMethod.GET, "/student-bank-account", "/student-bank-account/**")
