@@ -46,18 +46,7 @@ function CourseDetailTabs({
         </li>
       )}
 
-      {showRevenueTab && (
-        <li className="nav-item">
-          <button
-            type="button"
-            className="nav-link"
-            onClick={() => navigate(`${basePath}/${courseId}/revenue`)}
-          >
-            <i className="bi bi-graph-up-arrow me-1"></i>
-            Doanh thu
-          </button>
-        </li>
-      )}
+      
     </ul>
   );
 }

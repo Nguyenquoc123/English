@@ -93,6 +93,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/video/*/lessons").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT,"/video/*/lessons/edit").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/video/*/lessons", "/video/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/video/*/publish").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/video/*/admin").hasAnyAuthority("SCOPE_admin")
 
                 // Practice & exams
@@ -112,9 +113,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAuthority("SCOPE_student")
                 
                 .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.POST, "/personal-practices/ai-generate").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/personal-practices").hasAuthority("SCOPE_student")
-                .requestMatchers(HttpMethod.GET, "/personal-practices/*").hasAuthority("SCOPE_student")
+                
                 
                 
                 .requestMatchers(HttpMethod.POST, "/gio-hang/them/*", "/gio-hang/xoa/*").hasAuthority("SCOPE_student")
@@ -127,7 +126,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/bank-account/*").hasAuthority("SCOPE_teacher")
                 
                 // dashboard
-                .requestMatchers(HttpMethod.GET, "/teacher/dashboard", "/teacher/earnings", "/teacher/withdrawals").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/teacher/dashboard/**", "/teacher/earnings", "/teacher/withdrawals").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/withdraw/create").hasAuthority("SCOPE_teacher")
 
                 // Admin area
                 .requestMatchers(HttpMethod.GET, "/admin/**").hasAuthority("SCOPE_admin")

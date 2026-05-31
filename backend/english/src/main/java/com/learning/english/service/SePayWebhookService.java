@@ -160,6 +160,7 @@ public class SePayWebhookService {
                 .grossAmount(grossAmount)
                 .platformFee(platformFee)
                 .netAmount(netAmount)
+                .withdrawableAmount(netAmount)
                 .status("AVAILABLE")
                 .createdAt(now)
                 .build();

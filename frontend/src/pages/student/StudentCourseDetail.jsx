@@ -603,7 +603,7 @@ function StudentCourseDetail() {
         let url = "";
 
         if (childType === "videos") {
-            url = `${API_BASE}/video/${lessonId}/lessons`;
+            url = `${API_BASE}/video/${lessonId}/publish`;
         }
 
         if (childType === "vocabularies") {

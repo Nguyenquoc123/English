@@ -1,6 +1,9 @@
 package com.learning.english.repository;
 
 import com.learning.english.entity.Question;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -65,6 +68,60 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 	        @Param("questionType") String questionType,
 	        @Param("keyword") String keyword,
 	        @Param("levelId") Long levelId
+	);
+	
+	@Query(
+	        value = """
+	                SELECT q
+	                FROM Question q
+	                LEFT JOIN FETCH q.level l
+	                WHERE q.createdBy.username = :username
+	                  AND (
+	                        :questionType IS NULL
+	                        OR :questionType = ''
+	                        OR q.questionType = :questionType
+	                  )
+	                  AND (
+	                        :keyword IS NULL
+	                        OR :keyword = ''
+	                        OR LOWER(q.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                        OR LOWER(q.correctText) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                        OR LOWER(q.explanation) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                  )
+	                  AND (
+	                        :levelId IS NULL
+	                        OR q.level.levelId = :levelId
+	                  )
+	                ORDER BY q.createdAt DESC
+	                """,
+	        countQuery = """
+	                SELECT COUNT(q)
+	                FROM Question q
+	                WHERE q.createdBy.username = :username
+	                  AND (
+	                        :questionType IS NULL
+	                        OR :questionType = ''
+	                        OR q.questionType = :questionType
+	                  )
+	                  AND (
+	                        :keyword IS NULL
+	                        OR :keyword = ''
+	                        OR LOWER(q.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                        OR LOWER(q.correctText) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                        OR LOWER(q.explanation) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                  )
+	                  AND (
+	                        :levelId IS NULL
+	                        OR q.level.levelId = :levelId
+	                  )
+	                """
+	)
+	Page<Question> findMyQuestionBank(
+	        @Param("username") String username,
+	        @Param("questionType") String questionType,
+	        @Param("keyword") String keyword,
+	        @Param("levelId") Long levelId,
+	        Pageable pageable
 	);
 
 	@Query("""

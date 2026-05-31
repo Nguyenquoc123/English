@@ -1,4 +1,4 @@
-import QuestionCreateReusablePage from "./QuestionCreateReusablePage";
+import QuestionCreateComponent from "../../compenents/question/QuestionCreateComponent";
 
 const API_BASE = "http://localhost:8080";
 
@@ -8,11 +8,16 @@ function QuestionBankCreate() {
             title="Tạo câu hỏi vào ngân hàng"
             targetLabel="Câu hỏi sau khi tạo sẽ được lưu vào ngân hàng câu hỏi của bạn."
             allowAttachExisting={false}
+            allowExcelImport={true}
+            allowAiGenerate={true}
             showExamPoint={false}
+            showLevel={true}
             createEndpoint={`${API_BASE}/questions/my-bank`}
-            bulkCreateEndpoint={`${API_BASE}/questions/my-bank/bulk`}
-            buildCreatePayload={({ basePayload }) => ({
+            bulkCreateEndpoint={`${API_BASE}/questions/bank/many`}
+            aiGenerateEndpoint={`${API_BASE}/questions/ai-generate`}
+            buildCreatePayload={({ basePayload, levelId }) => ({
                 ...basePayload,
+                levelId,
             })}
             buildBulkCreatePayload={({ questionType, questions }) => ({
                 questionType,

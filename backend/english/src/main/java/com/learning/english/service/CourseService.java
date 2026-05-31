@@ -20,6 +20,7 @@ import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
+import com.learning.english.dto.response.TeacherDashboardCourseResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.Enrollment;
 import com.learning.english.entity.Level;

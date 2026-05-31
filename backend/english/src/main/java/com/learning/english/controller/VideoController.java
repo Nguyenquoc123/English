@@ -39,6 +39,11 @@ public class VideoController {
 
 	@GetMapping("/{lessonId}/lessons")
 	public List<VideoResponse> layDanhSachVideoTheoLesson(@PathVariable Long lessonId) {
+		return videoService.layDanhSachVideoPublishTheoLesson(lessonId);
+	}
+	
+	@GetMapping("/{lessonId}/publish")
+	public List<VideoResponse> layDanhSachVideoPublishTheoLesson(@PathVariable Long lessonId) {
 		return videoService.layDanhSachVideoTheoLesson(lessonId);
 	}
 

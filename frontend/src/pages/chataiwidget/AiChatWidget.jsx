@@ -190,7 +190,7 @@ function AiChatWidget() {
                         content:
                             data?.message ||
                             data?.error ||
-                            "AI hiện chưa thể trả lời. Vui lòng thử lại sau.",
+                            "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
                         isError: true,
                     },
                 ]);
@@ -222,7 +222,7 @@ function AiChatWidget() {
                 },
             ]);
         } catch (error) {
-            console.error("Lỗi gửi tin nhắn AI:", error);
+            console.error("Lỗi:", error);
 
             setMessages((prev) => [
                 ...prev,

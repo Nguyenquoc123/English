@@ -70,4 +70,6 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
               AND w.status = 'REJECTED'
         """)
         BigDecimal sumRejectedAmount(@Param("teacherId") Long teacherId);
+        
+        long countByTeacherUserIdAndStatus(Long teacherId, String status);
 }

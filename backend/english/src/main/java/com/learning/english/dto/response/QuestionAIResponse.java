@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PersonalPracticeResponse {
+public class QuestionAIResponse {
 
     private Long personalPracticeId;
     private Long userId;

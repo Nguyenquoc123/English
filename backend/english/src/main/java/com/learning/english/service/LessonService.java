@@ -373,13 +373,11 @@ public class LessonService {
 
 		long totalVideos = videoRepository.countVideos(lessonId);
 
-		if (totalVideos == 0) {
-			return false;
-		}
+		
 
 		long completedVideos = videoProgressRepository.countCompletedVideos(userId, lessonId);
-
-		return completedVideos == totalVideos;
+		System.out.println(totalVideos + "      " + completedVideos);
+		return completedVideos >= totalVideos;
 	}
 
 	@Transactional

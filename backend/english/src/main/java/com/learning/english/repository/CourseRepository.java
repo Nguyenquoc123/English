@@ -1,6 +1,7 @@
 package com.learning.english.repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.learning.english.dto.response.TeacherCourseDashboardProjection;
+import com.learning.english.dto.response.TeacherDashboardCourseResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.CourseReview;
 
@@ -49,6 +52,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 			""")
 	Page<Course> searchCourses(@Param("username") String username, @Param("status") String status,
 			@Param("keyword") String keyword, @Param("levelId") Long levelId, Pageable pageable);
+	
+	
 	
 	@EntityGraph(attributePaths = { "teacher", "level" })
 	@Query("""
@@ -257,6 +262,132 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             """)
     List<Course> findRecentCoursesByTeacherId(
             @Param("teacherId") Long teacherId,
+            Pageable pageable
+    );
+    
+    
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.status IN ('PUBLISHED', 'APPROVED')
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> findPublishedOrApprovedCoursesOrderByNewest(Pageable pageable);
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.status IN ('PUBLISHED', 'APPROVED')
+              AND (
+                    LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                 OR LOWER(c.shortDescription) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                 OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                 OR LOWER(c.courseType) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              )
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> searchPublishedOrApprovedCourses(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.status IN ('PUBLISHED', 'APPROVED')
+              AND (
+                    UPPER(c.courseType) = 'FREE'
+                 OR c.price = 0
+              )
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> findFreePublishedOrApprovedCourses(Pageable pageable);
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.status IN ('PUBLISHED', 'APPROVED')
+              AND c.price IS NOT NULL
+              AND c.price <= :budgetMax
+            ORDER BY c.price ASC
+            """)
+    List<Course> findPublishedOrApprovedCoursesByBudget(
+            @Param("budgetMax") BigDecimal budgetMax,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.status IN ('PUBLISHED', 'APPROVED')
+            ORDER BY c.price ASC
+            """)
+    List<Course> findPublishedOrApprovedCoursesOrderByPriceAsc(Pageable pageable);
+    
+    
+    long countByTeacherUserId(Long teacherId);
+
+    long countByTeacherUserIdAndStatus(Long teacherId, String status);
+
+    @Query(
+            value = """
+                    SELECT
+                        c.courseId AS courseId,
+                        c.title AS title,
+                        c.thumbnailUrl AS thumbnailUrl,
+                        c.courseType AS courseType,
+                        c.price AS price,
+                        c.status AS status,
+                        c.createdAt AS createdAt,
+
+                        ISNULL(en.totalStudents, 0) AS totalStudents,
+                        ISNULL(er.totalRevenue, 0) AS totalRevenue,
+                        ISNULL(rv.averageRating, 0) AS averageRating,
+                        ISNULL(rv.totalReviews, 0) AS totalReviews
+
+                    FROM courses c
+
+                    LEFT JOIN (
+                        SELECT
+                            e.courseId,
+                            COUNT(e.enrollmentId) AS totalStudents
+                        FROM enrollments e
+                        WHERE e.hasCourseAccess = 1
+                          AND e.createdAt >= :startDate
+                          AND e.createdAt < :endDate
+                        GROUP BY e.courseId
+                    ) en ON en.courseId = c.courseId
+
+                    LEFT JOIN (
+                        SELECT
+                            te.courseId,
+                            SUM(te.netAmount) AS totalRevenue
+                        FROM teacher_earnings te
+                        WHERE te.teacherId = :teacherId
+                          AND te.createdAt >= :startDate
+                          AND te.createdAt < :endDate
+                        GROUP BY te.courseId
+                    ) er ON er.courseId = c.courseId
+
+                    LEFT JOIN (
+                        SELECT
+                            cr.courseId,
+                            AVG(CAST(cr.rating AS FLOAT)) AS averageRating,
+                            COUNT(cr.reviewId) AS totalReviews
+                        FROM course_reviews cr
+                        GROUP BY cr.courseId
+                    ) rv ON rv.courseId = c.courseId
+
+                    WHERE c.teacherId = :teacherId
+
+                    ORDER BY ISNULL(er.totalRevenue, 0) DESC, c.createdAt DESC
+                    """,
+            nativeQuery = true
+    )
+    List<TeacherCourseDashboardProjection> findTeacherDashboardCourses(
+            @Param("teacherId") Long teacherId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
 }

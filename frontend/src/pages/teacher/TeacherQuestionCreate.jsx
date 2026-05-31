@@ -9,35 +9,7 @@ function TeacherQuestionCreate() {
     const { courseId, lessonId } = useParams();
 
     return (
-        // <QuestionCreateComponent
-        //     title="Thêm câu hỏi ôn tập"
-        //     targetLabel="Tạo câu hỏi mới hoặc chọn từ ngân hàng để gắn vào bài học."
-        //     breadcrumb={
-        //         <CourseBreadcrumb
-        //             items={teacherLessonTrail(courseId, lessonId, "Thêm câu hỏi")}
-        //         />
-        //     }
-        //     allowAttachExisting={true}
-        //     showExamPoint={false}
-        //     createEndpoint={`${API_BASE}/questions/lessons/${lessonId}`}
-        //     attachEndpoint={`${API_BASE}/questions/lessons/${lessonId}/attach`}
-        //     buildCreatePayload={({ basePayload }) => ({
-        //         ...basePayload,
-        //         lessonId: Number(lessonId),
-        //     })}
-        //     buildAttachPayload={({ questionType, questionIds }) => ({
-        //         lessonId: Number(lessonId),
-        //         questionType,
-        //         questionIds,
-        //     })}
-        //     submitNewText="Tạo và gắn câu hỏi"
-        //     submitExistingText="Gắn câu hỏi đã chọn"
-        //     successCreateMessage="Thêm câu hỏi vào bài ôn tập thành công"
-        //     successAttachMessage="Gắn câu hỏi vào bài ôn tập thành công"
-        //     cancelPath={`/teacher/courses/${courseId}/lessons/${lessonId}`}
-        //     redirectPath={`/teacher/courses/${courseId}/lessons/${lessonId}`}
-        // />
-
+        
         <QuestionCreateComponent
             title="Thêm câu hỏi ôn tập"
             targetLabel="Tạo câu hỏi mới hoặc chọn từ ngân hàng để gắn vào bài học."

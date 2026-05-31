@@ -52,4 +52,6 @@ public class Withdrawal {
 
     @Column(name = "paidat")
     private LocalDateTime paidAt;
+    
+    
 }

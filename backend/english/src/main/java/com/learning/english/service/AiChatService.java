@@ -1,5 +1,6 @@
 package com.learning.english.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,9 @@ public class AiChatService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private SystemSettingService systemSettingService;
 
     
     
@@ -59,7 +63,10 @@ public class AiChatService {
 
     public String askQuestion(String question) {
         try {
-        	User user = getCurrentUser();
+            User user = getCurrentUser();
+
+            checkAiDailyLimit(user);
+
             String summary = getLatestSummary(user.getUserId());
 
             List<AiChatHistory> recentMessages = getRecentMessages(user.getUserId());
@@ -75,10 +82,36 @@ public class AiChatService {
             return aiAnswer;
 
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi xử lý AI chat: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi: " + e.getMessage(), e);
         }
     }
+    
+    private void checkAiDailyLimit(User user) {
+        LocalDate today = LocalDate.now();
 
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+
+        String roleName = user.getRole().getRoleName();
+
+        int dailyLimit = systemSettingService.getAiDailyLimitByRole(roleName);
+
+        long usedToday = aiChatHistoryRepository
+                .countByUserIdAndUserMessageNotAndCreatedAtBetween(
+                        user.getUserId(),
+                        SUMMARY_MESSAGE,
+                        startOfDay,
+                        endOfDay
+                );
+
+        if (usedToday >= dailyLimit) {
+            throw new RuntimeException(
+                    "Bạn đã hết lượt sử dụng AI hôm nay."
+            );
+        }
+    }
+    
+    
     private String getLatestSummary(Long userId) {
         return aiChatHistoryRepository
                 .findTopByUserIdAndUserMessageOrderByCreatedAtDesc(userId, SUMMARY_MESSAGE)
@@ -88,9 +121,9 @@ public class AiChatService {
 
     private List<AiChatHistory> getRecentMessages(Long userId) {
         List<AiChatHistory> messages =
-                aiChatHistoryRepository.findTop5ByUserIdAndUserMessageNotOrderByCreatedAtDesc(
+                aiChatHistoryRepository.findTop5ByUserIdAndTypeOrderByCreatedAtDesc(
                         userId,
-                        SUMMARY_MESSAGE
+                        "chat"
                 );
 
         Collections.reverse(messages);
@@ -100,9 +133,9 @@ public class AiChatService {
 
     private List<AiChatHistory> getRecentMessagesForSummary(Long userId) {
         List<AiChatHistory> messages =
-                aiChatHistoryRepository.findTop20ByUserIdAndUserMessageNotOrderByCreatedAtDesc(
+                aiChatHistoryRepository.findTop20ByUserIdAndTypeOrderByCreatedAtDesc(
                         userId,
-                        SUMMARY_MESSAGE
+                        "chat"
                 );
 
         Collections.reverse(messages);
@@ -116,6 +149,7 @@ public class AiChatService {
         		.userId(userId)
         		.userMessage(question)
         		.createdAt(LocalDateTime.now())
+        		.type("chat")
         		.build();
         aiChatHistoryRepository.save(history);
     }
@@ -123,7 +157,7 @@ public class AiChatService {
     private void saveSummary(Long userId, String summary) {
         AiChatHistory summaryHistory = AiChatHistory.builder()
                 .userId(userId)
-                .userMessage("SUMMARY_MESSAGE")
+                .userMessage(SUMMARY_MESSAGE)
                 .aiResponse(summary)
                 .createdAt(LocalDateTime.now()).build();
                 
@@ -133,9 +167,9 @@ public class AiChatService {
     }
 
     private void updateSummaryIfNeeded(Long userId) throws Exception {
-        long totalRealMessages = aiChatHistoryRepository.countByUserIdAndUserMessageNot(
+        long totalRealMessages = aiChatHistoryRepository.countByUserIdAndType(
                 userId,
-                SUMMARY_MESSAGE
+                "chat"
         );
 
         // Cứ mỗi 10 lượt chat thật thì nén lại 1 lần

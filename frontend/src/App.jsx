@@ -92,7 +92,9 @@ import ExamEdit from "./pages/exam/ExamEdit.jsx";
 import TeacherVideoEdit from "./pages/teacher/TeacherVideoEdit.jsx";
 import TeacherGrammarEdit from "./pages/teacher/TeacherGrammarEdit.jsx";
 import TeacherEarningsPage from "./pages/teacher-earning/TeacherEarningsPage.jsx";
-import TeacherWithdrawalPage from "./pages/teacher-withdraw/TeacherWithdrawalPage.jsx";
+import QuestionBankCreate from "./pages/question-bank/QuestionBankCreate.jsx";
+import QuestionBank from "./pages/question-bank/QuestionBank.jsx";
+
 
 
 function ProtectedAdminRoute({ children }) {
@@ -356,10 +358,9 @@ function App() {
           <Route path="exam-results" element={<h1>Kết quả thi học viên</h1>} />
           <Route path="revenue" element={<TeacherDashboard />} />
           <Route path="earnings" element={<TeacherEarningsPage />} />
-          <Route
-            path="earnings/withdrawals"
-            element={<TeacherWithdrawalPage />}
-          />
+          <Route path="questions-bank" element={<QuestionBank />} />
+          <Route path="questions-bank/create" element={<QuestionBankCreate />} />
+          
           <Route path="withdrawals" element={<h1>Lịch sử rút tiền</h1>} />
         </Route>
 

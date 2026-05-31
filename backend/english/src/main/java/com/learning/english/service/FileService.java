@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -24,20 +25,30 @@ public class FileService {
         String extension = "";
 
         if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            extension = originalFilename
+                    .substring(originalFilename.lastIndexOf("."))
+                    .toLowerCase();
         }
 
         String fileName = UUID.randomUUID() + extension;
 
-        Path uploadPath = Paths.get(ROOT_DIR, subFolder);
+        Path uploadPath = Paths.get(ROOT_DIR, subFolder)
+                .toAbsolutePath()
+                .normalize();
 
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        Path filePath = uploadPath.resolve(fileName);
+        Path filePath = uploadPath.resolve(fileName)
+                .toAbsolutePath()
+                .normalize();
 
-        Files.copy(file.getInputStream(), filePath);
+        Files.copy(
+                file.getInputStream(),
+                filePath,
+                StandardCopyOption.REPLACE_EXISTING
+        );
 
         return subFolder + "/" + fileName;
     }

@@ -19,13 +19,14 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.learning.english.dto.request.AiGeneratedPracticeJson;
-import com.learning.english.dto.request.CreatePersonalPracticeAiRequest;
+import com.learning.english.dto.request.CreateQuestionAiRequest;
 import com.learning.english.dto.request.GeminiRequest;
 import com.learning.english.dto.response.GeminiResponse;
-import com.learning.english.dto.response.PersonalPracticeResponse;
+import com.learning.english.dto.response.QuestionAIResponse;
 import com.learning.english.dto.response.PracticeQuestionResponse;
 import com.learning.english.dto.response.QuestionOptionResponse;
 import com.learning.english.dto.response.QuestionResponse;
+import com.learning.english.entity.Level;
 import com.learning.english.entity.PersonalPractice;
 import com.learning.english.entity.Question;
 import com.learning.english.entity.QuestionOption;
@@ -33,6 +34,7 @@ import com.learning.english.entity.User;
 import com.learning.english.mapper.PersonalPracticeMapper;
 import com.learning.english.mapper.PracticeConfigMapper;
 import com.learning.english.mapper.QuestionMapper;
+import com.learning.english.repository.LevelRepository;
 import com.learning.english.repository.PersonalPracticeRepository;
 import com.learning.english.repository.QuestionOptionRepository;
 import com.learning.english.repository.QuestionRepository;
@@ -41,7 +43,7 @@ import com.learning.english.repository.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Service
-public class PersonalPracticeService {
+public class QuestionAIService {
 	@Autowired
 	PersonalPracticeRepository personalPracticeRepository;
 
@@ -65,32 +67,21 @@ public class PersonalPracticeService {
 
 	@Autowired
 	PracticeConfigMapper practiceConfigMapper;
+	
+	@Autowired
+	LevelRepository levelRepository;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	private final RestTemplate restTemplate = new RestTemplate();
 
-	public List<PersonalPracticeResponse> layDanhSachBaiOnTap(String keyword, String type) {
-		User user = getCurrentUser();
-		return personalPracticeRepository.findPersonalPractices(user.getUserId(), keyword, type).stream()
-				.map(personalPracticeMapper::toPersonalPracticeResponse).toList();
-	}
-
-	public List<PracticeQuestionResponse> layDSCauHoiBaiOnTapCaNhan(Long personalPracticeId) {
-		PersonalPractice personalPractice = personalPracticeRepository.findById(personalPracticeId)
-				.orElseThrow(() -> new RuntimeException("Không tìm thấy bài ôn tập"));
-		User user = getCurrentUser();
-		if(user.getUserId() != personalPractice.getUser().getUserId())
-			throw new RuntimeException("Bạn không có quyền truy cập bài ôn tập này");
-		
-		return questionRepository.findByPersonalPractice_PersonalPracticeId(personalPracticeId).stream()
-				.map(practiceConfigMapper::toPracticeQuestionResponse).toList();
-	}
-
+	
 	@Transactional
-	public PersonalPracticeResponse taoBaiOnTapBangAi(CreatePersonalPracticeAiRequest request) {
-		validateQuestionType(request.getType());
+	public List<QuestionResponse> taoBaiOnTapBangAi(CreateQuestionAiRequest request) {
+		validateQuestionType(request.getQuestionType());
+		
+		Level level = levelRepository.findById(request.getLevelId()).orElseThrow(() -> new RuntimeException("Không tìm thấy cấp độ"));
 
-		String aiJsonText = callGeminiForQuestions(request);
+		String aiJsonText = callGeminiForQuestions(request, level.getLevelName());
 
 		AiGeneratedPracticeJson generatedJson = parseAiJson(aiJsonText);
 
@@ -100,9 +91,7 @@ public class PersonalPracticeService {
 			throw new RuntimeException("AI không tạo được câu hỏi phù hợp.");
 		}
 
-		PersonalPractice practice = personalPracticeRepository.save(PersonalPractice.builder().user(user)
-				.title(request.getTitle()).type(request.getType()).questionLimit(request.getQuestionLimit())
-				.status("ACTIVE").createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build());
+		
 
 		List<QuestionResponse> questionResponses = new ArrayList<>();
 
@@ -114,26 +103,24 @@ public class PersonalPracticeService {
 			String questionType = aiQuestion.getQuestionType();
 
 			if (questionType == null || questionType.isBlank()) {
-				questionType = request.getType();
+				questionType = request.getQuestionType();
 			}
 
 			validateQuestionType(questionType);
 
-			Question savedQuestion = questionRepository
-					.save(Question.builder().personalPractice(practice).createdBy(user).questionType(questionType)
+			Question savedQuestion = Question.builder().createdBy(user).questionType(questionType)
 							.content(aiQuestion.getContent()).correctText(aiQuestion.getCorrectText())
 							.explanation(aiQuestion.getExplanation()).defaultPoint(BigDecimal.ONE).status("Published")
-							.sourceType("AI").createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build());
+							.sourceType("AI").createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
 
 			List<QuestionOptionResponse> optionResponses = new ArrayList<>();
 
 			if (aiQuestion.getOptions() != null && !aiQuestion.getOptions().isEmpty()) {
 
 				for (AiGeneratedPracticeJson.AiOption aiOption : aiQuestion.getOptions()) {
-					QuestionOption savedOption = questionOptionRepository
-							.save(QuestionOption.builder().question(savedQuestion).optionText(aiOption.getOptionText())
+					QuestionOption savedOption = QuestionOption.builder().question(savedQuestion).optionText(aiOption.getOptionText())
 									.isCorrect(Boolean.TRUE.equals(aiOption.getIsCorrect()))
-									.createdAt(LocalDateTime.now()).build());
+									.createdAt(LocalDateTime.now()).build();
 
 					optionResponses.add(QuestionOptionResponse.builder().optionId(savedOption.getOptionId())
 							.optionText(savedOption.getOptionText()).isCorrect(savedOption.getIsCorrect()).build());
@@ -147,16 +134,11 @@ public class PersonalPracticeService {
 					.options(optionResponses).build());
 		}
 
-		return PersonalPracticeResponse.builder().personalPracticeId(practice.getPersonalPracticeId())
-				.userId(practice.getUser().getUserId()).title(practice.getTitle())
-				.questionLimit(practice.getQuestionLimit()).type(practice.getType()).status(practice.getStatus())
-				.createdAt(practice.getCreatedAt())
-//                .questions(questionResponses)
-				.build();
+		return questionResponses;
 	}
 
-	private String callGeminiForQuestions(CreatePersonalPracticeAiRequest request) throws RestClientException {
-		String prompt = buildPrompt(request);
+	private String callGeminiForQuestions(CreateQuestionAiRequest request, String levelName) throws RestClientException {
+		String prompt = buildPrompt(request, levelName);
 
 		GeminiRequest requestBody = GeminiRequest.builder()
 				.systemInstruction(
@@ -194,11 +176,11 @@ public class PersonalPracticeService {
 		return body.getCandidates().get(0).getContent().getParts().get(0).getText();
 	}
 
-	private String buildPrompt(CreatePersonalPracticeAiRequest request) {
+	private String buildPrompt(CreateQuestionAiRequest request, String levelName) {
 		return """
 				Hãy tạo bài ôn tập tiếng Anh theo thông tin sau:
 
-				Tên bài: %s
+				Cấp độ: %s
 				Dạng câu hỏi: %s
 				Số lượng câu hỏi: %d
 				Mô tả nội dung: %s
@@ -244,8 +226,8 @@ public class PersonalPracticeService {
 				- Nếu dạng LISTENING_FILL_BLANK thì content có chỗ trống bằng ký hiệu ____.
 				- explanation viết bằng tiếng Việt dễ hiểu.
 				"""
-				.formatted(request.getTitle(), request.getType(), request.getQuestionLimit(), request.getDescription(),
-						request.getType(), request.getType());
+				.formatted(levelName, request.getQuestionType(), request.getQuestionLimit(), request.getPrompt(),
+						request.getQuestionType(), request.getQuestionType());
 	}
 
 	private AiGeneratedPracticeJson parseAiJson(String aiText) {

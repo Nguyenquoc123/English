@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Page from "../../compenents/phantrang/page";
+import { getFileUrl } from "../../utils/fileurl";
 
 function TeacherCourseList() {
     const navigate = useNavigate();
@@ -290,119 +291,162 @@ function TeacherCourseList() {
             <div className="card border-0 shadow-sm">
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0">
-                        <thead className="table-light">
-                            <tr>
-                                <th>Khóa học</th>
-                                <th>Cấp độ</th>
-                                <th>Giá</th>
-                                <th>Trạng thái</th>
-                                <th className="text-end">Thao tác</th>
-                            </tr>
-                        </thead>
+    <thead className="table-light">
+        <tr>
+            <th style={{ minWidth: "360px" }}>Khóa học</th>
+            <th>Cấp độ</th>
+            <th>Giá</th>
+            <th>Trạng thái</th>
+            <th className="text-end">Thao tác</th>
+        </tr>
+    </thead>
 
-                        <tbody>
-                            {courses.map((course) => (
-                                <tr key={course.courseId}>
-                                    <td>
-                                        <div className="d-flex align-items-center gap-2">
-
-                                            <div
-                                                className="fw-semibold text-truncate"
-                                                style={{ maxWidth: "240px" }}
-                                            >
-                                                {course.title}
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        <span className={getLevelBadge(course.levelName)}>
-                                            {course.levelName}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <span
-                                            className={
-                                                course.price === 0
-                                                    ? "fw-bold text-success"
-                                                    : "fw-bold text-primary"
-                                            }
-                                        >
-                                            {formatPrice(course.price)}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <span className={getStatusBadge(course.status)}>
-                                            {course.status}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <div className="d-flex justify-content-end gap-1">
-                                            <button
-                                                className="btn btn-sm btn-light"
-                                                title="Xem chi tiết"
-                                                onClick={() =>
-                                                    navigate(`/teacher/courses/${course.courseId}`)
-                                                }
-                                            >
-                                                <i className="bi bi-eye"></i>
-                                            </button>
-
-                                            <button
-                                                className="btn btn-sm btn-light"
-                                                title="Quản lý lesson"
-                                                onClick={() =>
-                                                    navigate(`/teacher/courses/${course.courseId}/lessons`)
-                                                }
-                                            >
-                                                <i className="bi bi-journal-text"></i>
-                                            </button>
-
-                                            <button
-                                                className="btn btn-sm btn-light"
-                                                title="Cập nhật"
-                                                onClick={() =>
-                                                    navigate(`/teacher/courses/${course.courseId}/edit`)
-                                                }
-                                            >
-                                                <i className="bi bi-pencil"></i>
-                                            </button>
-
-                                            {(course.status === "Draft" ||
-                                                course.status === "Rejected") && (
-                                                    <button
-                                                        className="btn btn-sm btn-light"
-                                                        title="Gửi duyệt"
-                                                        onClick={() => handleSubmitApproval(course.courseId)}
-                                                    >
-                                                        <i className="bi bi-send"></i>
-                                                    </button>
-                                                )}
-
-                                            <button
-                                                className="btn btn-sm btn-light text-danger"
-                                                title="Xóa"
-                                                onClick={() => handleDelete(course.courseId)}
-                                            >
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-
-                            {courses.length === 0 && (
-                                <tr>
-                                    <td colSpan="8" className="text-center text-muted py-4">
-                                        Không tìm thấy khóa học phù hợp.
-                                    </td>
-                                </tr>
+    <tbody>
+        {courses.map((course) => (
+            <tr key={course.courseId}>
+                <td>
+                    <div className="container d-flex align-items-center gap-3">
+                        <div
+                            className="rounded overflow-hidden bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                            style={{
+                                width: "96px",
+                                height: "64px",
+                                border: "1px solid #e5e7eb",
+                            }}
+                        >
+                            {course.thumbnailUrl ? (
+                                <img
+                                    src={getFileUrl(course.thumbnailUrl)}
+                                    alt={course.title}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                    }}
+                                />
+                            ) : (
+                                <i className="bi bi-image text-muted fs-4"></i>
                             )}
-                        </tbody>
-                    </table>
+                        </div>
+
+                        <div className="min-w-0">
+                            <div
+                                className="fw-semibold text-truncate"
+                                style={{ maxWidth: "360px" }}
+                                title={course.title}
+                            >
+                                {course.title}
+                            </div>
+
+                            <div
+                                className="text-muted small mt-1"
+                                style={{
+                                    maxWidth: "420px",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    overflow: "hidden",
+                                }}
+                                title={course.shortDescription || course.description || ""}
+                            >
+                                {course.shortDescription ||
+                                    course.description ||
+                                    "Chưa có mô tả ngắn"}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+                <td>
+                    <span className={getLevelBadge(course.levelName)}>
+                        {course.levelName || "Chưa có"}
+                    </span>
+                </td>
+
+                <td>
+                    <span
+                        className={
+                            Number(course.price || 0) === 0
+                                ? "fw-bold text-success"
+                                : "fw-bold text-primary"
+                        }
+                    >
+                        {formatPrice(course.price)}
+                    </span>
+                </td>
+
+                <td>
+                    <span className={getStatusBadge(course.status)}>
+                        {course.status}
+                    </span>
+                </td>
+
+                <td>
+                    <div className="d-flex justify-content-end gap-1">
+                        <button
+                            className="btn btn-sm btn-light"
+                            title="Xem chi tiết"
+                            onClick={() =>
+                                navigate(`/teacher/courses/${course.courseId}`)
+                            }
+                        >
+                            <i className="bi bi-eye"></i>
+                        </button>
+
+                        <button
+                            className="btn btn-sm btn-light"
+                            title="Quản lý lesson"
+                            onClick={() =>
+                                navigate(`/teacher/courses/${course.courseId}/lessons`)
+                            }
+                        >
+                            <i className="bi bi-journal-text"></i>
+                        </button>
+
+                        <button
+                            className="btn btn-sm btn-light"
+                            title="Cập nhật"
+                            onClick={() =>
+                                navigate(`/teacher/courses/${course.courseId}/edit`)
+                            }
+                        >
+                            <i className="bi bi-pencil"></i>
+                        </button>
+
+                        {(course.status === "Draft" ||
+                            course.status === "Rejected") && (
+                            <button
+                                className="btn btn-sm btn-light"
+                                title="Gửi duyệt"
+                                onClick={() =>
+                                    handleSubmitApproval(course.courseId)
+                                }
+                            >
+                                <i className="bi bi-send"></i>
+                            </button>
+                        )}
+
+                        <button
+                            className="btn btn-sm btn-light text-danger"
+                            title="Xóa"
+                            onClick={() => handleDelete(course.courseId)}
+                        >
+                            <i className="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        ))}
+
+        {courses.length === 0 && (
+            <tr>
+                <td colSpan="5" className="text-center text-muted py-4">
+                    Không tìm thấy khóa học phù hợp.
+                </td>
+            </tr>
+        )}
+    </tbody>
+</table>
                 </div>
                 {courses && <Page
                     page={page}
