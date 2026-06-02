@@ -24,17 +24,20 @@ import com.learning.english.dto.request.CourseDuyetRequest;
 import com.learning.english.dto.request.CourseRejectRequest;
 import com.learning.english.dto.request.CourseRequest;
 import com.learning.english.dto.request.MultiCoursePaymentRequest;
+import com.learning.english.dto.request.RefundRequest;
 import com.learning.english.dto.request.TeacherDuyetRequest;
 import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CoursePaymentResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
+import com.learning.english.dto.response.RefundEligibilityResponse;
+import com.learning.english.dto.response.StudentRefundStatusResponse;
 import com.learning.english.dto.response.TeacherProfileResponse;
 import com.learning.english.service.CoursePaymentService;
 import com.learning.english.service.CourseService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/khoa-hoc")
@@ -44,9 +47,7 @@ public class CourseController {
 	
 	@Autowired
 	CoursePaymentService coursePaymentService;
-	
-	
-	
+
 	@GetMapping("/danh-sach-khoa-hoc-public")
 	public Page<CourseResponse> dsKhoaHocPublic(
 	        @RequestParam(required = false) String keyword,
@@ -112,14 +113,9 @@ public class CourseController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<CourseResponse> taoKhoaHoc(
-            @RequestPart("data") String data,
+            @RequestPart("data") CourseRequest request,
             @RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile
     ) throws IOException {
-		System.out.println("Đã chạy");
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        CourseRequest request = objectMapper.readValue(data, CourseRequest.class);
-
         return ResponseEntity.ok(courseService.taoKhoaHoc(request, thumbnailFile));
     }
 	
@@ -129,14 +125,9 @@ public class CourseController {
     )
     public ResponseEntity<CourseResponse> updateKhoaHoc(
     		@PathVariable("courseId") Long courseId,
-            @RequestPart("data") String data,
+            @RequestPart("data") CourseRequest request,
             @RequestPart(value = "thumbnailFile", required = false) MultipartFile thumbnailFile
     ) throws IOException {
-		System.out.println("Đã chạy");
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        CourseRequest request = objectMapper.readValue(data, CourseRequest.class);
-
         return ResponseEntity.ok(courseService.capNhatKhoaHoc(courseId, request, thumbnailFile));
     }
 	
@@ -200,4 +191,26 @@ public class CourseController {
 
         return ResponseEntity.ok(hasAccess);
     }
+
+    @GetMapping("/refund-status")
+    public ResponseEntity<List<StudentRefundStatusResponse>> getMyRefundStatus() {
+        return ResponseEntity.ok(coursePaymentService.getMyCourseRefundStatuses());
+    }
+
+    @GetMapping("/{courseId}/refund-eligibility")
+    public ResponseEntity<RefundEligibilityResponse> getRefundEligibility(
+            @PathVariable Long courseId
+    ) {
+        return ResponseEntity.ok(coursePaymentService.getRefundEligibility(courseId));
+    }
+
+    @PostMapping("/{courseId}/yeu-cau-hoan-tien")
+    public ResponseEntity<String> requestRefund(
+            @PathVariable Long courseId,
+            @RequestBody RefundRequest request
+    ) {
+        coursePaymentService.requestRefundForCourse(courseId, request);
+        return ResponseEntity.ok("Đã gửi yêu cầu hoàn tiền");
+    }
+
 }

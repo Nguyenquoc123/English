@@ -93,7 +93,6 @@ function TeacherDashboard() {
     const loadDashboard = async (range = "7D") => {
         try {
             setLoading(true);
-            setError("");
 
             const [summaryData, chartsData, coursesData] = await Promise.all([
                 requestJson(
@@ -109,6 +108,9 @@ function TeacherDashboard() {
                     "Không thể tải danh sách khóa học"
                 ),
             ]);
+
+            console.log(summaryData);
+            
 
             setSummary(summaryData);
 
@@ -279,7 +281,7 @@ function TeacherDashboard() {
     const studentChartData = charts?.studentChart || [];
 
     const handleWithdrawClick = () => {
-        window.location.href = "/teacher/withdraw";
+        window.location.href = "/teacher/earnings";
     };
 
     const handleRangeChange = (range) => {

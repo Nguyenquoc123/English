@@ -1,9 +1,17 @@
-function TeacherHeader({ onOpenSidebar }) {
+import NotificationBell from "../../components/NotificationBell/NotificationBell";
+
+function TeacherHeader({ sidebarOpen, onToggleSidebar }) {
   return (
     <header className="teacher-layout-header bg-white px-4 py-3 d-flex justify-content-between align-items-center">
       <div className="d-flex align-items-center gap-3">
-        <button className="btn btn-light" onClick={onOpenSidebar}>
-          <i className="bi bi-list fs-5"></i>
+        <button
+          type="button"
+          className="btn btn-light panel-menu-toggle teacher-menu-toggle"
+          onClick={onToggleSidebar}
+          aria-label={sidebarOpen ? "Đóng menu" : "Mở menu chức năng"}
+          aria-expanded={sidebarOpen}
+        >
+          <i className="bi bi-three-dots-vertical fs-5"></i>
         </button>
 
         <div>
@@ -15,9 +23,9 @@ function TeacherHeader({ onOpenSidebar }) {
       </div>
 
       <div className="d-flex align-items-center gap-3">
-        <button className="btn btn-light rounded-circle">
-          <i className="bi bi-bell"></i>
-        </button>
+        <div className="teacher-header-notifications" title="Thông báo từ admin">
+          <NotificationBell variant="light" />
+        </div>
 
         <div className="d-flex align-items-center gap-2">
           <div

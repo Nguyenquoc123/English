@@ -3,6 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./QuestionBank.css";
 import Page from "../../compenents/phantrang/page.jsx";
 import { getFileUrl } from "../../utils/fileurl.js";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -21,6 +22,7 @@ const statusLabels = {
 };
 
 function QuestionBank() {
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [levels, setLevels] = useState([]);
 
@@ -269,7 +271,7 @@ function QuestionBank() {
               Tìm kiếm
             </button>
 
-            <button type="button" className="create-question-btn">
+            <button type="button" className="create-question-btn" onClick={() => navigate("/teacher/questions-bank/create")}>
             <i className="bi bi-plus-lg"></i>
             Thêm câu hỏi
           </button>

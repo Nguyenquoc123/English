@@ -53,5 +53,12 @@ public class Withdrawal {
     @Column(name = "paidat")
     private LocalDateTime paidAt;
     
+    @Column(name = "qrPay", nullable = true)
+    private String qrPay;
+    
+    @Column(name = "paymentcode", nullable = true)
+    private String paymentcode;
+    
+    
     
 }

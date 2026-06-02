@@ -7,6 +7,7 @@ import {
     studentCourses,
     studentCourseDetail,
 } from "../../utils/breadcrumbPaths";
+import { toast } from "react-toastify";
 
 function StudentCoursePurchase() {
     const navigate = useNavigate();
@@ -25,6 +26,7 @@ function StudentCoursePurchase() {
     const [creatingPayment, setCreatingPayment] = useState(false);
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [sseMessage, setSseMessage] = useState("");
 
     const getToken = () => {
         return localStorage.getItem("english_token") || localStorage.getItem("token");
@@ -33,6 +35,49 @@ function StudentCoursePurchase() {
     useEffect(() => {
         loadCourseDetail();
     }, [courseId]);
+
+    useEffect(() => {
+        const eventSource = new EventSource("http://localhost:8080/webhooks/sepay/sse");
+
+        eventSource.addEventListener("CONNECTED", (event) => {
+            console.log("Admin SSE connected:", event.data);
+        });
+
+        eventSource.addEventListener("PAID", (event) => {
+            const data = JSON.parse(event.data);
+
+            setSseMessage(data.message || "Đã chuyển tiền cho giáo viên thành công.");
+
+            if (paymentInfo?.paymentCode === data.transactionCode) {
+                setShowPaymentModal(null);
+            }
+            console.log(data);
+            console.log(paymentInfo);
+
+            toast.success(data.message)
+            setTimeout(() => {
+                navigate(`/khoa-hoc/${courseId}`);
+            }, 1500);
+
+            // loadData();
+        });
+
+        eventSource.addEventListener("FAILED", (event) => {
+            const data = JSON.parse(event.data);
+
+            setSseMessage(data.message || "Chuyển tiền thất bại hoặc số tiền không khớp.");
+
+            // loadData();
+        });
+
+        eventSource.onerror = (error) => {
+            console.error("SSE error:", error);
+        };
+
+        return () => {
+            eventSource.close();
+        };
+    }, [paymentInfo]);
 
     const loadCourseDetail = async () => {
         try {
@@ -161,8 +206,9 @@ function StudentCoursePurchase() {
             if (!response.ok) {
                 throw new Error("Lỗi khi gọi API");
             }
-
+            window.dispatchEvent(new Event('cartChanged'));
             return await response.json();
+
 
         } catch (error) {
             console.error(error);
@@ -175,9 +221,11 @@ function StudentCoursePurchase() {
         const hasAccess = await checkCourseAccess(paymentInfo.paymentCode);
 
         if (hasAccess) {
+            toast.success("Thanh toán thành công!");
             navigate(`/khoa-hoc/${courseId}`);
         } else {
-            alert("Giao dịch chưa thành công. Vui lòng nhấn lại sau ít phút");
+            // alert("Giao dịch chưa thành công. Vui lòng nhấn lại sau ít phút");
+            toast.error("Giao dịch chưa thành công. Vui lòng nhấn lại sau ít phút");
         }
     };
 
@@ -218,7 +266,7 @@ function StudentCoursePurchase() {
 
     return (
         <div className="student-purchase-page">
-            
+
 
             <div className="row g-4">
                 <div className="col-lg-7">
@@ -233,7 +281,7 @@ function StudentCoursePurchase() {
                                 </div>
                             )}
 
-                            
+
                         </div>
 
                         <div className="purchase-course-body">

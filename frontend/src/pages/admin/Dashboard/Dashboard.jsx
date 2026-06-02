@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getDashboard } from "../../../api/adminApi";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
+import {
+  getAdminStudentFeedbackTasks,
+  reviewAdminStudentFeedbackTask,
+} from "../../../api/studentFeedbackApi";
 import "./Dashboard.css";
 
 const statCards = [
@@ -56,6 +62,9 @@ const statCards = [
 
 function Dashboard() {
   const [stats, setStats] = useState({});
+  const [feedbackTasks, setFeedbackTasks] = useState([]);
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState("OPEN");
+  const [reviewingTaskId, setReviewingTaskId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -63,12 +72,15 @@ function Dashboard() {
     return (
       Number(stats?.pendingTeachers || 0) +
       Number(stats?.pendingCourses || 0) +
-      Number(stats?.pendingWithdrawals || 0)
+      Number(stats?.pendingWithdrawals || 0) +
+      Number(stats?.pendingStudentFeedbacks || 0) +
+      Number(stats?.pendingRefunds || 0)
     );
   }, [stats]);
 
   useEffect(() => {
     loadDashboard();
+    loadFeedbackTasks("OPEN");
   }, []);
 
   const loadDashboard = async () => {
@@ -86,6 +98,28 @@ function Dashboard() {
     }
   };
 
+  const loadFeedbackTasks = async (status = feedbackStatusFilter) => {
+    try {
+      const res = await getAdminStudentFeedbackTasks(status);
+      setFeedbackTasks(res.data || []);
+    } catch (err) {
+      console.error("Lỗi tải feedback học viên:", err);
+    }
+  };
+
+  const handleReviewFeedback = async (taskId, status) => {
+    try {
+      setReviewingTaskId(taskId);
+      await reviewAdminStudentFeedbackTask(taskId, status, "");
+      await Promise.all([loadDashboard(), loadFeedbackTasks()]);
+    } catch (err) {
+      console.error(err);
+      alert("Cập nhật trạng thái feedback thất bại.");
+    } finally {
+      setReviewingTaskId(null);
+    }
+  };
+
   const formatNumber = (value) => {
     return new Intl.NumberFormat("vi-VN").format(Number(value || 0));
   };
@@ -95,6 +129,13 @@ function Dashboard() {
       style: "currency",
       currency: "VND",
     }).format(Number(price || 0));
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "--";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString("vi-VN");
   };
 
   if (loading) {
@@ -160,7 +201,7 @@ function Dashboard() {
           <div className="pending-card">
             <div className="d-flex align-items-center justify-content-between">
               <div>
-                <p className="text-muted mb-1">Tác vụ đang chờ</p>
+                <p className="text-muted mb-1">Công việc cần xử lý</p>
                 <h2 className="fw-bold mb-0">{formatNumber(totalPending)}</h2>
               </div>
 
@@ -183,6 +224,20 @@ function Dashboard() {
               <div>
                 <span>Rút tiền</span>
                 <strong>{formatNumber(stats?.pendingWithdrawals)}</strong>
+              </div>
+
+              <div>
+                <span>Feedback học viên</span>
+                <strong>{formatNumber(stats?.pendingStudentFeedbacks)}</strong>
+              </div>
+
+              <div>
+                <span>Hoàn tiền</span>
+                <strong>
+                  <Link to="/admin/refunds" className="text-decoration-none">
+                    {formatNumber(stats?.pendingRefunds)}
+                  </Link>
+                </strong>
               </div>
             </div>
           </div>
@@ -209,6 +264,100 @@ function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="card border-0 shadow-sm mt-4">
+        <div className="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 className="mb-0 fw-bold">
+            <i className="bi bi-chat-dots me-2 text-primary"></i>
+            Feedback học viên cần xử lý
+          </h5>
+          <div className="d-flex gap-2">
+            <select
+              className="form-select form-select-sm"
+              value={feedbackStatusFilter}
+              onChange={async (e) => {
+                const value = e.target.value;
+                setFeedbackStatusFilter(value);
+                await loadFeedbackTasks(value);
+              }}
+            >
+              <option value="OPEN">Mới gửi</option>
+              <option value="IN_PROGRESS">Đang xử lý</option>
+              <option value="RESOLVED">Đã xử lý</option>
+            </select>
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => loadFeedbackTasks()}
+            >
+              <i className="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div className="card-body">
+          {feedbackTasks.length === 0 ? (
+            <div className="text-muted">Không có feedback nào trong bộ lọc hiện tại.</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Học viên</th>
+                    <th>Tiêu đề</th>
+                    <th>Nội dung</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày gửi</th>
+                    <th className="text-end">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feedbackTasks.map((item) => (
+                    <tr key={item.feedbackTaskId}>
+                      <td>
+                        <AdminUserLink userId={item.studentId} className="fw-semibold d-inline-block">
+                          {item.studentFullName || item.studentUsername}
+                        </AdminUserLink>
+                        <small className="text-muted d-block">@{item.studentUsername}</small>
+                      </td>
+                      <td className="fw-semibold">{item.title}</td>
+                      <td style={{ maxWidth: 320 }}>
+                        {item.content?.length > 120
+                          ? `${item.content.slice(0, 120)}...`
+                          : item.content}
+                      </td>
+                      <td>
+                        <span className="badge text-bg-light border">{item.status}</span>
+                      </td>
+                      <td>{formatDateTime(item.createdAt)}</td>
+                      <td className="text-end">
+                        <div className="d-flex justify-content-end gap-2">
+                          <button
+                            className="btn btn-sm btn-outline-warning"
+                            disabled={reviewingTaskId === item.feedbackTaskId}
+                            onClick={() =>
+                              handleReviewFeedback(item.feedbackTaskId, "IN_PROGRESS")
+                            }
+                          >
+                            Đang xử lý
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-success"
+                            disabled={reviewingTaskId === item.feedbackTaskId}
+                            onClick={() =>
+                              handleReviewFeedback(item.feedbackTaskId, "RESOLVED")
+                            }
+                          >
+                            Hoàn tất
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

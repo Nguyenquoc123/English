@@ -15,7 +15,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.learning.english.dto.response.TeacherCourseDashboardProjection;
-import com.learning.english.dto.response.TeacherDashboardCourseResponse;
+//import com.learning.english.dto.response.TeacherDashboardCourseResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.CourseReview;
 
@@ -61,7 +61,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 	        FROM Course c
 	        JOIN Enrollment e ON e.course = c
 	        WHERE c.status = 'Published'
-	          AND e.hasCourseAccess = true
 	          AND e.user.username = :username
 	          AND (:levelId IS NULL OR c.level.levelId = :levelId)
 	          AND (
@@ -196,6 +195,29 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 			WHERE c.courseId = :courseId AND c.status = 'Published'
 			""")
 	Optional<Course> findPublishedCourseDetail(@Param("courseId") Long courseId);
+	
+	@Query("""
+            SELECT DISTINCT c
+            FROM Course c
+            LEFT JOIN FETCH c.level l
+            WHERE UPPER(c.status) = 'PUBLISHED'
+              AND (:courseType IS NULL OR UPPER(c.courseType) = UPPER(:courseType))
+              AND (
+                    :levelName IS NULL
+                    OR LOWER(l.levelName) = LOWER(:levelName)
+                    OR LOWER(l.levelName) LIKE LOWER(CONCAT('%', :levelName, '%'))
+                  )
+              AND (:minPrice IS NULL OR c.price >= :minPrice)
+              AND (:maxPrice IS NULL OR c.price <= :maxPrice)
+            ORDER BY c.createdAt DESC
+            """)
+    List<Course> findPublishedCoursesByExactFilters(
+            @Param("courseType") String courseType,
+            @Param("levelName") String levelName,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
 
 	@Query("""
 			SELECT COUNT(c) FROM Course c

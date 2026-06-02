@@ -1,0 +1,70 @@
+.refund-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1040;
+}
+
+.refund-modal {
+  z-index: 1050;
+}
+
+.refund-modal .refund-modal-dialog {
+  max-width: 640px;
+  width: calc(100% - 2rem);
+}
+
+.refund-modal-card {
+  overflow: hidden;
+}
+
+.refund-modal-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* Không dùng .form-control — nhiều trang admin set height: 48px cho toàn app */
+.refund-modal .refund-modal-textarea {
+  display: block;
+  width: 100%;
+  height: 280px !important;
+  min-height: 280px !important;
+  max-height: min(60vh, 420px);
+  resize: vertical;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #212529;
+  box-sizing: border-box;
+}
+
+.refund-modal .refund-modal-textarea:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 0.2rem rgba(249, 115, 22, 0.2);
+}
+
+.refund-modal .refund-modal-textarea:disabled {
+  background: #f8f9fa;
+  opacity: 0.85;
+}
+
+.refund-modal-submit {
+  background: #f97316;
+  border-color: #f97316;
+  color: #fff;
+}
+
+.refund-modal-submit:hover:not(:disabled) {
+  background: #ea580c;
+  border-color: #ea580c;
+  color: #fff;
+}
+
+.refund-modal-submit:disabled {
+  opacity: 0.75;
+}

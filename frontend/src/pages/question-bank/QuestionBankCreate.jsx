@@ -12,7 +12,7 @@ function QuestionBankCreate() {
             allowAiGenerate={true}
             showExamPoint={false}
             showLevel={true}
-            createEndpoint={`${API_BASE}/questions/my-bank`}
+            createEndpoint={`${API_BASE}/questions/bank`}
             bulkCreateEndpoint={`${API_BASE}/questions/bank/many`}
             aiGenerateEndpoint={`${API_BASE}/questions/ai-generate`}
             buildCreatePayload={({ basePayload, levelId }) => ({
@@ -25,8 +25,8 @@ function QuestionBankCreate() {
             })}
             submitNewText="Lưu vào ngân hàng câu hỏi"
             successBulkCreateMessage="Nhập câu hỏi vào ngân hàng thành công"
-            cancelPath="/teacher/questions"
-            redirectPath="/teacher/questions"
+            cancelPath="/teacher/questions-bank"
+            redirectPath="/teacher/questions-bank"
         />
     );
 }

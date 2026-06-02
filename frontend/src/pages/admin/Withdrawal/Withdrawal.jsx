@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { getPendingWithdrawals, getAllWithdrawals, reviewWithdrawal } from "../../../api/adminApi";
+import { getPendingWithdrawals, getAllWithdrawals, reviewWithdrawal, approveWithdrawal } from "../../../api/adminApi";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "./Withdrawal.css";
+import { toast } from "react-toastify";
 
 function Withdrawal() {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -10,10 +12,56 @@ function Withdrawal() {
   const [selected, setSelected] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [paymentModal, setPaymentModal] = useState(null);
+  const [sseMessage, setSseMessage] = useState("");
 
   useEffect(() => {
     loadData();
   }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const eventSource = new EventSource("http://localhost:8080/webhooks/sepay/sse");
+
+    eventSource.addEventListener("CONNECTED", (event) => {
+      console.log("Admin SSE connected:", event.data);
+    });
+
+    eventSource.addEventListener("PAID", (event) => {
+      const data = JSON.parse(event.data);
+
+      setSseMessage(data.message || "Đã chuyển tiền cho giáo viên thành công.");
+
+      if (paymentModal?.paymentCode === data.transactionCode) {
+        setPaymentModal(null);
+      }
+      console.log(data);
+      console.log(paymentModal);
+
+      toast.success(data.message)
+      setTimeout(() => {
+        setPaymentModal(null);
+        window.location.reload();
+      }, 500);
+
+      // loadData();
+    });
+
+    eventSource.addEventListener("FAILED", (event) => {
+      const data = JSON.parse(event.data);
+
+      setSseMessage(data.message || "Chuyển tiền thất bại hoặc số tiền không khớp.");
+
+      // loadData();
+    });
+
+    eventSource.onerror = (error) => {
+      console.error("SSE error:", error);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   const loadData = async () => {
     try {
@@ -24,11 +72,41 @@ function Withdrawal() {
         ? await getPendingWithdrawals()
         : await getAllWithdrawals();
 
-      setWithdrawals(res.data || []);
-    } catch {
-      setError("Lỗi tải dữ liệu");
+      const data = res.data?.result ?? res.data?.data ?? res.data;
+      console.log(data);
+
+      setWithdrawals(Array.isArray(data) ? data : []);
+    } catch (err) {
+      const status = err.response?.status;
+      setError(
+        err.response?.data?.message ||
+        (status === 401 || status === 403
+          ? "Phiên đăng nhập admin hết hạn — vui lòng đăng nhập lại"
+          : "Lỗi tải dữ liệu yêu cầu rút tiền")
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprove = async (withdrawalId) => {
+    const ok = window.confirm("Duyệt yêu cầu rút tiền này?");
+    if (!ok) return;
+
+    try {
+      setActionLoading(true);
+
+      const res = await approveWithdrawal(withdrawalId);
+      const approvedWithdrawal = res.data?.result ?? res.data?.data ?? res.data;
+      console.log(approvedWithdrawal);
+
+
+      setPaymentModal(approvedWithdrawal);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Duyệt yêu cầu rút tiền thất bại");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -54,8 +132,8 @@ function Withdrawal() {
       setSelected(null);
       setRejectReason("");
       loadData();
-    } catch {
-      alert("Thao tác thất bại");
+    } catch (err) {
+      alert(err.response?.data?.message || "Thao tác thất bại");
     } finally {
       setActionLoading(false);
     }
@@ -63,9 +141,25 @@ function Withdrawal() {
 
   const getStatusBadge = (status) => {
     if (status === "PENDING") return "badge rounded-pill text-bg-warning";
+    if (status === "APPROVED") return "badge rounded-pill text-bg-info";
     if (status === "PAID") return "badge rounded-pill text-bg-success";
     if (status === "REJECTED") return "badge rounded-pill text-bg-danger";
     return "badge rounded-pill text-bg-secondary";
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "PENDING":
+        return "Chờ duyệt";
+      case "APPROVED":
+        return "Đã duyệt";
+      case "PAID":
+        return "Đã thanh toán";
+      case "REJECTED":
+        return "Từ chối";
+      default:
+        return status || "--";
+    }
   };
 
   const formatPrice = (amount) => {
@@ -143,6 +237,7 @@ function Withdrawal() {
                 <th>Số tiền</th>
                 <th>Trạng thái</th>
                 <th>Ngày yêu cầu</th>
+                <th>Ngày xử lý</th>
                 <th className="text-end">Hành động</th>
               </tr>
             </thead>
@@ -150,7 +245,7 @@ function Withdrawal() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-5">
+                  <td colSpan="10" className="text-center text-muted py-5">
                     <div className="spinner-border spinner-border-sm text-primary me-2"></div>
                     Đang tải danh sách yêu cầu rút tiền...
                   </td>
@@ -163,7 +258,9 @@ function Withdrawal() {
                     <td>{idx + 1}</td>
 
                     <td>
-                      <div className="withdrawal-teacher-name">{w.teacherName || "--"}</div>
+                      <AdminUserLink userId={w.teacherId} className="d-inline-block">
+                        <span className="withdrawal-teacher-name">{w.teacherName || "--"}</span>
+                      </AdminUserLink>
                       <div className="withdrawal-teacher-email text-muted small">
                         {w.teacherEmail || "--"}
                       </div>
@@ -177,11 +274,12 @@ function Withdrawal() {
 
                     <td>
                       <span className={getStatusBadge(w.status)}>
-                        {w.status}
+                        {getStatusLabel(w.status)}
                       </span>
                     </td>
 
                     <td>{formatDateTime(w.requestedAt)}</td>
+                    <td>{formatDateTime(w.reviewedAt || w.paidAt)}</td>
 
                     <td>
                       <div className="d-flex justify-content-end gap-1">
@@ -195,6 +293,7 @@ function Withdrawal() {
                                   value={rejectReason}
                                   onChange={(e) => setRejectReason(e.target.value)}
                                 />
+
                                 <div className="d-flex gap-1">
                                   <button
                                     className="btn btn-sm btn-outline-danger"
@@ -206,7 +305,10 @@ function Withdrawal() {
 
                                   <button
                                     className="btn btn-sm btn-light"
-                                    onClick={() => { setSelected(null); setRejectReason(""); }}
+                                    onClick={() => {
+                                      setSelected(null);
+                                      setRejectReason("");
+                                    }}
                                   >
                                     Huỷ
                                   </button>
@@ -215,22 +317,34 @@ function Withdrawal() {
                             ) : (
                               <>
                                 <button
-                                  className="btn btn-sm btn-outline-success"
+                                  className="btn btn-sm btn-outline-primary"
                                   disabled={actionLoading}
-                                  onClick={() => handleReview(w.withdrawalId, "PAID")}
+                                  onClick={() => handleApprove(w.withdrawalId)}
                                 >
-                                  Đã TT
+                                  {actionLoading ? "..." : "Duyệt"}
                                 </button>
 
                                 <button
                                   className="btn btn-sm btn-outline-danger"
-                                  onClick={() => { setSelected(w.withdrawalId); setRejectReason(""); }}
+                                  onClick={() => {
+                                    setSelected(w.withdrawalId);
+                                    setRejectReason("");
+                                  }}
                                 >
                                   Từ chối
                                 </button>
                               </>
                             )}
                           </>
+                        )}
+
+                        {w.status === "APPROVED" && (
+                          <button
+                            className="btn btn-sm btn-outline-success"
+                            onClick={() => setPaymentModal(w)}
+                          >
+                            Chuyển tiền
+                          </button>
                         )}
 
                         {w.rejectReason && (
@@ -245,7 +359,7 @@ function Withdrawal() {
 
               {!loading && withdrawals.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-5">
+                  <td colSpan="10" className="text-center text-muted py-5">
                     Không có yêu cầu rút tiền nào.
                   </td>
                 </tr>
@@ -254,6 +368,79 @@ function Withdrawal() {
           </table>
         </div>
       </div>
+
+      {paymentModal && (
+        <div className="withdrawal-modal-backdrop">
+          <div className="withdrawal-payment-modal">
+            <div className="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 className="fw-bold mb-1">Thanh toán yêu cầu rút tiền</h5>
+                <small className="text-muted">
+                  Quét mã QR để chuyển tiền cho giáo viên.
+                </small>
+              </div>
+
+              <button
+                className="btn btn-sm btn-light"
+                onClick={() => setPaymentModal(null)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+
+
+            <div className="text-center">
+              {paymentModal.qrPay ? (
+                <img
+                  src={paymentModal.qrPay}
+                  alt="QR thanh toán"
+                  className="withdrawal-qr-image"
+                />
+              ) : (
+                <div className="alert alert-warning mb-0">
+                  Không có mã QR thanh toán.
+                </div>
+              )}
+            </div>
+
+            <div className="withdrawal-payment-info mb-3">
+              <div>
+                <strong>Mã giao dịch:</strong> {paymentModal.paymentCode || "--"}
+              </div>
+              <div>
+                <strong>Ngân hàng:</strong> {paymentModal.bankName || "--"}
+              </div>
+              <div>
+                <strong>Số tài khoản:</strong> {paymentModal.accountNumber || "--"}
+              </div>
+              <div>
+                <strong>Chủ tài khoản:</strong> {paymentModal.accountHolder || "--"}
+              </div>
+              <div>
+                <strong>Số tiền:</strong> {formatPrice(paymentModal.amount)}
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <button
+                className="btn btn-light"
+                onClick={() => setPaymentModal(null)}
+              >
+                Đóng
+              </button>
+
+              <button
+                className="btn btn-success"
+                disabled={actionLoading}
+                onClick={() => handleReview(paymentModal.withdrawalId, "PAID")}
+              >
+                {actionLoading ? "Đang xử lý..." : "Xác nhận đã chuyển tiền"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

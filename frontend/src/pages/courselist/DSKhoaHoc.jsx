@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
 import { getFileUrl } from "../../utils/fileurl.js";
 import Page from "../../compenents/phantrang/page.jsx";
+import { toast } from "react-toastify";
 
 function DSKhoaHoc() {
   const navigate = useNavigate();
@@ -82,7 +83,8 @@ function DSKhoaHoc() {
       }
 
       if (!response.ok) {
-        setError(data?.message || "Không thể tải danh sách khóa học");
+        // setError(data?.message || "Không thể tải danh sách khóa học");
+        toast.error(data?.message || "Không thể tải danh sách khóa học")
         return;
       }
 
@@ -91,7 +93,8 @@ function DSKhoaHoc() {
       setTotalPages(data.totalPages || 0);
     } catch (err) {
       console.error(err);
-      setError("Lỗi kết nối server.");
+      // setError("Lỗi kết nối server.");
+      toast.error("Lỗi kết nối server.")
     } finally {
       setLoading(false);
     }

@@ -365,6 +365,8 @@ public class PracticeAttemptService {
 		List<AttemptDetail> details = attemptDetailRepository.findPracticeResultDetailsByAttemptId(attemptId);
 
 		PracticeSubmitResponse response = practiceAttemptMapper.toPracticeSubmitResponse(attempt);
+		if(attempt.getAttemptType().equals("EXAM"))
+			response.setCourseId(attempt.getExam().getCourse().getCourseId());
 
 		response.setDetails(practiceAttemptMapper.toPracticeSubmitDetailResponses(details));
 

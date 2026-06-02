@@ -1,21 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import NotificationBell from '../../NotificationBell/NotificationBell';
+import {
+  getAuthUser,
+  isAdminRole,
+  isStudentAreaPath,
+  isTeacherAccount,
+  STUDENT_HOME_PATH,
+  TEACHER_HOME_PATH,
+} from '../../../utils/authUser';
 
 import './Navbar.css';
-
-function getUserFromToken() {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return {
-      username: payload.sub || payload.username || 'User',
-      role: (payload.scope || payload.role || '').toLowerCase(),
-    };
-  } catch {
-    return null;
-  }
-}
 
 const NAV_LINKS = [
   { to: '/', label: 'Trang chủ', end: true },
@@ -24,12 +19,15 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(getUserFromToken);
+  const location = useLocation();
+  const [user, setUser] = useState(getAuthUser);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  useEffect(() => { setUser(getUserFromToken()); }, []);
+  useEffect(() => {
+    setUser(getAuthUser());
+  }, [location.pathname]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -53,9 +51,11 @@ export default function Navbar() {
 
   const closeAll = () => { setDropdownOpen(false); setMobileOpen(false); };
 
-  const isTeacher = user?.role?.includes('teacher');
-  const isAdmin = user?.role?.includes('admin');
+  const isTeacher = isTeacherAccount(user);
+  const isAdmin = isAdminRole(user?.role);
   const isStudent = user && !isTeacher && !isAdmin;
+  const canUseStudentFeatures = Boolean(user) && !isAdmin;
+  const onStudentArea = isStudentAreaPath(location.pathname);
   const initials = user?.username?.slice(0, 2).toUpperCase() || 'U';
   const roleLabel = isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : 'Học viên';
 
@@ -150,19 +150,39 @@ export default function Navbar() {
                   <Link to="/student/change-password" className="nb-mobile-link" onClick={closeAll}>
                     <i className="bi bi-key" /> Đổi mật khẩu
                   </Link>
-                  {/* {isStudent && (
-                    <Link to="/student/khoa-hoc-da-mua" className="nb-mobile-link" onClick={closeAll}>
+                  {canUseStudentFeatures && (
+                    <Link to="/student/bank-account" className="nb-mobile-link" onClick={closeAll}>
+                      <i className="bi bi-bank" /> Tài khoản nhận hoàn tiền
+                    </Link>
+                  )}
+                  {canUseStudentFeatures && (
+                    <Link to="/khoa-hoc-da-mua" className="nb-mobile-link" onClick={closeAll}>
                       <i className="bi bi-journal-bookmark" /> Khóa học đã mua
                     </Link>
-                  )} */}
+                  )}
+                  {canUseStudentFeatures && (
+                    <Link to="/personal-practices" className="nb-mobile-link" onClick={closeAll}>
+                      <i className="bi bi-journal-check" /> Bài ôn tập cá nhân
+                    </Link>
+                  )}
                   {!isTeacher && !isAdmin && (
                     <Link to="/student/teacher-register" className="nb-mobile-link" onClick={closeAll}>
                       <i className="bi bi-pencil-square" /> Đăng ký làm giáo viên
                     </Link>
                   )}
+                  {isTeacher && onStudentArea && (
+                    <Link to={TEACHER_HOME_PATH} className="nb-mobile-link" onClick={closeAll}>
+                      <i className="bi bi-easel2" /> Chuyển sang trang giảng viên
+                    </Link>
+                  )}
+                  {isTeacher && !onStudentArea && (
+                    <Link to={STUDENT_HOME_PATH} className="nb-mobile-link" onClick={closeAll}>
+                      <i className="bi bi-mortarboard" /> Chuyển sang trang học viên
+                    </Link>
+                  )}
                   {isTeacher && (
                     <Link to="/teacher/courses" className="nb-mobile-link" onClick={closeAll}>
-                      <i className="bi bi-easel2" /> Trang giáo viên
+                      <i className="bi bi-journal-bookmark" /> Quản lý khóa học
                     </Link>
                   )}
                   {isAdmin && (
@@ -189,7 +209,12 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* ── Cart desktop ── */}
+        {/* ── Notification + Cart desktop ── */}
+        {canUseStudentFeatures && (
+          <div className="nb-notifications nb-notifications--desktop">
+            <NotificationBell variant="light" />
+          </div>
+        )}
         <Link to="/gio-hang" className="nb-cart" onClick={closeAll} aria-label="Giỏ hàng">
           <i className="bi bi-cart3" />
 
@@ -234,27 +259,26 @@ export default function Navbar() {
                   <Link to="/student/change-password" className="nb-dropdown-item" onClick={closeAll}>
                     <i className="bi bi-key" /> Đổi mật khẩu
                   </Link>
-                  {isStudent && (
+                  {canUseStudentFeatures && (
+                    <Link to="/student/bank-account" className="nb-dropdown-item" onClick={closeAll}>
+                      <i className="bi bi-bank" /> Tài khoản nhận hoàn tiền
+                    </Link>
+                  )}
+                  {canUseStudentFeatures && (
                     <Link to="/khoa-hoc-da-mua" className="nb-dropdown-item" onClick={closeAll}>
                       <i className="bi bi-journal-bookmark" /> Khóa học đã mua
                     </Link>
                   )}
 
-                  <Link
-                    to="/personal-practices"
-                    className="nb-dropdown-item"
-                    onClick={closeAll}
-                  >
-                    <i className="bi bi-journal-check" /> Bài ôn tập cá nhân
-                  </Link>
-
-                  <Link
-                    to="/lich-su-lam-bai"
-                    className="nb-dropdown-item"
-                    onClick={closeAll}
-                  >
-                    <i className="bi bi-clock-history" /> Lịch sử làm bài
-                  </Link>
+                  {canUseStudentFeatures && (
+                    <Link
+                      to="/personal-practices"
+                      className="nb-dropdown-item"
+                      onClick={closeAll}
+                    >
+                      <i className="bi bi-journal-check" /> Bài ôn tập cá nhân
+                    </Link>
+                  )}
 
                   {/* Đăng ký GV (student only) */}
                   {!isTeacher && !isAdmin && (
@@ -271,8 +295,17 @@ export default function Navbar() {
                     <>
                       <div className="nb-dropdown-divider" />
                       <p className="nb-dropdown-section">Giáo viên</p>
+                      {onStudentArea ? (
+                        <Link to={TEACHER_HOME_PATH} className="nb-dropdown-item" onClick={closeAll}>
+                          <i className="bi bi-easel2" /> Chuyển sang trang giảng viên
+                        </Link>
+                      ) : (
+                        <Link to={STUDENT_HOME_PATH} className="nb-dropdown-item" onClick={closeAll}>
+                          <i className="bi bi-mortarboard" /> Chuyển sang trang học viên
+                        </Link>
+                      )}
                       <Link to="/teacher/courses" className="nb-dropdown-item" onClick={closeAll}>
-                        <i className="bi bi-easel2" /> Quản lý khoá học
+                        <i className="bi bi-journal-bookmark" /> Quản lý khóa học
                       </Link>
                       <Link to="/teacher/exams" className="nb-dropdown-item" onClick={closeAll}>
                         <i className="bi bi-file-earmark-text" /> Quản lý kỳ thi

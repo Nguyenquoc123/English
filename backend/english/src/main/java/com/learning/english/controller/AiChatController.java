@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.learning.english.dto.request.AIChatRequest;
+import com.learning.english.dto.response.AiChatHistoryPageResponse;
+import com.learning.english.dto.response.AiCourseHistoryPageResponse;
 import com.learning.english.dto.response.CourseRecommendationResponse;
 import com.learning.english.service.AiChatService;
 import com.learning.english.service.AiCourseRecommendationService;
@@ -34,6 +36,28 @@ public class AiChatController {
     ) {
         CourseRecommendationResponse response =
                 aiCourseRecommendationService.recommendCourses(request.getUserMessage());
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/history")
+    public ResponseEntity<AiChatHistoryPageResponse> getChatHistory(
+            @RequestParam(required = false) Long beforeChatId,
+            @RequestParam(defaultValue = "10") Integer limit
+    ) {
+        AiChatHistoryPageResponse response =
+                aiChatService.getChatHistory(beforeChatId, limit);
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/course-history")
+    public ResponseEntity<AiCourseHistoryPageResponse> getCourseHistory(
+            @RequestParam(required = false) Long beforeChatId,
+            @RequestParam(defaultValue = "10") Integer limit
+    ) {
+        AiCourseHistoryPageResponse response =
+        		aiChatService.getCourseHistory(beforeChatId, limit);
 
         return ResponseEntity.ok(response);
     }

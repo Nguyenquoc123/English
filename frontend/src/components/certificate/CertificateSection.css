@@ -1,0 +1,107 @@
+.certificate-content-wrapper.ready {
+  border-color: #86efac;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+}
+
+.certificate-content-wrapper.ready:hover {
+  border-color: #22c55e;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.12);
+}
+
+.certificate-content-wrapper.locked {
+  opacity: 0.85;
+  background: #f9fafb;
+}
+
+.certificate-lesson-item {
+  cursor: pointer;
+}
+
+.certificate-content-wrapper.locked .certificate-lesson-item {
+  cursor: pointer;
+}
+
+.certificate-index {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.certificate-content-wrapper.locked .certificate-index {
+  background: #9ca3af !important;
+}
+
+.certificate-badge-ready {
+  background: #16a34a !important;
+  color: #fff !important;
+}
+
+.certificate-preview-wrap {
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.certificate-preview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.certificate-rendered-image {
+  width: min(100%, 920px);
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12);
+}
+
+.certificate-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.certificate-modal {
+  width: min(960px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+}
+
+.certificate-view-modal {
+  width: min(1000px, 100%);
+}
+
+.certificate-modal-header,
+.certificate-modal-footer {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #eef2f7;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.certificate-modal-footer {
+  border-bottom: none;
+  border-top: 1px solid #eef2f7;
+  justify-content: flex-end;
+}
+
+.certificate-modal-body {
+  padding: 1rem 1.25rem 1.25rem;
+}

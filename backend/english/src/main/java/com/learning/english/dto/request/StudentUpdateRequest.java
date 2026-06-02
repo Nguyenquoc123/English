@@ -15,4 +15,5 @@ import lombok.experimental.FieldDefaults;
 public class StudentUpdateRequest {
     String fullName;
     String email;
+    String phone;
 }

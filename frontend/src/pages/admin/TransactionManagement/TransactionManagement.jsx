@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
-import { getAllTransactions } from "../../../api/adminApi";
+import { Link } from "react-router-dom";
+import { getAllTransactions, reviewRefund } from "../../../api/adminApi";
+import RefundBankInfo from "../../../components/RefundBankInfo/RefundBankInfo";
+import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "./TransactionManagement.css";
 
 function TransactionManagement() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [reviewingId, setReviewingId] = useState(null);
   const [error, setError] = useState("");
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
@@ -19,7 +23,8 @@ function TransactionManagement() {
       setError("");
 
       const res = await getAllTransactions();
-      setTransactions(res.data || []);
+      const data = res.data?.result ?? res.data?.data ?? res.data;
+      setTransactions(Array.isArray(data) ? data : []);
     } catch {
       setError("Lỗi tải danh sách giao dịch");
     } finally {
@@ -30,6 +35,10 @@ function TransactionManagement() {
   const successCount = transactions.filter((t) => t.status === "SUCCESS").length;
   const pendingCount = transactions.filter((t) => t.status === "PENDING").length;
   const failedCount = transactions.filter((t) => t.status === "FAILED").length;
+  const refundRequestedCount = transactions.filter(
+    (t) => t.status === "REFUND_REQUESTED"
+  ).length;
+  const refundedCount = transactions.filter((t) => t.status === "REFUNDED").length;
 
   const totalRevenue = transactions
     .filter((t) => t.status === "SUCCESS")
@@ -51,6 +60,9 @@ function TransactionManagement() {
     if (status === "SUCCESS") return "badge rounded-pill text-bg-success";
     if (status === "PENDING") return "badge rounded-pill text-bg-warning";
     if (status === "FAILED") return "badge rounded-pill text-bg-danger";
+    if (status === "REFUND_REQUESTED") return "badge rounded-pill text-bg-warning";
+    if (status === "REFUNDED") return "badge rounded-pill text-bg-info";
+    if (status === "REFUND_REJECTED") return "badge rounded-pill text-bg-secondary";
     return "badge rounded-pill text-bg-secondary";
   };
 
@@ -58,6 +70,9 @@ function TransactionManagement() {
     if (status === "SUCCESS") return "Thành công";
     if (status === "PENDING") return "Đang chờ";
     if (status === "FAILED") return "Thất bại";
+    if (status === "REFUND_REQUESTED") return "Chờ duyệt hoàn tiền";
+    if (status === "REFUNDED") return "Đã hoàn tiền";
+    if (status === "REFUND_REJECTED") return "Từ chối hoàn tiền";
     return status || "--";
   };
 
@@ -88,13 +103,33 @@ function TransactionManagement() {
     return date.toLocaleString("vi-VN");
   };
 
+  const handleRefundReview = async (transactionId, approve) => {
+    const note = window.prompt(
+      approve
+        ? "Ghi chú duyệt hoàn tiền (không bắt buộc):"
+        : "Nhập lý do từ chối hoàn tiền:"
+    );
+    if (note === null) return;
+
+    try {
+      setReviewingId(transactionId);
+      await reviewRefund(transactionId, approve, note.trim());
+      await loadTransactions();
+    } catch (err) {
+      alert(err.response?.data?.message || "Xử lý hoàn tiền thất bại");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
   return (
     <div className="admin-transaction-page">
       <div className="admin-page-heading">
         <div>
           <h2>Quản lý giao dịch</h2>
           <p>
-            Admin xem lịch sử toàn bộ giao dịch thanh toán của học viên trong hệ thống.
+            Admin xem lịch sử giao dịch và duyệt hoàn tiền tại tab{" "}
+            <strong>Chờ hoàn tiền</strong> hoặc cột thao tác khi trạng thái là chờ duyệt.
           </p>
         </div>
 
@@ -189,6 +224,18 @@ function TransactionManagement() {
             >
               Thất bại ({failedCount})
             </button>
+            <button
+              className={`btn btn-sm ${tab === "REFUND_REQUESTED" ? "btn-warning" : "btn-outline-secondary"}`}
+              onClick={() => setTab("REFUND_REQUESTED")}
+            >
+              Chờ hoàn tiền ({refundRequestedCount})
+            </button>
+            <button
+              className={`btn btn-sm ${tab === "REFUNDED" ? "btn-info" : "btn-outline-secondary"}`}
+              onClick={() => setTab("REFUNDED")}
+            >
+              Đã hoàn tiền ({refundedCount})
+            </button>
           </div>
 
           <div className="ms-auto">
@@ -215,6 +262,16 @@ function TransactionManagement() {
         </div>
       )}
 
+      {!loading && refundRequestedCount > 0 && (
+        <div className="alert alert-warning d-flex align-items-center gap-2 mb-4">
+          <i className="bi bi-cash-coin"></i>
+          <span>
+            Có <strong>{refundRequestedCount}</strong> yêu cầu hoàn tiền đang chờ xử lý.
+            Bấm tab <strong>Chờ hoàn tiền</strong> để duyệt.
+          </span>
+        </div>
+      )}
+
       <div className="admin-table-card">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
@@ -237,14 +294,17 @@ function TransactionManagement() {
                 <th>Sản phẩm</th>
                 <th>Số tiền</th>
                 <th>Trạng thái</th>
+                <th>Lý do hoàn tiền</th>
+                <th>STK hoàn tiền</th>
                 <th>Thời gian</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
 
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-5">
+                  <td colSpan="12" className="text-center text-muted py-5">
                     <div className="spinner-border spinner-border-sm text-primary me-2"></div>
                     Đang tải danh sách giao dịch...
                   </td>
@@ -260,7 +320,15 @@ function TransactionManagement() {
                       <span className="transaction-id-cell">#{t.transactionId}</span>
                     </td>
 
-                    <td className="fw-semibold">{t.username || "--"}</td>
+                    <td>
+                      {t.userId ? (
+                        <AdminUserLink userId={t.userId} className="fw-semibold d-inline-block">
+                          {t.username || "--"}
+                        </AdminUserLink>
+                      ) : (
+                        <span className="fw-semibold">{t.username || "--"}</span>
+                      )}
+                    </td>
 
                     <td>
                       <span className="text-muted small">{t.email || "--"}</span>
@@ -273,7 +341,18 @@ function TransactionManagement() {
                     </td>
 
                     <td>
-                      <div className="transaction-product-cell">{t.targetName || "--"}</div>
+                      {t.targetType === "COURSE" && t.targetId ? (
+                        <Link
+                          to={`/admin/courses/${t.targetId}/review`}
+                          className="transaction-product-cell text-decoration-none text-primary"
+                          title="Xem chi tiết khóa học"
+                        >
+                          {t.targetName || "Khóa học"}
+                          <i className="bi bi-box-arrow-up-right ms-1 small opacity-75" />
+                        </Link>
+                      ) : (
+                        <div className="transaction-product-cell">{t.targetName || "--"}</div>
+                      )}
                     </td>
 
                     <td className="fw-semibold">{formatPrice(t.amount)}</td>
@@ -284,13 +363,57 @@ function TransactionManagement() {
                       </span>
                     </td>
 
+                    <td>
+                      <span className="text-muted small">
+                        {t.refundReason || t.refundRejectReason || "--"}
+                      </span>
+                    </td>
+
+                    <td>
+                      {t.status === "REFUND_REQUESTED" || t.status === "REFUNDED" ? (
+                        <RefundBankInfo
+                          compact
+                          bankName={t.refundBankName}
+                          accountNumber={t.refundAccountNumber}
+                          accountName={t.refundAccountName}
+                          amount={formatPrice(t.amount)}
+                        />
+                      ) : (
+                        <span className="text-muted small">--</span>
+                      )}
+                    </td>
+
                     <td>{formatDateTime(t.createdAt)}</td>
+                    <td>
+                      {t.status === "REFUND_REQUESTED" ? (
+                        <div className="d-flex gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-success"
+                            disabled={reviewingId === t.transactionId}
+                            onClick={() => handleRefundReview(t.transactionId, true)}
+                          >
+                            Duyệt
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            disabled={reviewingId === t.transactionId}
+                            onClick={() => handleRefundReview(t.transactionId, false)}
+                          >
+                            Từ chối
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-muted small">--</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
 
               {!loading && filteredTransactions.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted py-5">
+                  <td colSpan="12" className="text-center text-muted py-5">
                     Không có giao dịch nào phù hợp với điều kiện tìm kiếm.
                   </td>
                 </tr>

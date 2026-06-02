@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,10 +63,13 @@ public class ExamQuestionService {
 
 	@Autowired
 	PracticeConfigMapper practiceConfigMapper;
+	
+	@Autowired
+	FileService fileService;
 
 	@Transactional
 	public TeacherExamQuestionResponse taoCauHoiMoiVaThemVaoDeThi(Long examId, ExamQuestionCreateRequest request,
-			MultipartFile mediaFile) {
+			MultipartFile mediaFile) throws IOException {
 		User teacher = getCurrentUser();
 
 		validateCreateRequest(examId, request);
@@ -76,7 +80,7 @@ public class ExamQuestionService {
 		String mediaUrl = null;
 
 		if (mediaFile != null && !mediaFile.isEmpty()) {
-			mediaUrl = saveAudioFile(mediaFile);
+			mediaUrl = fileService.saveFile(mediaFile, "audio");
 		}
 
 		LocalDateTime now = LocalDateTime.now();
@@ -364,34 +368,7 @@ public class ExamQuestionService {
 		return value.trim();
 	}
 
-	private String saveAudioFile(MultipartFile file) {
-		try {
-			String originalFilename = file.getOriginalFilename();
-
-			String extension = "";
-
-			if (originalFilename != null && originalFilename.contains(".")) {
-				extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-			}
-
-			String fileName = UUID.randomUUID() + extension;
-
-			Path uploadDir = Paths.get("D:/uploads/audios");
-
-			if (!Files.exists(uploadDir)) {
-				Files.createDirectories(uploadDir);
-			}
-
-			Path filePath = uploadDir.resolve(fileName);
-
-			file.transferTo(filePath.toFile());
-
-			return "audios/" + fileName;
-		} catch (Exception e) {
-			throw new RuntimeException("Không thể lưu file audio");
-		}
-	}
-
+	
 	private User getCurrentUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

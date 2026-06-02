@@ -92,11 +92,13 @@ public class QuestionService {
 			throws IOException {
 
 		String username = getCurrentUsername();
+		
 
 		validateQuestionType(request.getQuestionType());
 
 		Lesson lesson = lessonRepository.findLessonOfTeacher(lessonId, username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy lesson hoặc bạn không có quyền thao tác"));
+		Level level = lesson.getCourse().getLevel();
 
 		User teacher = userRepository.findByUsername(username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -111,7 +113,7 @@ public class QuestionService {
 
 		LocalDateTime now = LocalDateTime.now();
 
-		Question question = buildQuestionFromRequest(request, teacher, mediaUrl, now);
+		Question question = buildQuestionFromRequest(level, request, teacher, mediaUrl, now);
 
 		Question savedQuestion = questionRepository.save(question);
 
@@ -153,8 +155,13 @@ public class QuestionService {
 				 * lưu mediaUrl.
 				 */
 				validateCreateRequest(request, null);
+				
+				Level level = null;
+				if(request.getLevelId() != null) {
+					level = levelRepository.findById(request.getLevelId()).orElse(null);
+				}
 
-				Question question = buildQuestionFromRequest(request, teacher, request.getMediaUrl(), now);
+				Question question = buildQuestionFromRequest(level, request, teacher, request.getMediaUrl(), now);
 
 				Question savedQuestion = questionRepository.save(question);
 
@@ -181,6 +188,7 @@ public class QuestionService {
 
 		User teacher = userRepository.findByUsername(username)
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+		
 
 		LocalDateTime now = LocalDateTime.now();
 
@@ -194,8 +202,12 @@ public class QuestionService {
 				validateQuestionType(request.getQuestionType());
 
 				validateCreateRequest(request, null);
+				Level level = null;
+				if(request.getLevelId() != null) {
+					level = levelRepository.findById(request.getLevelId()).orElse(null);
+				}
 
-				Question question = buildQuestionFromRequest(request, teacher, request.getMediaUrl(), now);
+				Question question = buildQuestionFromRequest(level, request, teacher, request.getMediaUrl(), now);
 
 				Question savedQuestion = questionRepository.save(question);
 
@@ -225,19 +237,25 @@ public class QuestionService {
 		if (mediaFile != null && !mediaFile.isEmpty()) {
 			mediaUrl = fileService.saveFile(mediaFile, "audio");
 		}
-
+		
+		
+		Level level = null;
+		if(request.getLevelId() != null) {
+			level = levelRepository.findById(request.getLevelId()).orElse(null);
+		}
+		
 		LocalDateTime now = LocalDateTime.now();
 
-		Question question = buildQuestionFromRequest(request, teacher, mediaUrl, now);
+		Question question = buildQuestionFromRequest(level, request, teacher, mediaUrl, now);
 
 		Question savedQuestion = questionRepository.save(question);
 
 		return questionMapper.toQuestionResponse(savedQuestion);
 	}
 
-	private Question buildQuestionFromRequest(QuestionRequest request, User teacher, String mediaUrl,
+	private Question buildQuestionFromRequest(Level level, QuestionRequest request, User teacher, String mediaUrl,
 			LocalDateTime now) {
-		Level level = levelRepository.findById(request.getLevelId()).orElse(null);
+//		Level level = levelRepository.findById(request.getLevelId()).orElse(null);
 		Question question = Question.builder().createdBy(teacher).questionType(request.getQuestionType())
 				.content(request.getContent().trim()).mediaUrl(mediaUrl)
 				.correctText(trimToNull(request.getCorrectText())).explanation(trimToNull(request.getExplanation()))

@@ -30,6 +30,9 @@ public class Enrollment {
     @Column(name = "hascourseaccess", nullable = false)
     private Boolean hasCourseAccess;
 
+    @Column(name = "access_status", length = 30)
+    private String accessStatus;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coursetransactionitemid")
     private TransactionItem courseTransactionItem;

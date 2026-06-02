@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import "./TeacherBankAccountsPage.css";
+import BankSelectField from "../../components/BankSelectField/BankSelectField";
+import {
+  resolveBankName,
+  splitBankNameForForm,
+} from "../../constants/vietnamBanks";
 
 const API_BASE = "http://localhost:8080";
 
@@ -13,7 +18,8 @@ function TeacherBankAccountsPage() {
     const [editingAccount, setEditingAccount] = useState(null);
 
     const [form, setForm] = useState({
-        bankName: "",
+        bankSelect: "",
+        customBankName: "",
         accountNumber: "",
         accountName: "",
         isDefault: false,
@@ -69,7 +75,8 @@ function TeacherBankAccountsPage() {
     const openCreateModal = () => {
         setEditingAccount(null);
         setForm({
-            bankName: "",
+            bankSelect: "",
+            customBankName: "",
             accountNumber: "",
             accountName: "",
             isDefault: bankAccounts.length === 0,
@@ -80,8 +87,10 @@ function TeacherBankAccountsPage() {
 
     const openEditModal = (account) => {
         setEditingAccount(account);
+        const bankParts = splitBankNameForForm(account.bankName);
         setForm({
-            bankName: account.bankName || "",
+            bankSelect: bankParts.bankSelect,
+            customBankName: bankParts.customBankName,
             accountNumber: account.accountNumber || "",
             accountName: account.accountName || "",
             isDefault: Boolean(account.isDefault),
@@ -105,8 +114,8 @@ function TeacherBankAccountsPage() {
     };
 
     const validateForm = () => {
-        if (!form.bankName.trim()) {
-            return "Vui lòng nhập tên ngân hàng";
+        if (!resolveBankName(form.bankSelect, form.customBankName)) {
+            return "Vui lòng chọn ngân hàng";
         }
 
         if (!form.accountNumber.trim()) {
@@ -139,7 +148,7 @@ function TeacherBankAccountsPage() {
             setError("");
 
             const payload = {
-                bankName: form.bankName.trim(),
+                bankName: resolveBankName(form.bankSelect, form.customBankName),
                 accountNumber: form.accountNumber.trim(),
                 accountName: form.accountName.trim().toUpperCase(),
                 isDefault: Boolean(form.isDefault),
@@ -430,19 +439,17 @@ function TeacherBankAccountsPage() {
                                         </div>
                                     )}
 
-                                    <div className="mb-3">
-                                        <label className="form-label fw-semibold">
-                                            Tên ngân hàng <span className="text-danger">*</span>
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="Ví dụ: Vietcombank, MB Bank, Techcombank..."
-                                            value={form.bankName}
-                                            onChange={(e) => handleChange("bankName", e.target.value)}
-                                        />
-                                    </div>
+                                    <BankSelectField
+                                        bankSelect={form.bankSelect}
+                                        customBankName={form.customBankName}
+                                        onBankSelectChange={(value) => handleChange("bankSelect", value)}
+                                        onCustomBankNameChange={(value) =>
+                                            handleChange("customBankName", value)
+                                        }
+                                        disabled={saving}
+                                        selectId="teacherBankSelect"
+                                        customId="teacherCustomBankName"
+                                    />
 
                                     <div className="mb-3">
                                         <label className="form-label fw-semibold">

@@ -475,7 +475,7 @@ function TeacherExamDetail() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => navigate(`/teacher/exams/${examId}/questions/create`)}
+              onClick={() => navigate(`/teacher/courses/${courseId}/exams/${examId}/questions/create`)}
             >
               <i className="bi bi-plus-lg me-2"></i>
               Thêm câu hỏi

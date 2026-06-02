@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,38 +19,144 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.learning.english.dto.response.AiChatHistoryPageResponse;
+import com.learning.english.dto.response.AiChatMessageResponse;
+import com.learning.english.dto.response.AiCourseHistoryPageResponse;
+import com.learning.english.dto.response.AiCourseRecommendationHistoryResponse;
 import com.learning.english.entity.AiChatHistory;
 import com.learning.english.entity.User;
+import com.learning.english.mapper.AiChatHistoryMapper;
+import com.learning.english.mapper.AiCourseHistoryMapper;
 import com.learning.english.repository.AiChatHistoryRepository;
 import com.learning.english.repository.UserRepository;
 
 @Service
 public class AiChatService {
 
-    private static final String SUMMARY_MESSAGE = "__SUMMARY__";
+	private static final String SUMMARY_MESSAGE = "__SUMMARY__";
 
-    @Value("${gemini.api.key}")
-    private String apiKey;
+	@Value("${gemini.api.key}")
+	private String apiKey;
 
-    @Value("${gemini.api.url}")
-    private String url;
+	@Value("${gemini.api.url}")
+	private String url;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+	private final RestTemplate restTemplate = new RestTemplate();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
-    AiChatHistoryRepository aiChatHistoryRepository;
+	@Autowired
+	AiChatHistoryRepository aiChatHistoryRepository;
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private SystemSettingService systemSettingService;
+
+	@Autowired
+	AiChatHistoryMapper aiChatHistoryMapper;
+	
+	@Autowired
+	AiCourseHistoryMapper aiCourseHistoryMapper;
+
+	private static final String CHAT_TYPE = "chat";
+	private static final int DEFAULT_LIMIT = 10;
+	private static final int MAX_LIMIT = 50;
+	private static final String COURSE_TYPE = "suggest";
+	
+	public AiCourseHistoryPageResponse getCourseHistory(Long beforeChatId, Integer limit) {
+		User user = getCurrentUser();
+        int safeLimit = normalizeLimit(limit);
+
+        Pageable pageable = PageRequest.of(0, safeLimit + 1);
+
+        List<AiChatHistory> histories;
+
+        if (beforeChatId == null) {
+            histories = aiChatHistoryRepository.findByUserIdAndTypeOrderByChatIdDesc(
+                    user.getUserId(),
+                    COURSE_TYPE,
+                    pageable
+            );
+        } else {
+            histories = aiChatHistoryRepository.findByUserIdAndTypeAndChatIdLessThanOrderByChatIdDesc(
+                    user.getUserId(),
+                    COURSE_TYPE,
+                    beforeChatId,
+                    pageable
+            );
+        }
+
+        boolean hasMore = histories.size() > safeLimit;
+
+        if (hasMore) {
+            histories = histories.subList(0, safeLimit);
+        }
+
+        Collections.reverse(histories);
+
+        List<AiCourseRecommendationHistoryResponse> messages =
+                aiCourseHistoryMapper.toMessageResponses(histories);
+
+        Long nextCursor = null;
+
+        if (!histories.isEmpty()) {
+            nextCursor = histories.get(0).getChatId();
+        }
+
+        return AiCourseHistoryPageResponse.builder()
+                .messages(messages)
+                .nextCursor(nextCursor)
+                .hasMore(hasMore)
+                .build();
+    }
+
     
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
-    private SystemSettingService systemSettingService;
+	public AiChatHistoryPageResponse getChatHistory(Long beforeChatId, Integer limit) {
+		User user = getCurrentUser();
+		int safeLimit = normalizeLimit(limit);
 
-    
-    
-    private User getCurrentUser() {
+		Pageable pageable = PageRequest.of(0, safeLimit + 1);
+
+		List<AiChatHistory> histories;
+
+		if (beforeChatId == null) {
+			histories = aiChatHistoryRepository.findByUserIdAndTypeOrderByChatIdDesc(user.getUserId(), CHAT_TYPE,
+					pageable);
+		} else {
+			histories = aiChatHistoryRepository.findByUserIdAndTypeAndChatIdLessThanOrderByChatIdDesc(user.getUserId(),
+					CHAT_TYPE, beforeChatId, pageable);
+		}
+
+		boolean hasMore = histories.size() > safeLimit;
+
+		if (hasMore) {
+			histories = histories.subList(0, safeLimit);
+		}
+
+		Collections.reverse(histories);
+
+		List<AiChatMessageResponse> messages = aiChatHistoryMapper.toMessageResponses(histories);
+
+		Long nextCursor = null;
+
+		if (!histories.isEmpty()) {
+			nextCursor = histories.get(0).getChatId();
+		}
+
+		return AiChatHistoryPageResponse.builder().messages(messages).nextCursor(nextCursor).hasMore(hasMore).build();
+	}
+
+	private int normalizeLimit(Integer limit) {
+		if (limit == null || limit <= 0) {
+			return DEFAULT_LIMIT;
+		}
+
+		return Math.min(limit, MAX_LIMIT);
+	}
+
+	private User getCurrentUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (authentication == null || !authentication.isAuthenticated()) {
@@ -61,279 +169,215 @@ public class AiChatService {
 				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 	}
 
-    public String askQuestion(String question) {
-        try {
-            User user = getCurrentUser();
+	public String askQuestion(String question) {
+		try {
+			User user = getCurrentUser();
 
-            checkAiDailyLimit(user);
+			checkAiDailyLimit(user);
 
-            String summary = getLatestSummary(user.getUserId());
+			String summary = getLatestSummary(user.getUserId());
 
-            List<AiChatHistory> recentMessages = getRecentMessages(user.getUserId());
+			List<AiChatHistory> recentMessages = getRecentMessages(user.getUserId());
 
-            String prompt = buildMainPrompt(summary, recentMessages, question);
+			String prompt = buildMainPrompt(summary, recentMessages, question);
 
-            String aiAnswer = callGemini(prompt);
+			String aiAnswer = callGemini(prompt);
 
-            saveChatHistory(user.getUserId(), question, aiAnswer);
+			saveChatHistory(user.getUserId(), question, aiAnswer);
 
-            updateSummaryIfNeeded(user.getUserId());
+			updateSummaryIfNeeded(user.getUserId());
 
-            return aiAnswer;
+			return aiAnswer;
 
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi: " + e.getMessage(), e);
-        }
-    }
-    
-    private void checkAiDailyLimit(User user) {
-        LocalDate today = LocalDate.now();
+		} catch (Exception e) {
+			throw new RuntimeException("Lỗi: " + e.getMessage(), e);
+		}
+	}
 
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+	private void checkAiDailyLimit(User user) {
+		LocalDate today = LocalDate.now();
 
-        String roleName = user.getRole().getRoleName();
+		LocalDateTime startOfDay = today.atStartOfDay();
+		LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
 
-        int dailyLimit = systemSettingService.getAiDailyLimitByRole(roleName);
+		String roleName = user.getRole().getRoleName();
 
-        long usedToday = aiChatHistoryRepository
-                .countByUserIdAndUserMessageNotAndCreatedAtBetween(
-                        user.getUserId(),
-                        SUMMARY_MESSAGE,
-                        startOfDay,
-                        endOfDay
-                );
+		int dailyLimit = systemSettingService.getAiDailyLimitByRole(roleName);
 
-        if (usedToday >= dailyLimit) {
-            throw new RuntimeException(
-                    "Bạn đã hết lượt sử dụng AI hôm nay."
-            );
-        }
-    }
-    
-    
-    private String getLatestSummary(Long userId) {
-        return aiChatHistoryRepository
-                .findTopByUserIdAndUserMessageOrderByCreatedAtDesc(userId, SUMMARY_MESSAGE)
-                .map(AiChatHistory::getAiResponse)
-                .orElse("");
-    }
+		long usedToday = aiChatHistoryRepository.countByUserIdAndUserMessageNotAndCreatedAtBetween(user.getUserId(),
+				SUMMARY_MESSAGE, startOfDay, endOfDay);
 
-    private List<AiChatHistory> getRecentMessages(Long userId) {
-        List<AiChatHistory> messages =
-                aiChatHistoryRepository.findTop5ByUserIdAndTypeOrderByCreatedAtDesc(
-                        userId,
-                        "chat"
-                );
+		if (usedToday >= dailyLimit) {
+			throw new RuntimeException("Bạn đã hết lượt sử dụng AI hôm nay.");
+		}
+	}
 
-        Collections.reverse(messages);
+	private String getLatestSummary(Long userId) {
+		return aiChatHistoryRepository.findTopByUserIdAndUserMessageOrderByCreatedAtDesc(userId, SUMMARY_MESSAGE)
+				.map(AiChatHistory::getAiResponse).orElse("");
+	}
 
-        return messages;
-    }
+	private List<AiChatHistory> getRecentMessages(Long userId) {
+		List<AiChatHistory> messages = aiChatHistoryRepository.findTop5ByUserIdAndTypeOrderByCreatedAtDesc(userId,
+				"chat");
 
-    private List<AiChatHistory> getRecentMessagesForSummary(Long userId) {
-        List<AiChatHistory> messages =
-                aiChatHistoryRepository.findTop20ByUserIdAndTypeOrderByCreatedAtDesc(
-                        userId,
-                        "chat"
-                );
+		Collections.reverse(messages);
 
-        Collections.reverse(messages);
+		return messages;
+	}
 
-        return messages;
-    }
+	private List<AiChatHistory> getRecentMessagesForSummary(Long userId) {
+		List<AiChatHistory> messages = aiChatHistoryRepository.findTop20ByUserIdAndTypeOrderByCreatedAtDesc(userId,
+				"chat");
 
-    private void saveChatHistory(Long userId, String question, String aiAnswer) {
-        AiChatHistory history = AiChatHistory.builder()
-        		.aiResponse(aiAnswer)
-        		.userId(userId)
-        		.userMessage(question)
-        		.createdAt(LocalDateTime.now())
-        		.type("chat")
-        		.build();
-        aiChatHistoryRepository.save(history);
-    }
+		Collections.reverse(messages);
 
-    private void saveSummary(Long userId, String summary) {
-        AiChatHistory summaryHistory = AiChatHistory.builder()
-                .userId(userId)
-                .userMessage(SUMMARY_MESSAGE)
-                .aiResponse(summary)
-                .createdAt(LocalDateTime.now()).build();
-                
-        
+		return messages;
+	}
 
-        aiChatHistoryRepository.save(summaryHistory);
-    }
+	private void saveChatHistory(Long userId, String question, String aiAnswer) {
+		AiChatHistory history = AiChatHistory.builder().aiResponse(aiAnswer).userId(userId).userMessage(question)
+				.createdAt(LocalDateTime.now()).type("chat").build();
+		aiChatHistoryRepository.save(history);
+	}
 
-    private void updateSummaryIfNeeded(Long userId) throws Exception {
-        long totalRealMessages = aiChatHistoryRepository.countByUserIdAndType(
-                userId,
-                "chat"
-        );
+	private void saveSummary(Long userId, String summary) {
+		AiChatHistory summaryHistory = AiChatHistory.builder().userId(userId).userMessage(SUMMARY_MESSAGE)
+				.aiResponse(summary).createdAt(LocalDateTime.now()).build();
 
-        // Cứ mỗi 10 lượt chat thật thì nén lại 1 lần
-        if (totalRealMessages == 0 || totalRealMessages % 10 != 0) {
-            return;
-        }
+		aiChatHistoryRepository.save(summaryHistory);
+	}
 
-        String oldSummary = getLatestSummary(userId);
+	private void updateSummaryIfNeeded(Long userId) throws Exception {
+		long totalRealMessages = aiChatHistoryRepository.countByUserIdAndType(userId, "chat");
 
-        List<AiChatHistory> recentMessages = getRecentMessagesForSummary(userId);
+		// Cứ mỗi 10 lượt chat thật thì nén lại 1 lần
+		if (totalRealMessages == 0 || totalRealMessages % 10 != 0) {
+			return;
+		}
 
-        StringBuilder historyText = new StringBuilder();
+		String oldSummary = getLatestSummary(userId);
 
-        for (AiChatHistory item : recentMessages) {
-            historyText.append("User: ")
-                    .append(item.getUserMessage())
-                    .append("\n");
+		List<AiChatHistory> recentMessages = getRecentMessagesForSummary(userId);
 
-            historyText.append("AI: ")
-                    .append(item.getAiResponse())
-                    .append("\n\n");
-        }
+		StringBuilder historyText = new StringBuilder();
 
-        String summaryPrompt = """
-                Hãy nén lịch sử hội thoại sau thành một bản tóm tắt ngắn gọn để AI dùng làm ngữ cảnh dài hạn.
+		for (AiChatHistory item : recentMessages) {
+			historyText.append("User: ").append(item.getUserMessage()).append("\n");
 
-                Yêu cầu:
-                - Viết bằng tiếng Việt.
-                - Chỉ giữ thông tin quan trọng cho việc học tiếng Anh.
-                - Giữ chủ đề người học đang hỏi.
-                - Giữ lỗi sai thường gặp của người học.
-                - Giữ câu tiếng Anh quan trọng nếu cần.
-                - Bỏ chào hỏi, cảm ơn, nội dung lặp lại.
-                - Tối đa 1200 ký tự.
-                - Không thêm thông tin không có trong hội thoại.
+			historyText.append("AI: ").append(item.getAiResponse()).append("\n\n");
+		}
 
-                Tóm tắt cũ:
-                %s
+		String summaryPrompt = """
+				Hãy nén lịch sử hội thoại sau thành một bản tóm tắt ngắn gọn để AI dùng làm ngữ cảnh dài hạn.
 
-                Hội thoại mới:
-                %s
+				Yêu cầu:
+				- Viết bằng tiếng Việt.
+				- Chỉ giữ thông tin quan trọng cho việc học tiếng Anh.
+				- Giữ chủ đề người học đang hỏi.
+				- Giữ lỗi sai thường gặp của người học.
+				- Giữ câu tiếng Anh quan trọng nếu cần.
+				- Bỏ chào hỏi, cảm ơn, nội dung lặp lại.
+				- Tối đa 1200 ký tự.
+				- Không thêm thông tin không có trong hội thoại.
 
-                Bản tóm tắt mới:
-                """.formatted(
-                oldSummary == null || oldSummary.isBlank() ? "Chưa có." : oldSummary,
-                historyText.toString()
-        );
+				Tóm tắt cũ:
+				%s
 
-        String newSummary = callGemini(summaryPrompt);
+				Hội thoại mới:
+				%s
 
-        saveSummary(userId, newSummary);
-    }
+				Bản tóm tắt mới:
+				""".formatted(oldSummary == null || oldSummary.isBlank() ? "Chưa có." : oldSummary,
+				historyText.toString());
 
-    private String buildMainPrompt(
-            String summary,
-            List<AiChatHistory> recentMessages,
-            String currentQuestion
-    ) {
-        StringBuilder historyText = new StringBuilder();
+		String newSummary = callGemini(summaryPrompt);
 
-        for (AiChatHistory item : recentMessages) {
-            historyText.append("User: ")
-                    .append(item.getUserMessage())
-                    .append("\n");
+		saveSummary(userId, newSummary);
+	}
 
-            historyText.append("AI: ")
-                    .append(item.getAiResponse())
-                    .append("\n\n");
-        }
+	private String buildMainPrompt(String summary, List<AiChatHistory> recentMessages, String currentQuestion) {
+		StringBuilder historyText = new StringBuilder();
 
-        return """
-                Bạn là AI hỗ trợ học tiếng Anh cho website English Learning.
+		for (AiChatHistory item : recentMessages) {
+			historyText.append("User: ").append(item.getUserMessage()).append("\n");
 
-                Nhiệm vụ:
-                - Trả lời các câu hỏi về tiếng Anh.
-                - Giải thích ngữ pháp dễ hiểu.
-                - Dịch câu Anh - Việt.
-                - Giải thích từ vựng.
-                - Đưa ví dụ đơn giản.
-                - Hỗ trợ luyện viết và sửa lỗi tiếng Anh.
+			historyText.append("AI: ").append(item.getAiResponse()).append("\n\n");
+		}
 
-                Quy tắc:
-                - Luôn trả lời bằng tiếng Việt.
-                - Trình bày rõ ràng, dễ đọc.
-                - Nếu có ví dụ thì xuống dòng.
-                - Không trả lời các nội dung không liên quan đến học tiếng Anh.
-                - Nếu người dùng hỏi ngoài phạm vi, hãy lịch sự từ chối.
-                - Dùng ngữ cảnh trước đó khi người dùng nói: "câu đó", "ý trên", "nó", "tiếp tục", "ví dụ nữa".
+		return """
+				Bạn là AI hỗ trợ học tiếng Anh cho website English Learning.
 
-                Tóm tắt ngữ cảnh trước đó:
-                %s
+				Nhiệm vụ:
+				- Trả lời các câu hỏi về tiếng Anh.
+				- Giải thích ngữ pháp dễ hiểu.
+				- Dịch câu Anh - Việt.
+				- Giải thích từ vựng.
+				- Đưa ví dụ đơn giản.
+				- Hỗ trợ luyện viết và sửa lỗi tiếng Anh.
 
-                Hội thoại gần đây:
-                %s
+				Quy tắc:
+				- Luôn trả lời bằng tiếng Việt.
+				- Trình bày rõ ràng, dễ đọc.
+				- Nếu có ví dụ thì xuống dòng.
+				- Không trả lời các nội dung không liên quan đến học tiếng Anh.
+				- Nếu người dùng hỏi ngoài phạm vi, hãy lịch sự từ chối.
+				- Dùng ngữ cảnh trước đó khi người dùng nói: "câu đó", "ý trên", "nó", "tiếp tục", "ví dụ nữa".
 
-                Câu hỏi hiện tại của học viên:
-                %s
-                """.formatted(
-                summary == null || summary.isBlank() ? "Chưa có ngữ cảnh trước đó." : summary,
-                historyText.isEmpty() ? "Chưa có hội thoại gần đây." : historyText.toString(),
-                currentQuestion
-        );
-    }
+				Tóm tắt ngữ cảnh trước đó:
+				%s
 
-    private String callGemini(String prompt) throws Exception {
-        Map<String, Object> textPart = Map.of(
-                "text",
-                prompt
-        );
+				Hội thoại gần đây:
+				%s
 
-        Map<String, Object> content = Map.of(
-                "parts",
-                List.of(textPart)
-        );
+				Câu hỏi hiện tại của học viên:
+				%s
+				""".formatted(summary == null || summary.isBlank() ? "Chưa có ngữ cảnh trước đó." : summary,
+				historyText.isEmpty() ? "Chưa có hội thoại gần đây." : historyText.toString(), currentQuestion);
+	}
 
-        Map<String, Object> requestBody = Map.of(
-                "contents",
-                List.of(content)
-        );
+	private String callGemini(String prompt) throws Exception {
+		Map<String, Object> textPart = Map.of("text", prompt);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+		Map<String, Object> content = Map.of("parts", List.of(textPart));
 
-        HttpEntity<Map<String, Object>> entity =
-                new HttpEntity<>(requestBody, headers);
+		Map<String, Object> requestBody = Map.of("contents", List.of(content));
 
-        String fullUrl = url + "?key=" + apiKey;
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
 
-        ResponseEntity<String> response = restTemplate.exchange(
-                fullUrl,
-                HttpMethod.POST,
-                entity,
-                String.class
-        );
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        String responseBody = response.getBody();
+		String fullUrl = url + "?key=" + apiKey;
 
-        if (responseBody == null || responseBody.isBlank()) {
-            throw new RuntimeException("Gemini không trả dữ liệu");
-        }
+		ResponseEntity<String> response = restTemplate.exchange(fullUrl, HttpMethod.POST, entity, String.class);
 
-        JsonNode body = objectMapper.readTree(responseBody);
+		String responseBody = response.getBody();
 
-        JsonNode candidates = body.path("candidates");
+		if (responseBody == null || responseBody.isBlank()) {
+			throw new RuntimeException("Gemini không trả dữ liệu");
+		}
 
-        if (!candidates.isArray() || candidates.isEmpty()) {
-            throw new RuntimeException("Gemini không trả candidates: " + responseBody);
-        }
+		JsonNode body = objectMapper.readTree(responseBody);
 
-        JsonNode parts = candidates
-                .get(0)
-                .path("content")
-                .path("parts");
+		JsonNode candidates = body.path("candidates");
 
-        if (!parts.isArray() || parts.isEmpty()) {
-            throw new RuntimeException("Gemini không trả parts: " + responseBody);
-        }
+		if (!candidates.isArray() || candidates.isEmpty()) {
+			throw new RuntimeException("Gemini không trả candidates: " + responseBody);
+		}
 
-        JsonNode textNode = parts.get(0).path("text");
+		JsonNode parts = candidates.get(0).path("content").path("parts");
 
-        if (textNode.isMissingNode() || textNode.asText().isBlank()) {
-            throw new RuntimeException("Gemini không trả text: " + responseBody);
-        }
+		if (!parts.isArray() || parts.isEmpty()) {
+			throw new RuntimeException("Gemini không trả parts: " + responseBody);
+		}
 
-        return textNode.asText();
-    }
+		JsonNode textNode = parts.get(0).path("text");
+
+		if (textNode.isMissingNode() || textNode.asText().isBlank()) {
+			throw new RuntimeException("Gemini không trả text: " + responseBody);
+		}
+
+		return textNode.asText();
+	}
 }

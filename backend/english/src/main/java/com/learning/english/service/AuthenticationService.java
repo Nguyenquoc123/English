@@ -7,10 +7,13 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.learning.english.dto.request.ForgotPasswordRequest;
+import com.learning.english.dto.request.ResetPasswordRequest;
 import com.learning.english.dto.request.UserLoginRequest;
 import com.learning.english.dto.request.UserRequest;
 import com.learning.english.dto.request.XacMinhOTPRequest;
 import com.learning.english.dto.response.AuthenticationResponse;
+import com.learning.english.dto.response.MessageResponse;
 import com.learning.english.entity.Role;
 import com.learning.english.entity.User;
 import com.learning.english.repository.RoleRepository;
@@ -81,7 +84,7 @@ public class AuthenticationService {
                 .expiredAt(LocalDateTime.now().plusMinutes(5))
                 .used(false)
                 .build());
-
+        System.out.println(otp);
         sendRegisterMail(user.getEmail(), "Mã xác minh tài khoản", "Mã xác minh của bạn là: " + otp);
 
         String token = generateToken(user);
@@ -189,5 +192,85 @@ public class AuthenticationService {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    // ============
+    
+    public MessageResponse forgotPassword(ForgotPasswordRequest request) {
+        String email = normalizeEmail(request.getEmail());
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống"));
+
+        String otp = generateOtp();
+
+        OtpData otpData = OtpData.builder()
+                .otp(otp)
+                .expiredAt(LocalDateTime.now().plusMinutes(5))
+                .used(false)
+                .build();
+
+        otpStorage.put(email, otpData);
+        String content = "Xin chào,\n\n"
+                + "Mã xác nhận đặt lại mật khẩu của bạn là: " + otp + "\n\n"
+                + "Mã này có hiệu lực trong 5 phút.\n\n"
+                + "Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này."; 
+        sendRegisterMail(user.getEmail(), "Mã xác nhận đặt lại mật khẩu",  content);
+        System.out.println(otp);
+
+        return MessageResponse.builder()
+                .message("Mã xác nhận đã được gửi đến email của bạn.")
+                .build();
+    }
+
+    
+    @Transactional
+    public MessageResponse resetPassword(ResetPasswordRequest request) {
+        String email = normalizeEmail(request.getEmail());
+        String otp = request.getOtp().trim();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống"));
+
+        OtpData otpData = otpStorage.get(email);
+
+        if (otpData == null) {
+            throw new RuntimeException("Bạn chưa yêu cầu mã xác nhận hoặc mã đã hết hạn");
+        }
+
+        if (otpData.isUsed()) {
+            throw new RuntimeException("Mã OTP đã được sử dụng");
+        }
+
+        if (otpData.getExpiredAt().isBefore(LocalDateTime.now())) {
+            otpStorage.remove(email);
+            throw new RuntimeException("Mã OTP đã hết hạn");
+        }
+
+        if (!otpData.getOtp().equals(otp)) {
+            throw new RuntimeException("Mã OTP không chính xác");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        otpData.setUsed(true);
+        otpStorage.put(email, otpData);
+
+        otpStorage.remove(email);
+
+        return MessageResponse.builder()
+                .message("Đặt lại mật khẩu thành công.")
+                .build();
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase();
+    }
+
+    private String generateOtp() {
+        Random random = new Random();
+        int number = 100000 + random.nextInt(900000);
+        return String.valueOf(number);
     }
 }

@@ -24,11 +24,15 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 			""")
 	List<Enrollment> findPurchasedByUserId(@Param("userId") Long userId);
 
+	
 	boolean existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(Long userId, Long courseId);
+	boolean existsByUserUserIdAndCourseCourseId(Long userId, Long courseId);
 
 	
 
 	Optional<Enrollment> findByUserUserIdAndCourseCourseId(Long userId, Long courseId);
+
+	List<Enrollment> findByCourseTransactionItem_Transaction_TransactionId(Long transactionId);
 
 	Long countByCourseCourseIdAndHasCourseAccessTrue(Long courseId);
 

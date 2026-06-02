@@ -280,7 +280,7 @@ function TeacherEarningsPage() {
         <div className="teacher-earnings-page">
             <div className="earnings-heading">
                 <div>
-                    <h4 className="fw-bold mb-1">Doanh thu & rút tiền</h4>
+                    <h4 className="fw-bold mb-1">Số dư của tôi</h4>
                     <p className="text-muted mb-0">
                         Theo dõi số dư và các yêu cầu rút tiền của bạn.
                     </p>
@@ -497,9 +497,9 @@ function TeacherEarningsPage() {
                                                 required
                                             />
 
-                                            <div className="form-text">
+                                            {/* <div className="form-text">
                                                 Số tiền rút tối thiểu là 10.000đ
-                                            </div>
+                                            </div> */}
                                         </div>
 
                                         <div className="mb-3">

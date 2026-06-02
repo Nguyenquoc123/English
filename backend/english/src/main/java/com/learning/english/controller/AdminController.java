@@ -6,6 +6,7 @@ import com.learning.english.dto.request.WithdrawalReviewRequest;
 import com.learning.english.dto.request.NotificationRequest;
 import com.learning.english.dto.request.AdminChangePasswordRequest;
 import com.learning.english.dto.request.AdminCreateUserRequest;
+import com.learning.english.dto.request.RefundReviewRequest;
 
 import com.learning.english.dto.response.*;
 import com.learning.english.dto.response.TransactionAdminResponse;
@@ -95,19 +96,19 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllWithdrawals());
     }
 
-    @PutMapping("/withdrawals/{withdrawalId}/review")
-    public ResponseEntity<WithdrawalResponse> reviewWithdrawal(
-            @PathVariable Long withdrawalId,
-            @RequestBody WithdrawalReviewRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return ResponseEntity.ok(adminService.reviewWithdrawalByUsername(
-                withdrawalId,
-                request.getStatus(),
-                request.getRejectReason(),
-                username
-        ));
-    }
+//    @PutMapping("/withdrawals/{withdrawalId}/review")
+//    public ResponseEntity<WithdrawalResponse> reviewWithdrawal(
+//            @PathVariable Long withdrawalId,
+//            @RequestBody WithdrawalReviewRequest request) {
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        String username = auth.getName();
+//        return ResponseEntity.ok(adminService.reviewWithdrawalByUsername(
+//                withdrawalId,
+//                request.getStatus(),
+//                request.getRejectReason(),
+//                username
+//        ));
+//    }
 
     // ==================== LESSON FREE MANAGEMENT ====================
 
@@ -178,6 +179,27 @@ public class AdminController {
     @GetMapping("/transactions")
     public ResponseEntity<List<TransactionAdminResponse>> getAllTransactions() {
         return ResponseEntity.ok(adminService.getAllTransactions());
+    }
+
+    @GetMapping("/refund-requests/pending")
+    public ResponseEntity<List<RefundRequestAdminResponse>> getPendingRefundRequests() {
+        return ResponseEntity.ok(adminService.getAllRefunds());
+    }
+
+    @PutMapping("/transactions/{transactionId}/refund-review")
+    public ResponseEntity<String> reviewRefund(
+            @PathVariable Long transactionId,
+            @RequestBody RefundReviewRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminUsername = auth.getName();
+        adminService.reviewRefund(
+                transactionId,
+                request.isApprove(),
+                request.getNote(),
+                request.getInternalNote(),
+                adminUsername
+        );
+        return ResponseEntity.ok(request.isApprove() ? "Đã duyệt hoàn tiền" : "Đã từ chối hoàn tiền");
     }
 
     @GetMapping("/reviews")

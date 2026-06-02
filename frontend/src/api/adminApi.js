@@ -40,6 +40,12 @@ export const getPendingWithdrawals = () => axiosClient.get("/admin/withdrawals/p
 
 export const getAllWithdrawals = () => axiosClient.get("/admin/withdrawals");
 
+export const approveWithdrawal = (withdrawnId) => {
+  return axiosClient.put("/withdraw/approve", null, {
+    params: { withdrawnId },
+  });
+};
+
 export const reviewWithdrawal = (withdrawalId, status, rejectReason) =>
   axiosClient.put(`/admin/withdrawals/${withdrawalId}/review`, { status, rejectReason });
 
@@ -65,6 +71,16 @@ export const createNotification = (title, message, targetType, targetValue) =>
   axiosClient.post("/admin/notifications", { title, message, targetType, targetValue });
 
 export const getAllTransactions = () => axiosClient.get("/admin/transactions");
+
+export const getPendingRefundRequests = () =>
+  axiosClient.get("/admin/refund-requests/pending");
+
+export const reviewRefund = (transactionId, approve, note, internalNote) =>
+  axiosClient.put(`/admin/transactions/${transactionId}/refund-review`, {
+    approve,
+    note,
+    internalNote,
+  });
 
 export const getAllReviews = () => axiosClient.get("/admin/reviews");
 

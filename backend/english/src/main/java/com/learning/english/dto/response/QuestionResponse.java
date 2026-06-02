@@ -40,4 +40,6 @@ public class QuestionResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    private Long levelId;
+    private String levelName;
 }

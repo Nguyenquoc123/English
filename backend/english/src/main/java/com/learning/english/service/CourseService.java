@@ -20,7 +20,7 @@ import com.learning.english.dto.response.CourseComboboxResponse;
 import com.learning.english.dto.response.CourseDetailResponse;
 import com.learning.english.dto.response.CourseResponse;
 import com.learning.english.dto.response.StudentCourseDetailResponse;
-import com.learning.english.dto.response.TeacherDashboardCourseResponse;
+//import com.learning.english.dto.response.TeacherDashboardCourseResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.Enrollment;
 import com.learning.english.entity.Level;
@@ -367,11 +367,10 @@ public class CourseService {
 	    boolean isEnrolled = false;
 
 	    if (user != null) {
-	        isEnrolled = enrollmentRepository
-	                .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
-	                        user.getUserId(),
-	                        courseId
-	                );
+	    	Enrollment enrollment = enrollmentRepository.findByUserUserIdAndCourseCourseId(user.getUserId(), courseId).orElse(null);
+	    	if(enrollment != null)
+	    		isEnrolled = true;
+	    	
 	    }
 
 	    Long lessonCount = lessonRepository.countLessonsByCourseId(courseId);

@@ -22,6 +22,8 @@ public class WithdrawalResponse {
     private BigDecimal amount;
     private String status;
     private String proofImageUrl;
+    private String qrPay;
+    private String paymentCode;
     private LocalDateTime requestedAt;
     private LocalDateTime reviewedAt;
     private Long reviewedBy;

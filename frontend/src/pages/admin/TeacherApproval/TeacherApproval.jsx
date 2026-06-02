@@ -378,6 +378,10 @@ function TeacherApproval() {
                   <span>{formatDateTime(detailProfile.createdAt)}</span>
                 </div>
                 <div className="teacher-detail-info-row">
+                  <span className="teacher-detail-label">Người duyệt</span>
+                  <span>{detailProfile.reviewedByName || "—"}</span>
+                </div>
+                <div className="teacher-detail-info-row">
                   <span className="teacher-detail-label">Thời gian duyệt</span>
                   <span>{formatDateTime(detailProfile.reviewedAt)}</span>
                 </div>

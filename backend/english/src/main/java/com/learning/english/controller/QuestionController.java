@@ -59,13 +59,20 @@ public class QuestionController {
             @RequestPart("data") QuestionRequest request,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile
     ) throws IOException {
-        request.setLessonId(lessonId);
-
-        return questionService.taoCauHoiVaGanVaoLesson(
-                lessonId,
-                request,
-                mediaFile
-        );
+    	try {
+    		request.setLessonId(lessonId);
+            System.out.println("=========" + lessonId);
+    		return questionService.taoCauHoiVaGanVaoLesson(
+                    lessonId,
+                    request,
+                    mediaFile
+            );	
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+        
+        
     }
     
     @PostMapping("/bank")

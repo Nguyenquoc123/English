@@ -159,7 +159,7 @@ function ThanhToanGioHang() {
             if (!response.ok) {
                 throw new Error("Lỗi khi kiểm tra thanh toán");
             }
-
+            window.dispatchEvent(new Event('cartChanged'));
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -185,7 +185,13 @@ function ThanhToanGioHang() {
             alert("Thanh toán thành công. Khóa học đã được thêm vào tài khoản của bạn.");
             navigate("/khoa-hoc-da-mua");
         } else {
-            alert("Giao dịch chưa thành công. Vui lòng nhấn lại sau ít phút");
+            alert(
+                "Hệ thống chưa nhận được xác nhận từ ngân hàng (webhook SePay).\n\n" +
+                    "• Đảm bảo đã chuyển đúng số tiền và nội dung CK (ví dụ SEVQR8)\n" +
+                    "• Giữ ngrok và backend đang chạy\n" +
+                    "• Kiểm tra tab Lịch sử gửi trên SePay (phải là 200, không phải 401)\n\n" +
+                    "Thử lại sau 1–2 phút hoặc bấm Gửi lại webhook trên SePay."
+            );
         }
     };
 

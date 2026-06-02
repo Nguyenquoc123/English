@@ -1,3 +1,10 @@
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 spring:
   servlet:
     multipart:
@@ -21,6 +28,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.SQLServerDialect
+
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
   mail:
     host: smtp.gmail.com
@@ -48,7 +61,7 @@ sepay:
     
 gemini:
   api:
-    key: AIzaSyC_xYSiQkWNNyA95UdjQDJFiZxsDY4AOfo
+    key: AQ.Ab8RN6KE2CrzPQJ9pOTiXbRYLI8rnUyg7apQVQD6cbKNP4DN4w212121
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
     fallback-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
     

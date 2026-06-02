@@ -1,3 +1,5 @@
+import { getFileUrl } from "../../../utils/fileurl";
+
 const ListeningFillBlankQuestion = ({
   question,
   value,
@@ -13,7 +15,7 @@ const ListeningFillBlankQuestion = ({
 
       <audio
         controls
-        src={question.mediaUrl}
+        src={getFileUrl(question.mediaUrl)}
         className="question-audio"
       />
 

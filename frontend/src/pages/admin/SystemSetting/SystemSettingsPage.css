@@ -1,0 +1,232 @@
+.system-settings-page {
+    padding: 28px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.system-settings-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.system-settings-header h1 {
+    margin: 0 0 6px;
+    color: #0f172a;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.system-settings-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 15px;
+}
+
+.system-settings-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.system-settings-refresh-btn:hover:not(:disabled) {
+    background: #dbeafe;
+}
+
+.system-settings-refresh-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.system-settings-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.system-settings-alert.success {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.system-settings-alert.error {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.system-settings-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.system-settings-loading {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.system-settings-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.system-settings-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1050px;
+}
+
+.system-settings-table th {
+    padding: 14px 16px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.system-settings-table td {
+    padding: 16px;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.system-settings-table code {
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: #4338ca;
+    background: #eef2ff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.system-settings-name {
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.system-settings-description {
+    max-width: 320px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.system-settings-value-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.system-settings-value-cell input {
+    width: 130px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    outline: none;
+    color: #0f172a;
+    background: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.system-settings-value-cell input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.system-settings-value-cell span {
+    color: #64748b;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.system-settings-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.system-settings-save-btn,
+.system-settings-reset-btn {
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.system-settings-save-btn {
+    color: #ffffff;
+    background: #2563eb;
+}
+
+.system-settings-save-btn:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.system-settings-reset-btn {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+.system-settings-reset-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+}
+
+.system-settings-save-btn:disabled,
+.system-settings-reset-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.system-settings-empty {
+    text-align: center;
+    color: #94a3b8;
+    padding: 40px 16px !important;
+}
+
+@media (max-width: 768px) {
+    .system-settings-page {
+        padding: 18px;
+    }
+
+    .system-settings-header {
+        flex-direction: column;
+    }
+
+    .system-settings-header h1 {
+        font-size: 24px;
+    }
+}

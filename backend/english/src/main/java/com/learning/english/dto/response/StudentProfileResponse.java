@@ -21,6 +21,7 @@ public class StudentProfileResponse {
     String username;
     String email;
     String avatarUrl;
+    String phone;
     String status;
     String role;
     LocalDateTime createdAt;

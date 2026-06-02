@@ -33,6 +33,8 @@ public class Transaction {
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
+    
+
     @Column(name = "paidat")
     private LocalDateTime paidAt;
 

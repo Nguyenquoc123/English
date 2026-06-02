@@ -38,6 +38,9 @@ public class User {
     @Column(name = "avatarurl", length = 500)
     private String avatarUrl;
 
+    @Column(name = "phone", length = 20)
+    private String phone;
+
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 

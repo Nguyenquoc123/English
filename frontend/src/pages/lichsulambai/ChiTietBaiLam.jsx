@@ -169,7 +169,9 @@ function ChiTietBaiLam() {
   };
 
   const handleBack = () => {
-    navigate("/lich-su-lam-bai");
+    console.log(result);
+    
+    navigate(`/khoa-hoc/${result.courseId}`);
   };
 
   const handleRetry = () => {
@@ -207,7 +209,7 @@ function ChiTietBaiLam() {
             onClick={handleBack}
           >
             <i className="bi bi-arrow-left"></i>
-            Quay lại lịch sử làm bài
+            Quay lại
           </button>
 
           <div className="alert alert-danger mt-3">{error}</div>
@@ -226,7 +228,7 @@ function ChiTietBaiLam() {
             onClick={handleBack}
           >
             <i className="bi bi-arrow-left"></i>
-            Quay lại lịch sử làm bài
+            Quay lại
           </button>
 
           <div className="alert alert-warning mt-3">
@@ -248,7 +250,7 @@ function ChiTietBaiLam() {
               onClick={handleBack}
             >
               <i className="bi bi-arrow-left"></i>
-              Quay lại lịch sử làm bài
+              Quay lại
             </button>
 
             <h2>{getPageTitle()}</h2>

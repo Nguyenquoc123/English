@@ -76,6 +76,26 @@
   font-weight: 600;
 }
 
+/* ══ NOTIFICATIONS ══ */
+.nb-notifications {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.nb-mobile-notifications {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.nb-mobile-notifications-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
 /* ══ CART ══ */
 .nb-cart {
   width: 38px;
@@ -360,6 +380,10 @@
 }
 
 @media (max-width: 768px) {
+
+  .nb-notifications--desktop {
+    display: none;
+  }
 
   .nb-cart {
     display: none;
