@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../verifyotp/XacMinh.css";
+import { toast } from "react-toastify";
 
 function XacMinh() {
   const navigate = useNavigate();
@@ -56,12 +57,14 @@ function XacMinh() {
         return;
       }
 
-      alert("Xác minh tài khoản thành công. Vui lòng đăng nhập.");
+      toast.success("Xác minh tài khoản thành công. Vui lòng đăng nhập.");
+      // alert("Xác minh tài khoản thành công. Vui lòng đăng nhập.");
 
       navigate("/dang-nhap");
     } catch (err) {
       console.error(err);
-      setError("Không thể kết nối tới server");
+      // setError("Không thể kết nối tới server");
+      toast.error("Không thể kết nối tới server")
     } finally {
       setLoading(false);
     }

@@ -16,30 +16,30 @@ public class RefundAuditService {
     @Autowired
     RefundAuditLogRepository refundAuditLogRepository;
 
-    @Transactional
-    public void log(
-            String action,
-            RefundRequestEntity refundRequest,
-            User actor,
-            String oldStatus,
-            String newStatus,
-            String note
-    ) {
-        if (refundRequest == null || actor == null) {
-            return;
-        }
-        String roleName = actor.getRole() != null ? actor.getRole().getRoleName() : "unknown";
-        RefundAuditLog auditLog = RefundAuditLog.builder()
-                .refundRequest(refundRequest)
-                .transactionId(refundRequest.getTransaction().getTransactionId())
-                .action(action)
-                .actor(actor)
-                .actorRole(roleName)
-                .oldStatus(oldStatus)
-                .newStatus(newStatus)
-                .note(note)
-                .createdAt(LocalDateTime.now())
-                .build();
-        refundAuditLogRepository.save(auditLog);
-    }
+//    @Transactional
+//    public void log(
+//            String action,
+//            RefundRequestEntity refundRequest,
+//            User actor,
+//            String oldStatus,
+//            String newStatus,
+//            String note
+//    ) {
+//        if (refundRequest == null || actor == null) {
+//            return;
+//        }
+//        String roleName = actor.getRole() != null ? actor.getRole().getRoleName() : "unknown";
+//        RefundAuditLog auditLog = RefundAuditLog.builder()
+//                .refundRequest(refundRequest)
+//                .transactionId(refundRequest.getTransaction().getTransactionId())
+//                .action(action)
+//                .actor(actor)
+//                .actorRole(roleName)
+//                .oldStatus(oldStatus)
+//                .newStatus(newStatus)
+//                .note(note)
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//        refundAuditLogRepository.save(auditLog);
+//    }
 }

@@ -1,8 +1,9 @@
 package com.learning.english.service;
 
+import com.learning.english.entity.TeacherEarning;
+import com.learning.english.entity.TransactionItem;
 import com.learning.english.repository.RefundRequestRepository;
 import com.learning.english.repository.TeacherEarningRepository;
-import com.learning.english.entity.TeacherEarning;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,17 +25,27 @@ public class TeacherEarningReleaseScheduler {
     @Transactional
     public void releaseHeldEarnings() {
         LocalDateTime now = LocalDateTime.now();
+
         List<TeacherEarning> releasable = teacherEarningRepository
                 .findByStatusAndHoldReleaseAtLessThanEqual("HOLD", now);
 
         for (TeacherEarning earning : releasable) {
-            Long transactionId = earning.getTransaction() != null
-                    ? earning.getTransaction().getTransactionId()
-                    : null;
-            if (transactionId != null && refundRequestRepository.existsByTransactionTransactionIdAndStatusIn(
-                    transactionId, List.of("PENDING"))) {
+            TransactionItem transactionItem = earning.getTransactionItem();
+
+            if (transactionItem == null || transactionItem.getTransactionItemId() == null) {
                 continue;
             }
+
+            boolean hasPendingRefund = refundRequestRepository
+                    .existsByTransactionItemTransactionItemIdAndStatusIn(
+                            transactionItem.getTransactionItemId(),
+                            List.of("PENDING")
+                    );
+
+            if (hasPendingRefund) {
+                continue;
+            }
+
             earning.setStatus("AVAILABLE");
             teacherEarningRepository.save(earning);
         }

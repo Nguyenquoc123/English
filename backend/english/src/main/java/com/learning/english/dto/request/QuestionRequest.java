@@ -20,6 +20,8 @@ public class QuestionRequest {
     private String questionType;
 
     private String content;
+    
+    private Long levelId;
 
     private String mediaUrl;
 

@@ -46,6 +46,32 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 			ORDER BY v.displayOrder ASC
 			""", nativeQuery = true)
 	List<Object[]> findVideosWithProgressByLessonId(@Param("lessonId") Long lessonId, @Param("userId") Long userId);
+	
+	@Query(value = """
+			SELECT
+			    v.videoId AS videoId,
+			    v.lessonId AS lessonId,
+			    v.title AS title,
+			    v.videoUrl AS videoUrl,
+			    v.durationSeconds AS durationSeconds,
+			    v.thumbnailUrl AS thumbnailUrl,
+			    v.displayOrder AS displayOrder,
+			    v.createdAt AS createdAt,
+			    v.updatedAt AS updatedAt,
+			    v.status AS status,
+			    CAST(ISNULL(vp.isCompleted, 0) AS bit) AS isCompleted,
+			    ISNULL(vp.watchedSeconds, 0) AS watchedSeconds,
+			    v.fileUrl as fileUrl
+			FROM videos v
+			LEFT JOIN video_progress vp
+			    ON v.videoId = vp.videoId
+			   AND vp.userId = :userId
+			WHERE v.lessonId = :lessonId and v.status = 'PUBLISHED'
+			ORDER BY v.displayOrder ASC
+			""", nativeQuery = true)
+	List<Object[]> findVideosPublishWithProgressByLessonId(@Param("lessonId") Long lessonId, @Param("userId") Long userId);
+	
+	
 
 	@Query("""
 			    SELECT MAX(v.displayOrder)

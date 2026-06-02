@@ -1,8 +1,10 @@
 package com.learning.english.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,15 +18,39 @@ public interface AiChatHistoryRepository extends JpaRepository<AiChatHistory, Lo
             String userMessage
     );
 
-    List<AiChatHistory> findTop5ByUserIdAndUserMessageNotOrderByCreatedAtDesc(
+    long countByUserIdAndUserMessageNotAndCreatedAtBetween(
             Long userId,
-            String userMessage
+            String userMessage,
+            LocalDateTime startOfDay,
+            LocalDateTime endOfDay
     );
 
-    List<AiChatHistory> findTop20ByUserIdAndUserMessageNotOrderByCreatedAtDesc(
+    List<AiChatHistory> findTop5ByUserIdAndTypeOrderByCreatedAtDesc(
             Long userId,
-            String userMessage
+            String type
     );
 
-    long countByUserIdAndUserMessageNot(Long userId, String userMessage);
+    List<AiChatHistory> findTop20ByUserIdAndTypeOrderByCreatedAtDesc(
+            Long userId,
+            String type
+    );
+
+    long countByUserIdAndType(
+            Long userId,
+            String type
+    );
+    
+    
+    List<AiChatHistory> findByUserIdAndTypeOrderByChatIdDesc(
+            Long userId,
+            String type,
+            Pageable pageable
+    );
+
+    List<AiChatHistory> findByUserIdAndTypeAndChatIdLessThanOrderByChatIdDesc(
+            Long userId,
+            String type,
+            Long beforeChatId,
+            Pageable pageable
+    );
 }

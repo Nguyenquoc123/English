@@ -159,7 +159,7 @@ function ThanhToanGioHang() {
             if (!response.ok) {
                 throw new Error("Lỗi khi kiểm tra thanh toán");
             }
-
+            window.dispatchEvent(new Event('cartChanged'));
             return await response.json();
         } catch (error) {
             console.error(error);

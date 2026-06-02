@@ -6,7 +6,7 @@ import QuestionCreateComponent from "../../compenents/question/QuestionCreateCom
 const API_BASE = "http://localhost:8080";
 
 function TeacherExamQuestionCreate() {
-    const { examId } = useParams();
+    const { courseId, examId } = useParams();
 
     return (
 
@@ -40,7 +40,7 @@ function TeacherExamQuestionCreate() {
             submitExistingText="Thêm câu hỏi đã chọn vào kỳ thi"
             successBulkCreateMessage="Nhập câu hỏi vào kỳ thi thành công"
             cancelPath={`/teacher/exams/${examId}`}
-            redirectPath={`/teacher/exams/${examId}`}
+            redirectPath={`/teacher/courses/6/exams/${examId}`}
         />
     );
 }

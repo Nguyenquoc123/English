@@ -155,9 +155,11 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
                 COUNT(DISTINCT eq.examQuestionId),
                 COUNT(DISTINCT a.attemptId),
                 MAX(a.score),
-                MAX(a.submittedAt)
+                MAX(a.submittedAt),
+                c.courseId
             )
             FROM Exam e
+            JOIN e.course c
             LEFT JOIN ExamQuestion eq
                 ON eq.exam.examId = e.examId
                 AND eq.question.status = 'PUBLISHED'
@@ -170,6 +172,7 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
             GROUP BY
                 e.examId,
                 e.title,
+                c.courseId,
                 e.durationMinutes
         """)
         Optional<ChiTietExam> findChiTietExamByIdAndUserId(

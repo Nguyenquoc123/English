@@ -45,7 +45,11 @@ function QuestionCreateComponent({
     breadcrumb,
     targetLabel,
     allowAttachExisting = true,
+    allowExcelImport = true,
+    allowAiGenerate = false,
+    aiGenerateEndpoint,
     showExamPoint = false,
+    showLevel = false,
     submitNewText = "Tạo câu hỏi",
     submitExistingText = "Gắn câu hỏi đã chọn",
     cancelPath,
@@ -90,6 +94,10 @@ function QuestionCreateComponent({
     const [excelQuestions, setExcelQuestions] = useState([]);
     const [searchKeyword, setSearchKeyword] = useState("");
     const [levelIdFilter, setLevelIdFilter] = useState("");
+    const [levelId, setLevelId] = useState("");
+    const [aiPrompt, setAiPrompt] = useState("");
+    const [aiQuestionCount, setAiQuestionCount] = useState(5);
+    const [generatingAi, setGeneratingAi] = useState(false);
 
     const selectedQuestionType = useMemo(() => {
         return QUESTION_TYPES.find((item) => item.value === questionType);
@@ -100,6 +108,10 @@ function QuestionCreateComponent({
         questionType === "LISTENING_CHOICE";
 
     const isExcelSupportedType =
+        questionType === "MULTIPLE_CHOICE" ||
+        questionType === "ARRANGE_SENTENCE";
+
+    const isAiSupportedType =
         questionType === "MULTIPLE_CHOICE" ||
         questionType === "ARRANGE_SENTENCE";
 
@@ -133,11 +145,14 @@ function QuestionCreateComponent({
         setExplanation("");
         setDefaultPoint(1);
         setExamPoint(1);
+        setLevelId("");
         setMediaFile(null);
         setMediaFileName("");
         setSelectedQuestionIds([]);
         setExcelFileName("");
         setExcelQuestions([]);
+        setAiPrompt("");
+        setAiQuestionCount(5);
 
         if (nextType === "MULTIPLE_CHOICE" || nextType === "LISTENING_CHOICE") {
             setOptions(DEFAULT_OPTIONS);
@@ -311,6 +326,10 @@ function QuestionCreateComponent({
             return "Dạng nghe cần có file audio";
         }
 
+        if (showLevel && !levelId) {
+            return "Vui lòng chọn cấp độ câu hỏi";
+        }
+
         if (isChoiceType) {
             const validOptions = options.filter((item) => item.optionText.trim());
 
@@ -381,6 +400,7 @@ function QuestionCreateComponent({
                     basePayload,
                     questionType,
                     examPoint: Number(examPoint),
+                    levelId: showLevel && levelId ? Number(levelId) : null,
                 })
                 : basePayload;
 
@@ -724,7 +744,11 @@ function QuestionCreateComponent({
         }
 
         if (excelQuestions.length === 0) {
-            return "Vui lòng chọn file Excel và kiểm tra danh sách preview";
+            return "Chưa có câu hỏi";
+        }
+
+        if (showLevel && !levelId) {
+            return "Vui lòng chọn cấp độ cho danh sách câu hỏi";
         }
 
         for (let i = 0; i < excelQuestions.length; i++) {
@@ -785,6 +809,7 @@ function QuestionCreateComponent({
                 correctText: question.correctText?.trim() || null,
                 explanation: question.explanation?.trim() || null,
                 defaultPoint: Number(question.defaultPoint),
+                levelId: showLevel && levelId ? Number(levelId) : null,
                 status: "Published",
                 sourceType: "TEACHER_CREATED",
                 options:
@@ -843,6 +868,111 @@ function QuestionCreateComponent({
         }
     };
 
+    const normalizeAiQuestions = (questions) => {
+        if (!Array.isArray(questions)) return [];
+
+        return questions.map((question, index) => ({
+            rowIndex: index + 1,
+            questionType,
+            content: question.content || "",
+            correctText: question.correctText || "",
+            defaultPoint: Number(question.defaultPoint) > 0
+                ? Number(question.defaultPoint)
+                : 1,
+            explanation: question.explanation || "",
+            options:
+                questionType === "MULTIPLE_CHOICE"
+                    ? Array.isArray(question.options)
+                        ? question.options.map((option) => ({
+                            optionText: option.optionText || "",
+                            isCorrect: Boolean(option.isCorrect),
+                        }))
+                        : []
+                    : [],
+        }));
+    };
+
+
+    const generateQuestionsByAi = async () => {
+        if (!aiGenerateEndpoint) {
+            setError("Chưa cấu hình API tạo câu hỏi bằng AI");
+            return;
+        }
+
+        if (!isAiSupportedType) {
+            setError("Tạo câu hỏi bằng AI chỉ hỗ trợ Trắc nghiệm và Sắp xếp câu");
+            return;
+        }
+
+        if (!aiPrompt.trim()) {
+            setError("Vui lòng nhập mô tả yêu cầu");
+            return;
+        }
+
+        if (Number(aiQuestionCount) <= 0) {
+            setError("Số lượng câu hỏi phải lớn hơn 0");
+            return;
+        }
+
+        if (showLevel && !levelId) {
+            setError("Vui lòng chọn cấp độ cho danh sách câu hỏi");
+            return;
+        }
+
+        try {
+            setGeneratingAi(true);
+            setError("");
+
+            const response = await fetch(aiGenerateEndpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...authHeaders(),
+                },
+                body: JSON.stringify({
+                    questionType,
+                    questionLimit: Number(aiQuestionCount),
+                    prompt: aiPrompt.trim(),
+                    levelId: showLevel && levelId ? Number(levelId) : null,
+                }),
+            });
+
+            let data = null;
+
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+
+            console.log(data);
+            
+
+           
+            const questions = data || [];
+
+            if (!response.ok) {
+                setError(result?.message || data?.message || "Tạo câu hỏi bằng AI thất bại");
+                return;
+            }
+
+            const normalizedQuestions = normalizeAiQuestions(questions);
+
+            if (normalizedQuestions.length === 0) {
+                setError("AI chưa trả về danh sách câu hỏi hợp lệ");
+                return;
+            }
+
+            setExcelFileName("AI generated");
+            setExcelQuestions(normalizedQuestions);
+        } catch (err) {
+            console.error(err);
+            setError("Lỗi hệ thống khi tạo câu hỏi bằng AI");
+        } finally {
+            setGeneratingAi(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -856,7 +986,7 @@ function QuestionCreateComponent({
             return;
         }
 
-        if (mode === "EXCEL") {
+        if (mode === "EXCEL" || mode === "AI") {
             await createQuestionsFromExcel();
         }
     };
@@ -895,13 +1025,13 @@ function QuestionCreateComponent({
     };
 
     const getLevelName = (question) => {
-    return (
-        question.levelName ||
-        question.level?.levelName ||
-        question.levelTitle ||
-        "Chưa phân cấp"
-    );
-};
+        return (
+            question.levelName ||
+            question.level?.levelName ||
+            question.levelTitle ||
+            "Chưa phân cấp"
+        );
+    };
 
     return (
         <div className="question-reusable-page">
@@ -951,7 +1081,7 @@ function QuestionCreateComponent({
                                 </div>
                             </div>
 
-                            {allowAttachExisting && (
+                            {(allowAttachExisting || allowExcelImport || allowAiGenerate) && (
                                 <div className="card border-0 shadow-sm rounded-4 mb-4">
                                     <div className="card-body p-4">
                                         <label className="form-label fw-semibold d-block">
@@ -972,35 +1102,65 @@ function QuestionCreateComponent({
                                                 Tạo câu hỏi mới
                                             </label>
 
-                                            <input
-                                                type="radio"
-                                                className="btn-check"
-                                                name="questionMode"
-                                                id="modeExisting"
-                                                checked={mode === "EXISTING"}
-                                                onChange={() => setMode("EXISTING")}
-                                            />
-                                            <label className="btn btn-outline-primary" htmlFor="modeExisting">
-                                                <i className="bi bi-bank me-1"></i>
-                                                Chọn từ ngân hàng
-                                            </label>
+                                            {allowAttachExisting && (
+                                                <>
+                                                    <input
+                                                        type="radio"
+                                                        className="btn-check"
+                                                        name="questionMode"
+                                                        id="modeExisting"
+                                                        checked={mode === "EXISTING"}
+                                                        onChange={() => setMode("EXISTING")}
+                                                    />
+                                                    <label className="btn btn-outline-primary" htmlFor="modeExisting">
+                                                        <i className="bi bi-bank me-1"></i>
+                                                        Chọn từ ngân hàng
+                                                    </label>
+                                                </>
+                                            )}
 
-                                            <input
-                                                type="radio"
-                                                className="btn-check"
-                                                name="questionMode"
-                                                id="modeExcel"
-                                                checked={mode === "EXCEL"}
-                                                onChange={() => {
-                                                    setMode("EXCEL");
-                                                    setExcelFileName("");
-                                                    setExcelQuestions([]);
-                                                }}
-                                            />
-                                            <label className="btn btn-outline-primary" htmlFor="modeExcel">
-                                                <i className="bi bi-file-earmark-excel me-1"></i>
-                                                Nhập từ Excel
-                                            </label>
+                                            {allowExcelImport && (
+                                                <>
+                                                    <input
+                                                        type="radio"
+                                                        className="btn-check"
+                                                        name="questionMode"
+                                                        id="modeExcel"
+                                                        checked={mode === "EXCEL"}
+                                                        onChange={() => {
+                                                            setMode("EXCEL");
+                                                            setExcelFileName("");
+                                                            setExcelQuestions([]);
+                                                        }}
+                                                    />
+                                                    <label className="btn btn-outline-primary" htmlFor="modeExcel">
+                                                        <i className="bi bi-file-earmark-excel me-1"></i>
+                                                        Nhập từ Excel
+                                                    </label>
+                                                </>
+                                            )}
+
+                                            {allowAiGenerate && (
+                                                <>
+                                                    <input
+                                                        type="radio"
+                                                        className="btn-check"
+                                                        name="questionMode"
+                                                        id="modeAi"
+                                                        checked={mode === "AI"}
+                                                        onChange={() => {
+                                                            setMode("AI");
+                                                            setExcelFileName("");
+                                                            setExcelQuestions([]);
+                                                            setError("");
+                                                        }}
+                                                    />
+                                                    <label className="btn btn-outline-primary" htmlFor="modeAi">
+                                                        <i className="bi bi-stars me-1"></i>
+                                                        Tạo bằng AI
+                                                    </label>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1011,6 +1171,24 @@ function QuestionCreateComponent({
                                     <div className="card-header bg-white px-4 py-3">
                                         <h5 className="fw-bold mb-0">Thông tin câu hỏi</h5>
                                     </div>
+                                    {showLevel && (
+                                        <div className="mt-2 p-3">
+                                            <label className="form-label fw-semibold">
+                                                Cấp độ <span className="text-danger">*</span>
+                                            </label>
+
+                                            <select
+                                                className="form-select"
+                                                value={levelId}
+                                                onChange={(e) => setLevelId(e.target.value)}
+                                            >
+                                                <option value="">Chọn cấp độ</option>
+                                                <option value="1">Sơ cấp</option>
+                                                <option value="2">Trung cấp</option>
+                                                <option value="3">Cao cấp</option>
+                                            </select>
+                                        </div>
+                                    )}
 
                                     <div className="card-body p-4">
                                         {isListeningType && (
@@ -1184,158 +1362,158 @@ function QuestionCreateComponent({
                             )}
 
                             {mode === "EXISTING" && allowAttachExisting && (
-    <div className="card border-0 shadow-sm rounded-4">
-        <div className="card-header bg-white px-4 py-3">
-            <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-                <div>
-                    <h5 className="fw-bold mb-1">Ngân hàng câu hỏi</h5>
-                    <small className="text-muted">
-                        Tìm kiếm và lọc câu hỏi theo cấp độ
-                    </small>
-                </div>
+                                <div className="card border-0 shadow-sm rounded-4">
+                                    <div className="card-header bg-white px-4 py-3">
+                                        <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                                            <div>
+                                                <h5 className="fw-bold mb-1">Ngân hàng câu hỏi</h5>
+                                                <small className="text-muted">
+                                                    Tìm kiếm và lọc câu hỏi theo cấp độ
+                                                </small>
+                                            </div>
 
-                <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={loadExistingQuestions}
-                    disabled={loadingQuestions}
-                >
-                    <i className="bi bi-arrow-clockwise me-1"></i>
-                    Tải lại
-                </button>
-            </div>
-        </div>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={loadExistingQuestions}
+                                                disabled={loadingQuestions}
+                                            >
+                                                <i className="bi bi-arrow-clockwise me-1"></i>
+                                                Tải lại
+                                            </button>
+                                        </div>
+                                    </div>
 
-        <div className="card-body p-4">
-            {showExamPoint && (
-                <div className="mb-3">
-                    <label className="form-label fw-semibold">
-                        Điểm trong kỳ thi <span className="text-danger">*</span>
-                    </label>
+                                    <div className="card-body p-4">
+                                        {showExamPoint && (
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Điểm trong kỳ thi <span className="text-danger">*</span>
+                                                </label>
 
-                    <input
-                        type="number"
-                        className="form-control"
-                        min="0.25"
-                        step="0.25"
-                        value={examPoint}
-                        onChange={(e) => setExamPoint(e.target.value)}
-                    />
-                </div>
-            )}
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    min="0.25"
+                                                    step="0.25"
+                                                    value={examPoint}
+                                                    onChange={(e) => setExamPoint(e.target.value)}
+                                                />
+                                            </div>
+                                        )}
 
-            <div className="question-bank-filter mb-4">
-                <div className="row g-2">
-                    <div className="col-12 col-lg-8">
-                        <div className="input-group">
-                            <span className="input-group-text bg-white">
-                                <i className="bi bi-search"></i>
-                            </span>
+                                        <div className="question-bank-filter mb-4">
+                                            <div className="row g-2">
+                                                <div className="col-12 col-lg-8">
+                                                    <div className="input-group">
+                                                        <span className="input-group-text bg-white">
+                                                            <i className="bi bi-search"></i>
+                                                        </span>
 
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Tìm theo nội dung, đáp án hoặc giải thích..."
-                                value={searchKeyword}
-                                onChange={(e) => setSearchKeyword(e.target.value)}
-                            />
-                        </div>
-                    </div>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            placeholder="Tìm theo nội dung, đáp án hoặc giải thích..."
+                                                            value={searchKeyword}
+                                                            onChange={(e) => setSearchKeyword(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
 
-                    <div className="col-12 col-lg-4">
-                        <select
-                            className="form-select"
-                            value={levelIdFilter}
-                            onChange={(e) => setLevelIdFilter(e.target.value)}
-                        >
-                            <option value="">Tất cả cấp độ</option>
-                            <option value="1">Sơ cấp</option>
-                            <option value="2">Trung cấp</option>
-                            <option value="3">Cao cấp</option>
-                        </select>
-                    </div>
-                </div>
+                                                <div className="col-12 col-lg-4">
+                                                    <select
+                                                        className="form-select"
+                                                        value={levelIdFilter}
+                                                        onChange={(e) => setLevelIdFilter(e.target.value)}
+                                                    >
+                                                        <option value="">Tất cả cấp độ</option>
+                                                        <option value="1">Sơ cấp</option>
+                                                        <option value="2">Trung cấp</option>
+                                                        <option value="3">Cao cấp</option>
+                                                    </select>
+                                                </div>
+                                            </div>
 
-                {(searchKeyword || levelIdFilter) && (
-                    <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-                        <small className="text-muted">
-                            Đang lọc ngân hàng câu hỏi
-                        </small>
+                                            {(searchKeyword || levelIdFilter) && (
+                                                <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                                    <small className="text-muted">
+                                                        Đang lọc ngân hàng câu hỏi
+                                                    </small>
 
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-link text-decoration-none px-0"
-                            onClick={() => {
-                                setSearchKeyword("");
-                                setLevelIdFilter("");
-                            }}
-                        >
-                            Xóa bộ lọc
-                        </button>
-                    </div>
-                )}
-            </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-link text-decoration-none px-0"
+                                                        onClick={() => {
+                                                            setSearchKeyword("");
+                                                            setLevelIdFilter("");
+                                                        }}
+                                                    >
+                                                        Xóa bộ lọc
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
 
-            {loadingQuestions ? (
-                <div className="text-center text-muted py-4">
-                    <div className="spinner-border spinner-border-sm text-primary me-2"></div>
-                    Đang tải câu hỏi...
-                </div>
-            ) : existingQuestions.length === 0 ? (
-                <div className="empty-question-box">
-                    <i className="bi bi-search d-block fs-3 mb-2"></i>
-                    Không tìm thấy câu hỏi phù hợp.
-                    <div className="text-muted small mt-1">
-                        Thử đổi từ khóa, cấp độ hoặc loại câu hỏi.
-                    </div>
-                </div>
-            ) : (
-                <div className="existing-question-list">
-                    {existingQuestions.map((question) => (
-                        <button
-                            type="button"
-                            key={question.questionId}
-                            className={
-                                selectedQuestionIds.includes(question.questionId)
-                                    ? "existing-question-item active"
-                                    : "existing-question-item"
-                            }
-                            onClick={() => toggleSelectQuestion(question.questionId)}
-                        >
-                            <span className="question-check">
-                                {selectedQuestionIds.includes(question.questionId) ? (
-                                    <i className="bi bi-check-circle-fill"></i>
-                                ) : (
-                                    <i className="bi bi-circle"></i>
-                                )}
-                            </span>
+                                        {loadingQuestions ? (
+                                            <div className="text-center text-muted py-4">
+                                                <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                Đang tải câu hỏi...
+                                            </div>
+                                        ) : existingQuestions.length === 0 ? (
+                                            <div className="empty-question-box">
+                                                <i className="bi bi-search d-block fs-3 mb-2"></i>
+                                                Không tìm thấy câu hỏi phù hợp.
+                                                <div className="text-muted small mt-1">
+                                                    Thử đổi từ khóa, cấp độ hoặc loại câu hỏi.
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="existing-question-list">
+                                                {existingQuestions.map((question) => (
+                                                    <button
+                                                        type="button"
+                                                        key={question.questionId}
+                                                        className={
+                                                            selectedQuestionIds.includes(question.questionId)
+                                                                ? "existing-question-item active"
+                                                                : "existing-question-item"
+                                                        }
+                                                        onClick={() => toggleSelectQuestion(question.questionId)}
+                                                    >
+                                                        <span className="question-check">
+                                                            {selectedQuestionIds.includes(question.questionId) ? (
+                                                                <i className="bi bi-check-circle-fill"></i>
+                                                            ) : (
+                                                                <i className="bi bi-circle"></i>
+                                                            )}
+                                                        </span>
 
-                            <span className="question-content">
-                                <strong>{question.content}</strong>
+                                                        <span className="question-content">
+                                                            <strong>{question.content}</strong>
 
-                                <small className="d-flex align-items-center gap-2 flex-wrap">
-                                    <span>
-                                        <i className="bi bi-list-check me-1"></i>
-                                        {question.optionCount || 0} đáp án
-                                    </span>
+                                                            <small className="d-flex align-items-center gap-2 flex-wrap">
+                                                                <span>
+                                                                    <i className="bi bi-list-check me-1"></i>
+                                                                    {question.optionCount || 0} đáp án
+                                                                </span>
 
-                                    <span>
-                                        <i className="bi bi-star me-1"></i>
-                                        {question.defaultPoint || 1} điểm
-                                    </span>
+                                                                <span>
+                                                                    <i className="bi bi-star me-1"></i>
+                                                                    {question.defaultPoint || 1} điểm
+                                                                </span>
 
-                                    <span className="badge rounded-pill text-bg-light border">
-                                        {getLevelName(question)}
-                                    </span>
-                                </small>
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-    </div>
-)}
+                                                                <span className="badge rounded-pill text-bg-light border">
+                                                                    {getLevelName(question)}
+                                                                </span>
+                                                            </small>
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {mode === "EXCEL" && (
                                 <div className="card border-0 shadow-sm rounded-4">
@@ -1382,22 +1560,28 @@ function QuestionCreateComponent({
                                                     </label>
                                                 </div>
 
-                                                {/* {showExamPoint && (
+                                                {showLevel && (
                                                     <div className="mb-4">
                                                         <label className="form-label fw-semibold">
-                                                            Điểm trong kỳ thi <span className="text-danger">*</span>
+                                                            Cấp độ cho toàn bộ câu hỏi <span className="text-danger">*</span>
                                                         </label>
 
-                                                        <input
-                                                            type="number"
-                                                            className="form-control"
-                                                            min="0.25"
-                                                            step="0.25"
-                                                            value={examPoint}
-                                                            onChange={(e) => setExamPoint(e.target.value)}
-                                                        />
+                                                        <select
+                                                            className="form-select"
+                                                            value={levelId}
+                                                            onChange={(e) => setLevelId(e.target.value)}
+                                                        >
+                                                            <option value="">Chọn cấp độ</option>
+                                                            <option value="1">Sơ cấp</option>
+                                                            <option value="2">Trung cấp</option>
+                                                            <option value="3">Cao cấp</option>
+                                                        </select>
+
+                                                        <small className="text-muted">
+                                                            Cấp độ này sẽ áp dụng cho tất cả câu hỏi trong file Excel.
+                                                        </small>
                                                     </div>
-                                                )} */}
+                                                )}
 
                                                 {excelQuestions.length > 0 && (
                                                     <div className="excel-preview-list">
@@ -1547,6 +1731,248 @@ function QuestionCreateComponent({
                                 </div>
                             )}
 
+
+                            {mode === "AI" && (
+                                <div className="card border-0 shadow-sm rounded-4">
+                                    <div className="card-header bg-white px-4 py-3">
+                                        <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                                            <div>
+                                                <h5 className="fw-bold mb-1">Tạo câu hỏi bằng AI</h5>
+                                                <small className="text-muted">
+                                                    Chỉ hỗ trợ Trắc nghiệm và Sắp xếp câu. AI sẽ tạo danh sách để giáo viên chỉnh sửa trước khi lưu.
+                                                </small>
+                                            </div>
+
+                                            {excelQuestions.length > 0 && (
+                                                <span className="badge text-bg-primary">
+                                                    {excelQuestions.length} câu hỏi
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="card-body p-4">
+                                        {!isAiSupportedType ? (
+                                            <div className="alert alert-warning mb-0">
+                                                Tạo bằng AI hiện chỉ hỗ trợ Trắc nghiệm và Sắp xếp câu.
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="row g-3 mb-3">
+                                                    <div className="col-12 col-md-4">
+                                                        <label className="form-label fw-semibold">
+                                                            Số lượng câu hỏi <span className="text-danger">*</span>
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            min="1"
+                                                            max="50"
+                                                            value={aiQuestionCount}
+                                                            onChange={(e) => setAiQuestionCount(e.target.value)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="col-12 col-md-8">
+                                                        <label className="form-label fw-semibold">
+                                                            Cấp độ <span className="text-danger">*</span>
+                                                        </label>
+
+                                                        <select
+                                                            className="form-select"
+                                                            value={levelId}
+                                                            onChange={(e) => setLevelId(e.target.value)}
+                                                        >
+                                                            <option value="">Chọn cấp độ</option>
+                                                            <option value="1">Sơ cấp</option>
+                                                            <option value="2">Trung cấp</option>
+                                                            <option value="3">Cao cấp</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mb-3">
+                                                    <label className="form-label fw-semibold">
+                                                        Mô tả yêu cầu <span className="text-danger">*</span>
+                                                    </label>
+
+                                                    <textarea
+                                                        className="form-control"
+                                                        rows="4"
+                                                        placeholder="Ví dụ: Tạo câu hỏi tiếng Anh chủ đề Present Simple, mức sơ cấp, có giải thích đáp án."
+                                                        value={aiPrompt}
+                                                        onChange={(e) => setAiPrompt(e.target.value)}
+                                                    />
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-primary mb-4"
+                                                    onClick={generateQuestionsByAi}
+                                                    disabled={generatingAi}
+                                                >
+                                                    {generatingAi ? (
+                                                        <>
+                                                            <span className="spinner-border spinner-border-sm me-2"></span>
+                                                            Đang tạo câu hỏi...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="bi bi-stars me-1"></i>
+                                                            Gửi AI tạo câu hỏi
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {excelQuestions.length > 0 && (
+                                                    <div className="excel-preview-list">
+                                                        {excelQuestions.map((question, questionIndex) => (
+                                                            <div className="excel-preview-card" key={questionIndex}>
+                                                                <div className="excel-preview-header">
+                                                                    <strong>Câu {questionIndex + 1}</strong>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-sm btn-outline-danger"
+                                                                        onClick={() => removeExcelQuestion(questionIndex)}
+                                                                    >
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </button>
+                                                                </div>
+
+                                                                <div className="mb-3">
+                                                                    <label className="form-label fw-semibold">
+                                                                        Nội dung câu hỏi <span className="text-danger">*</span>
+                                                                    </label>
+
+                                                                    <textarea
+                                                                        className="form-control"
+                                                                        rows="3"
+                                                                        value={question.content}
+                                                                        onChange={(e) =>
+                                                                            updateExcelQuestion(
+                                                                                questionIndex,
+                                                                                "content",
+                                                                                e.target.value
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                </div>
+
+                                                                {question.questionType === "MULTIPLE_CHOICE" && (
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold">
+                                                                            Đáp án <span className="text-danger">*</span>
+                                                                        </label>
+
+                                                                        <div className="option-list">
+                                                                            {question.options.map((option, optionIndex) => (
+                                                                                <div className="option-row" key={optionIndex}>
+                                                                                    <input
+                                                                                        className="form-check-input mt-0"
+                                                                                        type="radio"
+                                                                                        name={`aiCorrectOption-${questionIndex}`}
+                                                                                        checked={option.isCorrect}
+                                                                                        onChange={() =>
+                                                                                            updateExcelCorrectOption(
+                                                                                                questionIndex,
+                                                                                                optionIndex
+                                                                                            )
+                                                                                        }
+                                                                                    />
+
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        className="form-control"
+                                                                                        placeholder={`Đáp án ${optionIndex + 1}`}
+                                                                                        value={option.optionText}
+                                                                                        onChange={(e) =>
+                                                                                            updateExcelOption(
+                                                                                                questionIndex,
+                                                                                                optionIndex,
+                                                                                                e.target.value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {question.questionType === "ARRANGE_SENTENCE" && (
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold">
+                                                                            Câu đúng <span className="text-danger">*</span>
+                                                                        </label>
+
+                                                                        <textarea
+                                                                            className="form-control"
+                                                                            rows="2"
+                                                                            value={question.correctText || ""}
+                                                                            onChange={(e) =>
+                                                                                updateExcelQuestion(
+                                                                                    questionIndex,
+                                                                                    "correctText",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="row g-3">
+                                                                    <div className="col-12 col-md-4">
+                                                                        <label className="form-label fw-semibold">
+                                                                            Điểm mặc định <span className="text-danger">*</span>
+                                                                        </label>
+
+                                                                        <input
+                                                                            type="number"
+                                                                            className="form-control"
+                                                                            min="0.25"
+                                                                            step="0.25"
+                                                                            value={question.defaultPoint}
+                                                                            onChange={(e) =>
+                                                                                updateExcelQuestion(
+                                                                                    questionIndex,
+                                                                                    "defaultPoint",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="col-12 col-md-8">
+                                                                        <label className="form-label fw-semibold">
+                                                                            Giải thích đáp án
+                                                                        </label>
+
+                                                                        <input
+                                                                            type="text"
+                                                                            className="form-control"
+                                                                            value={question.explanation || ""}
+                                                                            onChange={(e) =>
+                                                                                updateExcelQuestion(
+                                                                                    questionIndex,
+                                                                                    "explanation",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4">
                                 <button
                                     type="button"
@@ -1571,6 +1997,8 @@ function QuestionCreateComponent({
                                         submitNewText
                                     ) : mode === "EXISTING" ? (
                                         submitExistingText
+                                    ) : mode === "AI" ? (
+                                        "Lưu danh sách từ AI"
                                     ) : (
                                         "Lưu danh sách từ Excel"
                                     )}

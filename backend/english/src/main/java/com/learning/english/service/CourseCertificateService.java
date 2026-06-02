@@ -205,6 +205,11 @@ public class CourseCertificateService {
 
         return null;
     }
+    
+    public double tienDoHoc(Long userId, Long courseId) {
+    	CourseProgress courseProgress =  calculateProgress(userId, courseId);
+    	return courseProgress.progressPercent;
+    }
 
     private CourseProgress calculateProgress(Long userId, Long courseId) {
         List<CourseItem> items = courseItemRepository.findPublishedCourseContentsByCourseId(courseId);

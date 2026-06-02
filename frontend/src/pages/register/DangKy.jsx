@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import anhNen from "../../assets/anhnen.jpg";
 import "./DangKy.css";
+import { toast } from "react-toastify";
 
 function DangKy() {
   const navigate = useNavigate();
@@ -79,7 +80,8 @@ function DangKy() {
         return;
       }
 
-      alert("Đăng ký thành công. Vui lòng nhập mã OTP để xác minh tài khoản.");
+      // alert("Đăng ký thành công. Vui lòng nhập mã OTP để xác minh tài khoản.");
+      toast.success("Đăng ký thành công. Vui lòng nhập mã OTP để xác minh tài khoản.")
 
       navigate("/xac-minh", {
         state: {

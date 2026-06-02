@@ -370,32 +370,7 @@ function StudentProfile() {
                             </div>
                         </div>
 
-                        {teacherApplication && (() => {
-                            const appMeta = getTeacherApplicationStatusMeta(
-                                teacherApplication.approvalStatus,
-                                teacherApplication.registered
-                            );
-                            return (
-                                <div className="profile-teacher-application-card mb-3">
-                                    <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                                        <div>
-                                            <h6 className="mb-1 fw-bold">Đơn đăng ký giáo viên</h6>
-                                            <p className="text-muted small mb-0">{appMeta.description}</p>
-                                        </div>
-                                        <span className={`badge ${appMeta.className}`}>
-                                            {appMeta.label}
-                                        </span>
-                                    </div>
-                                    {(teacherApplication.phone || profile.phone) && (
-                                        <p className="small mb-0 mt-2">
-                                            <i className="bi bi-telephone me-1" />
-                                            SĐT trên hồ sơ:{" "}
-                                            <strong>{teacherApplication.phone || profile.phone}</strong>
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })()}
+                        
 
                         <div className="profile-action-area">
                             <button

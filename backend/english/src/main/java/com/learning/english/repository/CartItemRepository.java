@@ -27,4 +27,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long>{
 	        ORDER BY ci.cartItemId DESC
 	    """)
 	    List<CartItem> dsKhoaHocInGioHang(@Param("studentId") Long studentId);
+	
+	void deleteByCourse_CourseId(Long courseId);
 }

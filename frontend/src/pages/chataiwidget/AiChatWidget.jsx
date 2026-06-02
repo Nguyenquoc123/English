@@ -26,6 +26,11 @@ function AiChatWidget() {
 
     const [userMessage, setUserMessage] = useState("");
     const [loading, setLoading] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [hasMoreHistory, setHasMoreHistory] = useState(false);
+    const [nextCursor, setNextCursor] = useState(null);
+
+    const chatBodyRef = useRef(null);
 
     const chatEndRef = useRef(null);
 
@@ -34,10 +39,24 @@ function AiChatWidget() {
     };
 
     useEffect(() => {
-        if (open) {
+        if (open && !historyLoading) {
             scrollToBottom();
         }
-    }, [messages, loading, open]);
+    }, [loading, open]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        setNextCursor(null);
+        setHasMoreHistory(false);
+
+        loadChatHistory({
+            appendTop: false,
+            selectedMode: mode,
+        });
+    }, [open, mode]);
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -80,6 +99,8 @@ function AiChatWidget() {
 
         setMode(selectedMode);
         setUserMessage("");
+        setNextCursor(null);
+        setHasMoreHistory(false);
         setMessages([
             {
                 role: "ai",
@@ -141,6 +162,104 @@ function AiChatWidget() {
         };
     };
 
+    const normalizeHistoryResponse = (data) => {
+        const result = data?.data || data?.result || data;
+
+        return {
+            messages: result?.messages || [],
+            nextCursor: result?.nextCursor || null,
+            hasMore: Boolean(result?.hasMore),
+        };
+    };
+
+    const loadChatHistory = async ({ appendTop = false, selectedMode = mode } = {}) => {
+        if (historyLoading) {
+            return;
+        }
+
+        if (appendTop && !hasMoreHistory) {
+            return;
+        }
+
+        try {
+            setHistoryLoading(true);
+
+            const token = getToken();
+
+            const params = new URLSearchParams({
+                limit: "10",
+            });
+
+            if (appendTop && nextCursor) {
+                params.append("beforeChatId", nextCursor);
+            }
+
+            const historyEndpoint =
+                selectedMode === CHAT_MODE.LEARNING
+                    ? `${API_BASE}/chatbot/history`
+                    : `${API_BASE}/chatbot/course-history`;
+
+            const response = await fetch(
+                `${historyEndpoint}?${params.toString()}`,
+                {
+                    method: "GET",
+                    headers: {
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                }
+            );
+
+            const data = await parseResponseBody(response);
+
+            if (!response.ok) {
+                return;
+            }
+
+            const history = normalizeHistoryResponse(data);
+
+            if (!appendTop) {
+                if (history.messages.length > 0) {
+                    setMessages(history.messages);
+                } else {
+                    setMessages([
+                        {
+                            role: "ai",
+                            content: getWelcomeMessage(mode),
+                        },
+                    ]);
+                }
+
+                setNextCursor(history.nextCursor);
+                setHasMoreHistory(history.hasMore);
+
+                setTimeout(() => {
+                    chatEndRef.current?.scrollIntoView({ behavior: "auto" });
+                }, 80);
+
+                return;
+            }
+
+            const body = chatBodyRef.current;
+            const oldScrollHeight = body?.scrollHeight || 0;
+
+            setMessages((prev) => [...history.messages, ...prev]);
+            setNextCursor(history.nextCursor);
+            setHasMoreHistory(history.hasMore);
+
+            setTimeout(() => {
+                const newScrollHeight = body?.scrollHeight || 0;
+
+                if (body) {
+                    body.scrollTop = newScrollHeight - oldScrollHeight;
+                }
+            }, 80);
+        } catch (error) {
+            console.error("Lỗi tải lịch sử chat:", error);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
     const handleSendMessage = async (e) => {
         e.preventDefault();
 
@@ -190,7 +309,7 @@ function AiChatWidget() {
                         content:
                             data?.message ||
                             data?.error ||
-                            "AI hiện chưa thể trả lời. Vui lòng thử lại sau.",
+                            "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
                         isError: true,
                     },
                 ]);
@@ -222,7 +341,7 @@ function AiChatWidget() {
                 },
             ]);
         } catch (error) {
-            console.error("Lỗi gửi tin nhắn AI:", error);
+            console.error("Lỗi:", error);
 
             setMessages((prev) => [
                 ...prev,
@@ -255,7 +374,7 @@ function AiChatWidget() {
         return `${numberPrice.toLocaleString("vi-VN")} VNĐ`;
     };
 
-    
+
 
     const handleViewCourse = (courseId) => {
         if (!courseId) {
@@ -521,7 +640,22 @@ function AiChatWidget() {
                         {renderQuickQuestions()}
                     </div>
 
-                    <div className="ai-widget-body">
+                    <div
+                        className="ai-widget-body"
+                        ref={chatBodyRef}
+                        onScroll={(e) => {
+                            if (
+                                e.currentTarget.scrollTop <= 20 &&
+                                hasMoreHistory &&
+                                !historyLoading
+                            ) {
+                                loadChatHistory({
+                                    appendTop: true,
+                                    selectedMode: mode,
+                                });
+                            }
+                        }}
+                    >
                         {messages.map((message, index) => (
                             <div
                                 key={index}

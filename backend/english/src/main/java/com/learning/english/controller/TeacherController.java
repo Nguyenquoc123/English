@@ -22,10 +22,10 @@ public class TeacherController {
     @Autowired
     WithdrawalService withdrawalService;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<TeacherDashboardResponse> getDashboard() {
-        return ResponseEntity.ok(teacherDashboardService.getDashboard());
-    }
+//    @GetMapping("/dashboard")
+//    public ResponseEntity<TeacherDashboardResponse> getDashboard() {
+//        return ResponseEntity.ok(teacherDashboardService.getDashboard());
+//    }
 
     @GetMapping("/withdrawals/summary")
     public ResponseEntity<TeacherWithdrawalSummaryResponse> getWithdrawalSummary() {

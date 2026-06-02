@@ -13,7 +13,7 @@ public class ExamListResponse {
 
     private Long examId;
 
-    private Long courseId;
+    
 
     private String courseTitle;
 
@@ -32,4 +32,6 @@ public class ExamListResponse {
     private LocalDateTime endTime;
 
     private LocalDateTime createdAt;
+    
+    private Long courseId;
 }

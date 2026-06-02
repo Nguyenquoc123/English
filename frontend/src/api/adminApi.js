@@ -40,6 +40,12 @@ export const getPendingWithdrawals = () => axiosClient.get("/admin/withdrawals/p
 
 export const getAllWithdrawals = () => axiosClient.get("/admin/withdrawals");
 
+export const approveWithdrawal = (withdrawnId) => {
+  return axiosClient.put("/withdraw/approve", null, {
+    params: { withdrawnId },
+  });
+};
+
 export const reviewWithdrawal = (withdrawalId, status, rejectReason) =>
   axiosClient.put(`/admin/withdrawals/${withdrawalId}/review`, { status, rejectReason });
 

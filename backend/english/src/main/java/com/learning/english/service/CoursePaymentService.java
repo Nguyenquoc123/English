@@ -43,19 +43,19 @@ import java.util.Set;
 @Service
 public class CoursePaymentService {
 	@Autowired
-    CourseRepository courseRepository;
-	
+	CourseRepository courseRepository;
+
 	@Autowired
-    TransactionRepository transactionRepository;
-	
+	TransactionRepository transactionRepository;
+
 	@Autowired
-    TransactionItemRepository transactionItemRepository;
-	
+	TransactionItemRepository transactionItemRepository;
+
 	@Autowired
-    EnrollmentRepository enrollmentRepository;
-	
+	EnrollmentRepository enrollmentRepository;
+
 	@Autowired
-    UserRepository userRepository;
+	UserRepository userRepository;
 
 	@Autowired
 	TeacherEarningRepository teacherEarningRepository;
@@ -72,175 +72,140 @@ public class CoursePaymentService {
 	@Autowired
 	RefundService refundService;
 
-    @Value("${sepay.bank.account}")
-    private String bankAccount;
+	@Value("${sepay.bank.account}")
+	private String bankAccount;
 
-    @Value("${sepay.bank.name}")
-    private String bankName;
+	@Value("${sepay.bank.name}")
+	private String bankName;
 
-    @Value("${sepay.bank.account-name}")
-    private String accountName;
+	@Value("${sepay.bank.account-name}")
+	private String accountName;
 
-    @Transactional
-    public CoursePaymentResponse taoThanhToanKhoaHoc(Long courseId) {
-        MultiCoursePaymentRequest request = new MultiCoursePaymentRequest();
-        request.setCourseIds(List.of(courseId));
+	@Transactional
+	public CoursePaymentResponse taoThanhToanKhoaHoc(Long courseId) {
+		MultiCoursePaymentRequest request = new MultiCoursePaymentRequest();
+		request.setCourseIds(List.of(courseId));
 
-        return taoThanhToanNhieuKhoaHoc(request);
-    }
+		return taoThanhToanNhieuKhoaHoc(request);
+	}
 
-    @Transactional
-    public CoursePaymentResponse taoThanhToanNhieuKhoaHoc(MultiCoursePaymentRequest request) {
-        User user = getCurrentUser();
+	@Transactional
+	public CoursePaymentResponse taoThanhToanNhieuKhoaHoc(MultiCoursePaymentRequest request) {
+		User user = getCurrentUser();
 
-        if (request.getCourseIds() == null || request.getCourseIds().isEmpty()) {
-            throw new RuntimeException("Danh sách khóa học không được rỗng");
-        }
+		if (request.getCourseIds() == null || request.getCourseIds().isEmpty()) {
+			throw new RuntimeException("Danh sách khóa học không được rỗng");
+		}
 
-        List<Long> courseIds = new ArrayList<>(
-                new LinkedHashSet<>(request.getCourseIds())
-        );
+		List<Long> courseIds = new ArrayList<>(new LinkedHashSet<>(request.getCourseIds()));
 
-        List<Course> courses = courseRepository.findAllById(courseIds);
+		List<Course> courses = courseRepository.findAllById(courseIds);
 
-        if (courses.size() != courseIds.size()) {
-            throw new RuntimeException("Có khóa học không tồn tại");
-        }
+		if (courses.size() != courseIds.size()) {
+			throw new RuntimeException("Có khóa học không tồn tại");
+		}
 
-        LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now();
 
-        BigDecimal totalAmount = BigDecimal.ZERO;
+		BigDecimal totalAmount = BigDecimal.ZERO;
 
-        for (Course course : courses) {
-            if (!"PUBLISHED".equalsIgnoreCase(course.getStatus())
-                    && !"Published".equalsIgnoreCase(course.getStatus())) {
-                throw new RuntimeException("Khóa học chưa được mở bán: " + course.getTitle());
-            }
+		for (Course course : courses) {
+			if (!"PUBLISHED".equalsIgnoreCase(course.getStatus())
+					&& !"Published".equalsIgnoreCase(course.getStatus())) {
+				throw new RuntimeException("Khóa học chưa được mở bán: " + course.getTitle());
+			}
 
-            boolean hasAccess =
-                    enrollmentRepository.existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
-                            user.getUserId(),
-                            course.getCourseId()
-                    );
+			Enrollment enrollment = enrollmentRepository
+					.findByUserUserIdAndCourseCourseId(user.getUserId(), course.getCourseId()).orElse(null);
+//			boolean hasAccess = false;
+			if (enrollment != null) {
+				throw new RuntimeException("Bạn đã sở hữu khóa học: " + course.getTitle());
+			}
 
-            if (hasAccess) {
-                throw new RuntimeException("Bạn đã sở hữu khóa học: " + course.getTitle());
-            }
+			if (course.getTeacher() == null) {
+				throw new RuntimeException("Khóa học chưa có giáo viên: " + course.getTitle());
+			}
 
-            if (course.getTeacher() == null) {
-                throw new RuntimeException("Khóa học chưa có giáo viên: " + course.getTitle());
-            }
+			BigDecimal price = course.getPrice() == null ? BigDecimal.ZERO : course.getPrice();
 
-            BigDecimal price = course.getPrice() == null
-                    ? BigDecimal.ZERO
-                    : course.getPrice();
+			if (price.compareTo(BigDecimal.ZERO) <= 0) {
+				throw new RuntimeException("Khóa học miễn phí không cần thanh toán: " + course.getTitle());
+			}
 
-            if (price.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Khóa học miễn phí không cần thanh toán: " + course.getTitle());
-            }
+			totalAmount = totalAmount.add(price);
+		}
 
-            totalAmount = totalAmount.add(price);
-        }
+		if (totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new RuntimeException("Tổng tiền thanh toán không hợp lệ");
+		}
 
-        if (totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Tổng tiền thanh toán không hợp lệ");
-        }
+		Transaction transaction = Transaction.builder().user(user).totalAmount(totalAmount).paymentUrl(null)
+				.status("PENDING").paidAt(null).createdAt(now).updatedAt(now).build();
 
-        Transaction transaction = Transaction.builder()
-                .user(user)
-                .totalAmount(totalAmount)
-                .paymentUrl(null)
-                .status("PENDING")
-                .paidAt(null)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+		transaction = transactionRepository.save(transaction);
 
-        transaction = transactionRepository.save(transaction);
+		for (Course course : courses) {
+			TransactionItem item = TransactionItem.builder().transaction(transaction).course(course)
+					.teacher(course.getTeacher()).itemType("COURSE").price(course.getPrice()).createdAt(now).build();
 
-        for (Course course : courses) {
-            TransactionItem item = TransactionItem.builder()
-                    .transaction(transaction)
-                    .course(course)
-                    .teacher(course.getTeacher())
-                    .itemType("COURSE")
-                    .price(course.getPrice())
-                    .createdAt(now)
-                    .build();
+			transactionItemRepository.save(item);
+		}
 
-            transactionItemRepository.save(item);
-        }
+		String paymentCode = buildPaymentCode(transaction.getTransactionId());
+		String qrUrl = buildSePayQrUrl(paymentCode, totalAmount);
 
-        String paymentCode = buildPaymentCode(transaction.getTransactionId());
-        String qrUrl = buildSePayQrUrl(paymentCode, totalAmount);
+		transaction.setPaymentUrl(qrUrl);
+		transaction.setUpdatedAt(now);
+		transactionRepository.save(transaction);
 
-        transaction.setPaymentUrl(qrUrl);
-        transaction.setUpdatedAt(now);
-        transactionRepository.save(transaction);
+		return CoursePaymentResponse.builder().transactionId(transaction.getTransactionId())
+				.courseId(courses.size() == 1 ? courses.get(0).getCourseId() : null)
+				.courseTitle(courses.size() == 1 ? courses.get(0).getTitle() : "Thanh toán nhiều khóa học")
+				.userId(user.getUserId()).paymentCode(paymentCode).amount(totalAmount).status(transaction.getStatus())
+				.qrUrl(qrUrl).bankName(bankName).accountNumber(bankAccount).accountName(accountName)
+				.createdAt(transaction.getCreatedAt()).build();
+	}
 
-        return CoursePaymentResponse.builder()
-                .transactionId(transaction.getTransactionId())
-                .courseId(courses.size() == 1 ? courses.get(0).getCourseId() : null)
-                .courseTitle(courses.size() == 1 ? courses.get(0).getTitle() : "Thanh toán nhiều khóa học")
-                .userId(user.getUserId())
-                .paymentCode(paymentCode)
-                .amount(totalAmount)
-                .status(transaction.getStatus())
-                .qrUrl(qrUrl)
-                .bankName(bankName)
-                .accountNumber(bankAccount)
-                .accountName(accountName)
-                .createdAt(transaction.getCreatedAt())
-                .build();
-    }
+	private String buildPaymentCode(Long transactionId) {
+		return "SEVQR" + transactionId;
+	}
 
-    private String buildPaymentCode(Long transactionId) {
-        return "SEVQR" + transactionId;
-    }
+	private String buildSePayQrUrl(String paymentCode, BigDecimal amount) {
+		String description = URLEncoder.encode(paymentCode, StandardCharsets.UTF_8);
 
-    private String buildSePayQrUrl(String paymentCode, BigDecimal amount) {
-        String description = URLEncoder.encode(paymentCode, StandardCharsets.UTF_8);
+		return "https://qr.sepay.vn/img" + "?acc=" + bankAccount + "&bank=" + bankName + "&amount=" + amount.longValue()
+				+ "&des=" + description + "&template=compact";
+	}
 
-        return "https://qr.sepay.vn/img"
-                + "?acc=" + bankAccount
-                + "&bank=" + bankName
-                + "&amount=" + amount.longValue()
-                + "&des=" + description
-                + "&template=compact";
-    }
+	private User getCurrentUser() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+		if (authentication == null || !authentication.isAuthenticated()
+				|| "anonymousUser".equals(authentication.getName())) {
+			throw new RuntimeException("Người dùng chưa đăng nhập");
+		}
 
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getName())) {
-            throw new RuntimeException("Người dùng chưa đăng nhập");
-        }
+		String username = authentication.getName();
 
-        String username = authentication.getName();
+		return userRepository.findByUsername(username)
+				.orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+	}
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-    }
+	public List<StudentRefundStatusResponse> getMyCourseRefundStatuses() {
+		return refundService.getMyCourseRefundStatuses();
+	}
 
-    public List<StudentRefundStatusResponse> getMyCourseRefundStatuses() {
-        return refundService.getMyCourseRefundStatuses();
-    }
+	@Transactional
+	public void requestRefundForCourse(Long courseId, com.learning.english.dto.request.RefundRequest request) {
+		refundService.requestRefundForCourse(courseId, request);
+	}
 
-    @Transactional
-    public void requestRefundForCourse(Long courseId, com.learning.english.dto.request.RefundRequest request) {
-        refundService.requestRefundForCourse(courseId, request);
-    }
+	@Transactional
+	public void reviewRefund(Long transactionId, boolean approve, String note, String adminUsername) {
+		refundService.reviewRefund(transactionId, approve, note, null, adminUsername);
+	}
 
-    @Transactional
-    public void reviewRefund(Long transactionId, boolean approve, String note, String adminUsername) {
-        refundService.reviewRefund(transactionId, approve, note, null, adminUsername);
-    }
-
-    public RefundEligibilityResponse getRefundEligibility(Long courseId) {
-        return refundService.getEligibilityForCourse(courseId);
-    }
+	public RefundEligibilityResponse getRefundEligibility(Long courseId) {
+		return refundService.getEligibilityForCourse(courseId);
+	}
 }

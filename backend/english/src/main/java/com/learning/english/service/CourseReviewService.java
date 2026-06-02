@@ -13,6 +13,7 @@ import com.learning.english.dto.request.CourseReviewRequest;
 import com.learning.english.dto.response.CourseReviewResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.CourseReview;
+import com.learning.english.entity.Enrollment;
 import com.learning.english.entity.User;
 import com.learning.english.mapper.CourseReviewMapper;
 import com.learning.english.repository.CourseRepository;
@@ -40,6 +41,9 @@ public class CourseReviewService {
 	@Autowired
 	UserRepository userRepository;
 	
+	@Autowired
+	CourseCertificateService courseCertificateService;
+	
 	public List<CourseReviewResponse> layDanhGiaKhoaHoc(Long courseId){
 		return courseReviewRepository.findReviewsByCourseId(courseId).stream().map(courseReviewMapper::toCourseReviewResponse).toList();
 	}
@@ -47,12 +51,21 @@ public class CourseReviewService {
 	public CourseReviewResponse taoDanhGia(Long courseId, CourseReviewRequest request){
 		Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
 		User user = getCurrentUser();
-		boolean hasBoughtCourse = enrollmentRepository
-                .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(user.getUserId(), courseId);
-
-        if (!hasBoughtCourse) {
+		Enrollment enrollment = enrollmentRepository.findByUserUserIdAndCourseCourseId(user.getUserId(), courseId).orElse(null);
+		
+        if (enrollment == null) {
             throw new RuntimeException("Bạn cần mua khóa học trước khi đánh giá.");
         }
+        else if(!enrollment.getHasCourseAccess())
+        	throw new RuntimeException("Không thể thêm đánh giá vì quyền học của bạn đang bị khóa!.");
+        
+        double tienDo = courseCertificateService.tienDoHoc(user.getUserId(), courseId);
+        if(tienDo < 20)
+        	throw new RuntimeException("Vui lòng học ít nhất 20% bài học để có thể đánh giá khóa học.");
+        
+        CourseReview courseReviewOld = courseReviewRepository.findByCourseCourseIdAndUserUserId(courseId, user.getUserId()).orElse(null);
+        if(courseReviewOld != null)
+        	throw new RuntimeException("Bạn đã đánh giá khóa học này rồi!.");
         
         CourseReview courseReview = CourseReview.builder()
         		.course(course)

@@ -53,4 +53,7 @@ public class TeacherEarning {
 
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;
+    
+    @Column(name = "withdrawableamount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal withdrawableAmount = BigDecimal.ZERO;
 }

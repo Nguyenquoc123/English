@@ -92,8 +92,13 @@ import ExamEdit from "./pages/exam/ExamEdit.jsx";
 import TeacherVideoEdit from "./pages/teacher/TeacherVideoEdit.jsx";
 import TeacherGrammarEdit from "./pages/teacher/TeacherGrammarEdit.jsx";
 import TeacherEarningsPage from "./pages/teacher-earning/TeacherEarningsPage.jsx";
-import TeacherWithdrawalPage from "./pages/teacher-withdraw/TeacherWithdrawalPage.jsx";
+import QuestionBankCreate from "./pages/question-bank/QuestionBankCreate.jsx";
+import QuestionBank from "./pages/question-bank/QuestionBank.jsx";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ForgotPassword from "./pages/forgot-password/ForgotPassword.jsx";
+import SystemSettingsPage from "./pages/admin/SystemSetting/SystemSettingsPage.jsx";
 
 function ProtectedAdminRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -108,6 +113,14 @@ function ProtectedAdminRoute({ children }) {
 function App() {
   return (
     <BrowserRouter>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <Routes>
 
         <Route path="/" element={<HomePage />} />
@@ -263,7 +276,7 @@ function App() {
         </>} />
 
 
-        <Route path="/quen-mat-khau" element={<h1>Trang quên mật khẩu</h1>} />
+        <Route path="/quen-mat-khau" element={<ForgotPassword />} />
 
         <Route path="/teacher" element={<TeacherLayout />}>
           <Route index element={<Navigate to="/teacher/revenue" replace />} />
@@ -346,7 +359,7 @@ function App() {
             element={<ExamEdit />}
           />
           <Route
-            path="exams/:examId/questions/create"
+            path="courses/:courseId/exams/:examId/questions/create"
             element={<TeacherExamQuestionCreate />}
           />
 
@@ -365,10 +378,9 @@ function App() {
           <Route path="withdrawals/create" element={<TeacherWithdrawCreate />} />
           <Route path="withdrawals" element={<TeacherWithdrawHistory />} />
           <Route path="earnings" element={<TeacherEarningsPage />} />
-          <Route
-            path="earnings/withdrawals"
-            element={<TeacherWithdrawalPage />}
-          />
+          <Route path="questions-bank" element={<QuestionBank />} />
+          <Route path="questions-bank/create" element={<QuestionBankCreate />} />
+
           <Route path="withdrawals" element={<h1>Lịch sử rút tiền</h1>} />
         </Route>
 
@@ -404,12 +416,16 @@ function App() {
           <Route path="transactions" element={<TransactionManagement />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="statistics" element={<Statistics />} />
+          <Route path="system-settings" element={<SystemSettingsPage />} />
         </Route>
 
         <Route path="*" element={<h1>404 - Không tìm thấy trang</h1>} />
 
       </Routes>
+
     </BrowserRouter>
+
+
   );
 }
 

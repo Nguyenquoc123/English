@@ -72,6 +72,8 @@ function DSKhoaHocDaMua() {
       statuses.forEach((item) => {
         nextMap[item.courseId] = item;
       });
+      console.log(nextMap);
+      
       setRefundMap(nextMap);
     } catch (err) {
       console.error(err);
@@ -134,7 +136,7 @@ function DSKhoaHocDaMua() {
       const token = getToken();
 
       if (!token) {
-        navigate("/login");
+        navigate("/dang-nhap");
         return;
       }
 
@@ -170,6 +172,8 @@ function DSKhoaHocDaMua() {
       }
 
       const result = data?.result || data?.data || data;
+      console.log(result);
+      
 
       if (!response.ok) {
         setError(result?.message || "Không thể tải danh sách khóa học đã mua");

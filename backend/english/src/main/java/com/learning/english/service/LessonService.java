@@ -24,6 +24,7 @@ import com.learning.english.dto.response.TeacherLessonDetailResponse;
 import com.learning.english.dto.response.VideoProgressResponse;
 import com.learning.english.entity.Course;
 import com.learning.english.entity.CourseItem;
+import com.learning.english.entity.Enrollment;
 import com.learning.english.entity.Grammar;
 import com.learning.english.entity.Lesson;
 import com.learning.english.entity.Level;
@@ -279,7 +280,10 @@ public class LessonService {
 	            .existsByUserUserIdAndCourseCourseIdAndHasCourseAccessTrue(
 	                    user.getUserId(), courseId
 	            );
-
+	    
+	    
+	    Enrollment enrollment = enrollmentRepository.findByUserUserIdAndCourseCourseId(user.getUserId(), courseId).orElse(null);
+	    
 	    boolean hasFullCourseAccess = isFreeCourse || enrolled;
 
 	    List<CourseItem> courseItems =
@@ -326,7 +330,10 @@ public class LessonService {
 	                }
 	            } else {
 	                locked = true;
-	                lockReason = "Bạn cần mua khóa học";
+	                if(enrollment != null && !enrollment.getHasCourseAccess())
+	                	lockReason = "Quyền học của bạn đang bị khóa";
+	                else
+	                	lockReason = "Bạn cần mua khóa học";
 	            }
 
 	            // Quan trọng:
@@ -373,13 +380,11 @@ public class LessonService {
 
 		long totalVideos = videoRepository.countVideos(lessonId);
 
-		if (totalVideos == 0) {
-			return false;
-		}
+		
 
 		long completedVideos = videoProgressRepository.countCompletedVideos(userId, lessonId);
-
-		return completedVideos == totalVideos;
+		System.out.println(totalVideos + "      " + completedVideos);
+		return completedVideos >= totalVideos;
 	}
 
 	@Transactional

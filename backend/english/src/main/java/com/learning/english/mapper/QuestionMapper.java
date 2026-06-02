@@ -20,6 +20,8 @@ public interface QuestionMapper {
             target = "optionCount",
             expression = "java(question.getOptions() == null ? 0L : (long) question.getOptions().size())"
     )
+    @Mapping(target = "levelId", source = "level.levelId")
+    @Mapping(target = "levelName", source = "level.levelName")
     QuestionResponse toQuestionResponse(Question question);
 
     QuestionOptionResponse toQuestionOptionResponse(QuestionOption option);
@@ -28,5 +30,7 @@ public interface QuestionMapper {
             target = "optionCount",
             expression = "java(question.getOptions() == null ? 0L : (long) question.getOptions().size())"
     )
+    @Mapping(target = "levelId", source = "level.levelId")
+    @Mapping(target = "levelName", source = "level.levelName")
     QuestionBankItemResponse toQuestionBankItemResponse(Question question);
 }

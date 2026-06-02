@@ -7,14 +7,65 @@ import {
 import RefundBankInfo from "../../../components/RefundBankInfo/RefundBankInfo";
 import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "../TransactionManagement/TransactionManagement.css";
+import { toast } from "react-toastify";
 function RefundManagement() {
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [reviewingId, setReviewingId] = useState(null);
   const [error, setError] = useState("");
+  const [transferRefund, setTransferRefund] = useState(null);
+  const [sseMessage, setSseMessage] = useState("");
 
   useEffect(() => {
     loadRefunds();
+  }, []);
+
+  useEffect(() => {
+    const eventSource = new EventSource("http://localhost:8080/webhooks/sepay/sse");
+
+    eventSource.onopen = () => {
+      console.log("SSE opened");
+    };
+
+    eventSource.addEventListener("CONNECTED", (event) => {
+      console.log("Admin SSE connected:", event.data);
+    });
+
+    eventSource.addEventListener("PAID", (event) => {
+      const data = JSON.parse(event.data);
+
+      console.log("SSE PAID:", data);
+
+      setSseMessage(data.message || "Đã chuyển tiền thành công.");
+      toast.success(data.message );
+
+      setTransferRefund(null);
+
+      setTimeout(() => {
+        loadRefunds();
+      }, 500);
+    });
+
+    eventSource.addEventListener("FAILED", (event) => {
+      const data = JSON.parse(event.data);
+
+      console.log("SSE FAILED:", data);
+
+      setSseMessage(data.message);
+      toast.error(data.message);
+
+      setTimeout(() => {
+        loadRefunds();
+      }, 500);
+    });
+
+    eventSource.onerror = (error) => {
+      console.error("SSE error:", error);
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   const loadRefunds = async () => {
@@ -23,15 +74,17 @@ function RefundManagement() {
       setError("");
       const res = await getPendingRefundRequests();
       const data = res.data?.result ?? res.data?.data ?? res.data;
+      console.log(data);
+
       setRefunds(Array.isArray(data) ? data : []);
     } catch (err) {
       setRefunds([]);
       const status = err.response?.status;
       setError(
         err.response?.data?.message ||
-          (status === 401 || status === 403
-            ? "Phiên đăng nhập admin hết hạn — vui lòng đăng nhập lại"
-            : `Không tải được danh sách yêu cầu hoàn tiền${status ? ` (${status})` : ""}`)
+        (status === 401 || status === 403
+          ? "Phiên đăng nhập admin hết hạn — vui lòng đăng nhập lại"
+          : `Không tải được danh sách yêu cầu hoàn tiền${status ? ` (${status})` : ""}`)
       );
     } finally {
       setLoading(false);
@@ -53,7 +106,115 @@ function RefundManagement() {
     return date.toLocaleString("vi-VN");
   };
 
+  const getRefundStatus = (refund) =>
+    String(refund.status || refund.refundStatus || "").toUpperCase();
+
+  const renderRefundStatus = (refund) => {
+    const status = getRefundStatus(refund);
+
+    const statusMap = {
+      PENDING: {
+        label: "Chờ duyệt",
+        className: "badge bg-warning text-dark",
+      },
+      APPROVED: {
+        label: "Đã duyệt - chờ chuyển tiền",
+        className: "badge bg-primary",
+      },
+      PAID: {
+        label: "Đã hoàn tiền",
+        className: "badge bg-success",
+      },
+      REJECTED: {
+        label: "Đã từ chối",
+        className: "badge bg-danger",
+      },
+      FAILED: {
+        label: "Chuyển tiền thất bại",
+        className: "badge bg-danger",
+      },
+
+      // Các trạng thái bên teacher_earnings
+      AVAILABLE: {
+        label: "Có thể rút",
+        className: "badge bg-success",
+      },
+      WITHDRAWN: {
+        label: "Đã rút",
+        className: "badge bg-secondary",
+      },
+      CANCELLED: {
+        label: "Đã hủy",
+        className: "badge bg-danger",
+      },
+      REFUNDED: {
+        label: "Đã hoàn tiền",
+        className: "badge bg-info text-dark",
+      },
+    };
+
+    const item = statusMap[status] || {
+      label: status || "Không xác định",
+      className: "badge bg-secondary",
+    };
+
+    return <span className={item.className}>{item.label}</span>;
+  };
+
+
+  const handleTransfer = (refund) => {
+    setTransferRefund(refund);
+  };
+
+  const closeTransferModal = () => {
+    setTransferRefund(null);
+  };
+
+  const renderActionButtons = (refund) => {
+    const status = getRefundStatus(refund);
+    const isReviewing = reviewingId === refund.refundRequestId;
+
+    if (status === "PENDING") {
+      return (
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-sm btn-success"
+            disabled={isReviewing}
+            onClick={() => handleReview(refund.refundRequestId, true)}
+          >
+            Duyệt
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger"
+            disabled={isReviewing}
+            onClick={() => handleReview(refund.refundRequestId, false)}
+          >
+            Từ chối
+          </button>
+        </div>
+      );
+    }
+
+    if (status === "APPROVED") {
+      return (
+        <button
+          type="button"
+          className="btn btn-sm btn-primary"
+          onClick={() => handleTransfer(refund)}
+        >
+          Chuyển tiền
+        </button>
+      );
+    }
+
+    return <span className="text-muted small">--</span>;
+  };
+
   const handleReview = async (transactionId, approve) => {
+    console.log(transactionId);
+
     const note = window.prompt(
       approve
         ? "Ghi chú duyệt hoàn tiền (không bắt buộc):"
@@ -110,6 +271,134 @@ function RefundManagement() {
         </div>
       )}
 
+      {transferRefund && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          aria-modal="true"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.45)" }}
+          onClick={closeTransferModal}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered modal-lg"
+            role="document"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <div>
+                  <h5 className="modal-title">
+                    Quét QR chuyển tiền hoàn tiền #{transferRefund.refundRequestId}
+                  </h5>
+                  <small className="text-muted">
+                    Admin quét mã QR bằng app ngân hàng để chuyển tiền cho học viên.
+                  </small>
+                </div>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Đóng"
+                  onClick={closeTransferModal}
+                />
+              </div>
+
+              <div className="modal-body">
+                <div className="row g-4 align-items-center">
+                  <div className="col-md-5 text-center">
+                    {transferRefund.qrPay ? (
+                      <img
+                        src={transferRefund.qrPay}
+                        alt={`QR chuyển khoản hoàn tiền #${transferRefund.refundRequestId}`}
+                        className="img-fluid border rounded p-2 bg-white"
+                        style={{ maxWidth: 280 }}
+                      />
+                    ) : (
+                      <div className="alert alert-warning mb-0">
+                        Chưa có mã QR chuyển khoản cho yêu cầu này.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-md-7">
+                    <div className="mb-3">
+                      <div className="text-muted small">Số tiền</div>
+                      <div className="fs-4 fw-bold text-danger">
+                        {formatPrice(transferRefund.amount)}
+                      </div>
+                    </div>
+
+                    <div className="table-responsive">
+                      <table className="table table-sm table-bordered mb-0">
+                        <tbody>
+                          <tr>
+                            <th className="bg-light" style={{ width: 160 }}>Ngân hàng</th>
+                            <td>{transferRefund.refundBankName || "--"}</td>
+                          </tr>
+                          <tr>
+                            <th className="bg-light">Số tài khoản</th>
+                            <td className="fw-semibold">
+                              {transferRefund.refundAccountNumber || "--"}
+                            </td>
+                          </tr>
+                          <tr>
+                            <th className="bg-light">Chủ tài khoản</th>
+                            <td>{transferRefund.refundAccountName || "--"}</td>
+                          </tr>
+                          <tr>
+                            <th className="bg-light">Nội dung CK</th>
+                            <td className="fw-semibold">
+                              {transferRefund.paymentCode || `REFUND${transferRefund.refundRequestId}`}
+                            </td>
+                          </tr>
+                          <tr>
+                            <th className="bg-light">Học viên</th>
+                            <td>
+                              {transferRefund.studentFullName || transferRefund.studentUsername || "--"}
+                            </td>
+                          </tr>
+                          <tr>
+                            <th className="bg-light">Khóa học</th>
+                            <td>{transferRefund.courseTitle || "--"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={closeTransferModal}
+                >
+                  Đóng
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={closeTransferModal}
+                >
+                  Kiểm tra
+                </button>
+                {transferRefund.qrPay ? (
+                  <a
+                    className="btn btn-primary"
+                    href={transferRefund.qrPay}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Mở QR
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="admin-table-card">
         <div className="table-responsive">
           <table className="table table-hover align-middle admin-transaction-table">
@@ -122,9 +411,10 @@ function RefundManagement() {
                 <th>Khóa học / GV</th>
                 <th>Số tiền</th>
                 <th>Tiến độ</th>
-                <th>STK hoàn</th>
+                {/* <th>STK hoàn</th> */}
                 <th>Lý do</th>
-                <th>Thời gian</th>
+                <th>Trạng thái</th>
+
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -140,7 +430,7 @@ function RefundManagement() {
                   <tr key={r.refundRequestId}>
                     <td>{idx + 1}</td>
                     <td>#{r.refundRequestId}</td>
-                    <td>#{r.transactionId}</td>
+                    <td>#{r.transactionItemId}</td>
                     <td>
                       <AdminUserLink
                         userId={r.studentId}
@@ -190,7 +480,7 @@ function RefundManagement() {
                         </small>
                       ) : null}
                     </td>
-                    <td style={{ minWidth: 220 }}>
+                    {/* <td style={{ minWidth: 220 }}>
                       <RefundBankInfo
                         bankName={r.refundBankName}
                         accountNumber={r.refundAccountNumber}
@@ -199,7 +489,7 @@ function RefundManagement() {
                         studentPhone={r.studentPhone}
                         amount={formatPrice(r.amount)}
                       />
-                    </td>
+                    </td> */}
                     <td>
                       <div className="fw-semibold small">
                         {r.reasonLabel || r.reasonCode || "--"}
@@ -210,34 +500,8 @@ function RefundManagement() {
                         <span className="text-muted small d-block">{r.reason}</span>
                       ) : null}
                     </td>
-                    <td>
-                      <div>{formatDateTime(r.createdAt)}</div>
-                      {r.refundDeadlineAt ? (
-                        <small className="text-muted d-block">
-                          Hạn: {formatDateTime(r.refundDeadlineAt)}
-                        </small>
-                      ) : null}
-                    </td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-success"
-                          disabled={reviewingId === r.transactionId}
-                          onClick={() => handleReview(r.transactionId, true)}
-                        >
-                          Duyệt
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger"
-                          disabled={reviewingId === r.transactionId}
-                          onClick={() => handleReview(r.transactionId, false)}
-                        >
-                          Từ chối
-                        </button>
-                      </div>
-                    </td>
+                    <td>{renderRefundStatus(r)}</td>
+                    <td>{renderActionButtons(r)}</td>
                   </tr>
                 ))
               )}

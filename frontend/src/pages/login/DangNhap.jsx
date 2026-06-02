@@ -24,10 +24,8 @@ function Login() {
         taiKhoan: taiKhoan.trim(),
         password: password.trim(),
       });
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("english_token", data.token);
-      }
+      if (data.token) localStorage.setItem("token", data.token);
+      console.log(data)
       const role = data.role?.toLowerCase();
       if (role === "admin") navigate("/admin", { replace: true });
       else if (role === "teacher") navigate("/teacher", { replace: true });

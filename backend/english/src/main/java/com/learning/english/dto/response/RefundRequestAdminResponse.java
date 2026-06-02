@@ -16,7 +16,7 @@ import lombok.Setter;
 @Builder
 public class RefundRequestAdminResponse {
     private Long refundRequestId;
-    private Long transactionId;
+    private Long transactionItemId;
     private Long courseId;
     private String courseTitle;
     private Long teacherId;
@@ -44,4 +44,6 @@ public class RefundRequestAdminResponse {
     private LocalDateTime createdAt;
     private LocalDateTime reviewedAt;
     private String rejectReason;
+    private String qrPay;
+    private String paymentCode;
 }

@@ -42,7 +42,7 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
 
     List<Withdrawal> findByTeacher_UserIdOrderByRequestedAtDesc(Long teacherId);
 
-    @Query("""
+    
     
     @Query("""
             SELECT w
@@ -67,8 +67,8 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
               AND w.status = 'PENDING'
             """)
     BigDecimal sumPendingAmountByTeacherId(@Param("teacherId") Long teacherId);
-        """)
-        BigDecimal sumPendingAmount(@Param("teacherId") Long teacherId);
+    
+//        BigDecimal sumPendingAmount(@Param("teacherId") Long teacherId);
 
         @Query("""
             SELECT COALESCE(SUM(w.amount), 0)
@@ -93,4 +93,6 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
               AND w.status = 'REJECTED'
         """)
         BigDecimal sumRejectedAmount(@Param("teacherId") Long teacherId);
+        
+        long countByTeacherUserIdAndStatus(Long teacherId, String status);
 }

@@ -52,16 +52,16 @@ jwt:
 
 sepay:
   bank:
-    account: "103877010565"
+    account: "103877010278"
     name: "VietinBank"
-    account-name: "TRAN DAI DUC"
+    account-name: "NGUYEN CONG QUOC"
 
   webhook:
-    secret: "whsec_WqhFrd1SCKQyJxcRbDPMAmzZrtiTUEAG"
+    secret: "your_sepay_webhook_secret"
     
 gemini:
   api:
-    key: AIzaSyC_xYSiQkWNNyA95UdjQDJFiZxsDY4AOfo1111
+    key: AQ.Ab8RN6KE2CrzPQJ9pOTiXbRYLI8rnUyg7apQVQD6cbKNP4DN4w212121
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
     fallback-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
     

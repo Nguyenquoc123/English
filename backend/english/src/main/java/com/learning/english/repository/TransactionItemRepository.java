@@ -12,4 +12,8 @@ public interface TransactionItemRepository extends JpaRepository<TransactionItem
 	List<TransactionItem> findByTransactionTransactionId(Long transactionId);
 
 	List<TransactionItem> findByTransactionUserUserIdAndCourseCourseIdOrderByCreatedAtDesc(Long userId, Long courseId);
+	
+	//============
+	
+	
 }

@@ -150,7 +150,7 @@ function TeacherBankAccountsPage() {
             const payload = {
                 bankName: resolveBankName(form.bankSelect, form.customBankName),
                 accountNumber: form.accountNumber.trim(),
-                accountName: form.accountName.trim(),
+                accountName: form.accountName.trim().toUpperCase(),
                 isDefault: Boolean(form.isDefault),
             };
 

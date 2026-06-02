@@ -21,6 +21,7 @@ import com.learning.english.entity.Role;
 import com.learning.english.entity.TeacherCertificate;
 import com.learning.english.entity.TeacherProfile;
 import com.learning.english.entity.User;
+import com.learning.english.events.TeacherProfileAiReviewEvent;
 import com.learning.english.mapper.TeacherProfileMapper;
 import com.learning.english.repository.RoleRepository;
 import com.learning.english.repository.TeacherProfileRepository;
@@ -113,10 +114,11 @@ public class TeacherProfileService {
 
 				TeacherProfile savedProfile = teacherProfileRepository.save(existingProfile);
 
-				applicationEventPublisher.publishEvent(savedProfile.getTeacherProfileId());
+				applicationEventPublisher.publishEvent(
+				        new TeacherProfileAiReviewEvent(savedProfile.getTeacherProfileId())
+				);
 
 				return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
-
 			}
 		}
 
@@ -139,7 +141,9 @@ public class TeacherProfileService {
 
 		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
 
-		applicationEventPublisher.publishEvent(savedProfile.getTeacherProfileId());
+		applicationEventPublisher.publishEvent(
+		        new TeacherProfileAiReviewEvent(savedProfile.getTeacherProfileId())
+		);
 
 		return teacherProfileMapper.toTeacherProfileResponse(savedProfile);
 	}

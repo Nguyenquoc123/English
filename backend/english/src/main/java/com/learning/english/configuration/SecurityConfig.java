@@ -46,9 +46,9 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(request -> request
                 // Public endpoints
-                .requestMatchers(HttpMethod.POST, "/register", "/login", "/xacminh").permitAll()
-                .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-public", "/images/**", "/videos/**", "/level/*", "/audios/**", "/files/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/webhooks/sepay").permitAll()
+                .requestMatchers(HttpMethod.POST, "/register", "/login", "/xacminh", "/forgot-password", "/reset-password").permitAll()
+                .requestMatchers(HttpMethod.GET, "/khoa-hoc/danh-sach-khoa-hoc-public", "/images/**", "/videos/**", "/level/*", "/audio/**", "/files/**", "/webhooks/sepay/sse").permitAll()
+                .requestMatchers(HttpMethod.POST, "/webhooks/sepay", "/webhooks/sepay/chuyen-khoan", "/webhooks/sepay/hoan-tien").permitAll()
                 .requestMatchers(HttpMethod.GET, "/thumbnails/**", "/certificates/verify/**", "/uploads/**", "/files/**", "/khoa-hoc/chi-tiet-khoa-hoc-student/*", "/khoa-hoc/certificate-api-health", "/danh-gia/ds-danh-gia/*").permitAll()
 
                 // Student
@@ -108,6 +108,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/video/*/lessons").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.PUT,"/video/*/lessons/edit").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher")
                 .requestMatchers(HttpMethod.GET, "/video/*/lessons", "/video/*").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/video/*/publish").hasAnyAuthority("SCOPE_admin", "SCOPE_teacher", "SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/video/*/admin").hasAnyAuthority("SCOPE_admin")
 
                 // Practice & exams
@@ -123,6 +124,28 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/exam-questions/exam-submit").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
+                
+                .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAuthority("SCOPE_student")
+                
+                .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses", "/chatbot/history", "/chatbot/course-history").hasAuthority("SCOPE_student")
+                
+                
+                
+                .requestMatchers(HttpMethod.POST, "/gio-hang/them/*", "/gio-hang/xoa/*").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.GET, "/gio-hang/khoa-hoc").hasAuthority("SCOPE_student")
+                
+                // bank
+                .requestMatchers(HttpMethod.POST, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.GET, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.PUT, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.DELETE, "/bank-account/*").hasAuthority("SCOPE_teacher")
+                
+                // dashboard
+                .requestMatchers(HttpMethod.GET, "/teacher/dashboard/**", "/teacher/earnings", "/teacher/withdrawals").hasAuthority("SCOPE_teacher")
+                .requestMatchers(HttpMethod.POST, "/withdraw/create").hasAuthority("SCOPE_teacher")
+                
+                .requestMatchers(HttpMethod.POST, "/withdraw/approve").hasAuthority("SCOPE_admin")
+                
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                         .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses")

@@ -21,8 +21,8 @@ public class RefundRequestEntity {
     private Long refundRequestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transactionid", nullable = false)
-    private Transaction transaction;
+    @JoinColumn(name = "transactionitemid", nullable = false)
+    private TransactionItem transactionItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "courseid")
@@ -87,4 +87,20 @@ public class RefundRequestEntity {
 
     @Column(name = "updatedat", nullable = false)
     private LocalDateTime updatedAt;
+    
+    @Column(name = "refundreason", columnDefinition = "NVARCHAR(1000)")
+    private String refundReason;
+
+    @Column(name = "refundrequestat")
+    private LocalDateTime refundRequestedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "refundreviewedby")
+    private User refundReviewedBy;
+
+    @Column(name = "refundreviewedat")
+    private LocalDateTime refundReviewedAt;
+
+    @Column(name = "refundrejectreason", columnDefinition = "NVARCHAR(1000)")
+    private String refundRejectReason;
 }

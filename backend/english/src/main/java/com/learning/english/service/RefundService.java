@@ -9,7 +9,7 @@ import com.learning.english.dto.response.RefundReasonOptionResponse;
 import com.learning.english.dto.response.StudentRefundStatusResponse;
 import com.learning.english.entity.*;
 import com.learning.english.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,41 +17,44 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RefundService {
 
-    private static final Set<String> OPEN_REFUND_STATUSES = Set.of("PENDING");
+    private static final String TX_SUCCESS = "SUCCESS";
+    private static final String TX_REFUND_REQUESTED = "REFUND_REQUESTED";
+    private static final String TX_PARTIALLY_REFUND_REQUESTED = "PARTIALLY_REFUND_REQUESTED";
+    private static final String TX_REFUND_APPROVED = "REFUND_APPROVED";
+    private static final String TX_PARTIALLY_REFUND_APPROVED = "PARTIALLY_REFUND_APPROVED";
+    private static final String TX_REFUNDED = "REFUNDED";
+    private static final String TX_PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED";
+    private static final String TX_REFUND_REJECTED = "REFUND_REJECTED";
 
-    @Autowired
-    TransactionRepository transactionRepository;
-    @Autowired
-    TransactionItemRepository transactionItemRepository;
-    @Autowired
-    RefundRequestRepository refundRequestRepository;
-    @Autowired
-    EnrollmentRepository enrollmentRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    StudentBankAccountService studentBankAccountService;
-    @Autowired
-    NotificationService notificationService;
-    @Autowired
-    TeacherEarningRepository teacherEarningRepository;
-    @Autowired
-    LessonRepository lessonRepository;
-    @Autowired
-    VideoProgressRepository videoProgressRepository;
-    @Autowired
-    RefundAuditService refundAuditService;
+    private static final String REFUND_PENDING = "PENDING";
+    private static final String REFUND_APPROVED = "APPROVED";
+    private static final String REFUND_REJECTED = "REJECTED";
+    private static final String REFUND_PAID = "PAID";
+    private static final String REFUND_REFUNDED = "REFUNDED";
+    private static final String REFUND_CANCELLED = "CANCELLED";
+
+    private static final Set<String> OPEN_REFUND_STATUSES = Set.of(
+            REFUND_PENDING,
+            REFUND_APPROVED
+    );
+
+    private final TransactionRepository transactionRepository;
+    private final TransactionItemRepository transactionItemRepository;
+    private final RefundRequestRepository refundRequestRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
+    private final StudentBankAccountService studentBankAccountService;
+    private final NotificationService notificationService;
+    private final TeacherEarningRepository teacherEarningRepository;
+    private final LessonRepository lessonRepository;
+    private final VideoProgressRepository videoProgressRepository;
 
     public List<RefundReasonOptionResponse> listReasonOptions() {
         return Arrays.stream(RefundReasonCode.values())
@@ -65,64 +68,84 @@ public class RefundService {
     @Transactional(readOnly = true)
     public RefundEligibilityResponse getEligibilityForCourse(Long courseId) {
         User user = getCurrentUser();
-        TransactionContext ctx = resolveSuccessfulTransaction(user.getUserId(), courseId);
+
+        TransactionContext ctx = resolveRefundableTransaction(user.getUserId(), courseId);
+
         if (ctx == null) {
             return RefundEligibilityResponse.builder()
                     .courseId(courseId)
                     .canRequestRefund(false)
-                    .ineligibilityReasons(List.of("Không tìm thấy giao dịch thành công"))
+                    .ineligibilityReasons(List.of("Không tìm thấy giao dịch hợp lệ để hoàn tiền"))
                     .build();
         }
-        return buildEligibility(user, ctx.transaction(), ctx.course(), ctx.enrollment());
+
+        RefundRequestEntity latestRefund = refundRequestRepository
+                .findFirstByTransactionItemTransactionItemIdOrderByCreatedAtDesc(
+                        ctx.transactionItem().getTransactionItemId()
+                )
+                .orElse(null);
+
+        return buildEligibilityForCourseItem(
+                user,
+                ctx.transaction(),
+                ctx.transactionItem(),
+                ctx.enrollment(),
+                latestRefund
+        );
     }
 
     @Transactional(readOnly = true)
     public List<StudentRefundStatusResponse> getMyCourseRefundStatuses() {
         User user = getCurrentUser();
-        List<Transaction> transactions = transactionRepository.findByUserUserIdOrderByCreatedAtDesc(user.getUserId());
-        Map<Long, StudentRefundStatusResponse> latestByCourse = new HashMap<>();
+
+        List<Transaction> transactions = transactionRepository
+                .findByUserUserIdOrderByCreatedAtDesc(user.getUserId());
+
+        Map<Long, StudentRefundStatusResponse> latestByCourse = new LinkedHashMap<>();
 
         for (Transaction tx : transactions) {
-            List<TransactionItem> items = transactionItemRepository.findByTransactionTransactionId(tx.getTransactionId());
+            List<TransactionItem> items = transactionItemRepository
+                    .findByTransactionTransactionId(tx.getTransactionId());
+
             for (TransactionItem item : items) {
                 if (item.getCourse() == null) {
                     continue;
                 }
+
                 Long courseId = item.getCourse().getCourseId();
+
                 if (latestByCourse.containsKey(courseId)) {
                     continue;
                 }
+
                 Enrollment enrollment = enrollmentRepository
                         .findByUserUserIdAndCourseCourseId(user.getUserId(), courseId)
                         .orElse(null);
-                RefundRequestEntity refund = refundRequestRepository
-                        .findFirstByStudentUserIdAndCourseCourseIdOrderByCreatedAtDesc(user.getUserId(), courseId)
+
+                RefundRequestEntity latestRefund = refundRequestRepository
+                        .findFirstByTransactionItemTransactionItemIdOrderByCreatedAtDesc(
+                                item.getTransactionItemId()
+                        )
                         .orElse(null);
 
-                RefundEligibilityResponse eligibility = buildEligibility(user, tx, item.getCourse(), enrollment);
-                String displayStatus = resolveDisplayStatus(tx, refund);
-                boolean canRequest = eligibility.isCanRequestRefund();
-                if (refund != null && OPEN_REFUND_STATUSES.contains(refund.getStatus().toUpperCase())) {
-                    canRequest = false;
-                }
-                if (refund != null && ("APPROVED".equalsIgnoreCase(refund.getStatus())
-                        || "PAID".equalsIgnoreCase(refund.getStatus()))) {
-                    canRequest = false;
-                }
-                if ("REFUNDED".equalsIgnoreCase(tx.getStatus())) {
-                    canRequest = false;
-                }
+                RefundEligibilityResponse eligibility = buildEligibilityForCourseItem(
+                        user,
+                        tx,
+                        item,
+                        enrollment,
+                        latestRefund
+                );
 
                 latestByCourse.put(courseId, StudentRefundStatusResponse.builder()
                         .courseId(courseId)
                         .transactionId(tx.getTransactionId())
-                        .status(displayStatus)
+                        .status(resolveCourseRefundDisplayStatus(tx, latestRefund))
                         .accessStatus(eligibility.getAccessStatus())
-                        .refundReason(refund != null ? refund.getReason() : tx.getRefundReason())
-                        .refundRejectReason(resolveRejectReason(refund, tx))
-                        .refundRequestedAt(refund != null ? refund.getCreatedAt() : tx.getRefundRequestedAt())
-                        .refundReviewedAt(refund != null ? refund.getReviewedAt() : tx.getRefundReviewedAt())
-                        .canRequestRefund(canRequest)
+                        .refundReason(resolveRefundReason(latestRefund))
+                        .refundRejectReason(resolveRefundRejectReason(latestRefund))
+                        .refundRequestedAt(resolveRefundRequestedAt(latestRefund))
+                        .refundReviewedAt(resolveRefundReviewedAt(latestRefund))
+                        .canRequestRefund(eligibility.isCanRequestRefund())
                         .purchaseAt(eligibility.getPurchaseAt())
                         .refundDeadlineAt(eligibility.getRefundDeadlineAt())
                         .remainingSeconds(eligibility.getRemainingSeconds())
@@ -133,201 +156,447 @@ public class RefundService {
                         .build());
             }
         }
+
         return new ArrayList<>(latestByCourse.values());
     }
 
     @Transactional
-    public void requestRefundForCourse(Long courseId, RefundRequest request) {
+    public RefundRequestEntity requestRefundForCourse(Long courseId, RefundRequest request) {
         User user = getCurrentUser();
-        TransactionContext ctx = resolveSuccessfulTransaction(user.getUserId(), courseId);
+
+        TransactionContext ctx = resolveRefundableTransaction(user.getUserId(), courseId);
+
         if (ctx == null) {
-            throw new RuntimeException("Không tìm thấy giao dịch thành công để yêu cầu hoàn tiền");
+            throw new RuntimeException("Không tìm thấy giao dịch hợp lệ để yêu cầu hoàn tiền");
         }
 
-        RefundEligibilityResponse eligibility = buildEligibility(user, ctx.transaction(), ctx.course(), ctx.enrollment());
+        Transaction tx = ctx.transaction();
+        TransactionItem item = ctx.transactionItem();
+
+        RefundRequestEntity latestRefund = refundRequestRepository
+                .findFirstByTransactionItemTransactionItemIdOrderByCreatedAtDesc(
+                        item.getTransactionItemId()
+                )
+                .orElse(null);
+
+        RefundEligibilityResponse eligibility = buildEligibilityForCourseItem(
+                user,
+                tx,
+                item,
+                ctx.enrollment(),
+                latestRefund
+        );
+
         if (!eligibility.isCanRequestRefund()) {
             String message = eligibility.getIneligibilityReasons().isEmpty()
                     ? "Không đủ điều kiện hoàn tiền"
                     : eligibility.getIneligibilityReasons().get(0);
+
             throw new RuntimeException(message);
+        }
+
+        boolean hasOpenRefund = refundRequestRepository
+                .existsByTransactionItemTransactionItemIdAndStatusIn(
+                        item.getTransactionItemId(),
+                        OPEN_REFUND_STATUSES
+                );
+
+        if (hasOpenRefund) {
+            throw new RuntimeException("Đã có yêu cầu hoàn tiền đang chờ xử lý cho khóa học này");
         }
 
         RefundReasonCode reasonCode = resolveReasonCode(request);
         String detail = normalizeDetail(request != null ? request.getDetailDescription() : null);
+
         validateReasonInput(reasonCode, detail);
 
-        Transaction target = ctx.transaction();
-        if (refundRequestRepository.existsByTransactionTransactionIdAndStatusIn(
-                target.getTransactionId(), OPEN_REFUND_STATUSES)) {
-            throw new RuntimeException("Đã có yêu cầu hoàn tiền đang chờ xử lý");
-        }
-
         StudentBankAccount bankAccount = studentBankAccountService.requireDefaultAccount(user);
+
         LocalDateTime now = LocalDateTime.now();
         String reasonText = buildReasonText(reasonCode, detail);
 
         RefundRequestEntity refundRequest = RefundRequestEntity.builder()
-                .transaction(target)
-                .course(ctx.course())
+                .transactionItem(item)
+                .course(item.getCourse())
                 .student(user)
                 .studentBankAccount(bankAccount)
+                .reason(reasonText)
                 .reasonCode(reasonCode.getCode())
                 .detailDescription(detail)
-                .reason(reasonText)
+                .internalNote(null)
                 .purchaseAt(eligibility.getPurchaseAt())
                 .progressPercent(eligibility.getProgressPercent())
                 .completedLessons(eligibility.getCompletedLessons())
                 .totalLessons(eligibility.getTotalLessons())
                 .refundDeadlineAt(eligibility.getRefundDeadlineAt())
-                .status("PENDING")
+                .status(REFUND_PENDING)
+                .reviewNote(null)
+                .rejectReason(null)
+                .reviewedBy(null)
+                .reviewedAt(null)
+                .paidAt(null)
                 .createdAt(now)
                 .updatedAt(now)
+
+                // Các field legacy/FE đang dùng
+                .refundReason(reasonText)
+                .refundRequestedAt(now)
+                .refundReviewedBy(null)
+                .refundReviewedAt(null)
+                .refundRejectReason(null)
                 .build();
+
         refundRequest = refundRequestRepository.save(refundRequest);
 
-        target.setStatus("REFUND_REQUESTED");
-        target.setRefundReason(reasonText);
-        target.setRefundRejectReason(null);
-        target.setRefundRequestedAt(now);
-        target.setRefundReviewedAt(null);
-        target.setRefundReviewedBy(null);
-        target.setUpdatedAt(now);
-        transactionRepository.save(target);
-
         lockEnrollment(user.getUserId(), courseId, now);
-        refundAuditService.log("CREATED", refundRequest, user, null, "PENDING", reasonText);
-        notifyAdminsNewRefundRequest(user, ctx.course(), target, refundRequest, bankAccount);
+
+        refreshTransactionRefundStatus(tx, now);
+
+        notifyAdminsNewRefundRequest(
+                user,
+                item.getCourse(),
+                tx,
+                refundRequest,
+                bankAccount
+        );
+
+        return refundRequest;
     }
 
+    /**
+     * Admin duyệt hoặc từ chối yêu cầu hoàn tiền.
+     * Vẫn nhận transactionId để không cần sửa controller nhiều.
+     * Nếu transaction có nhiều item, service sẽ tìm refund PENDING mới nhất trong các item.
+     */
     @Transactional
-    public void reviewRefund(Long transactionId, boolean approve, String note, String internalNote, String adminUsername) {
-        Transaction tx = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch"));
+    public RefundRequestEntity reviewRefund(
+            Long refundRequestId,
+            boolean approve,
+            String note,
+            String internalNote,
+            String adminUsername
+    ) {
+        
 
-        RefundRequestEntity refundRequest = refundRequestRepository
-                .findFirstByTransactionTransactionIdAndStatusOrderByCreatedAtDesc(transactionId, "PENDING")
-                .orElseGet(() -> refundRequestRepository
-                        .findFirstByTransactionTransactionIdOrderByCreatedAtDesc(transactionId)
-                        .orElse(null));
+        RefundRequestEntity refundRequest = refundRequestRepository.findById(refundRequestId).orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu hoàn tiền"));
 
-        if (refundRequest != null && !"PENDING".equalsIgnoreCase(refundRequest.getStatus())) {
-            refundRequest = null;
+        
+
+        if (!REFUND_PENDING.equalsIgnoreCase(refundRequest.getStatus())) {
+            throw new RuntimeException("Yêu cầu hoàn tiền này không ở trạng thái chờ xử lý");
         }
-        if (refundRequest == null && !"REFUND_REQUESTED".equalsIgnoreCase(tx.getStatus())) {
-            throw new RuntimeException("Giao dịch này không ở trạng thái chờ hoàn tiền");
+
+        TransactionItem item = refundRequest.getTransactionItem();
+
+        if (item == null) {
+            throw new RuntimeException("Yêu cầu hoàn tiền không có chi tiết giao dịch");
         }
 
         User admin = userRepository.findByUsername(adminUsername)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
-        LocalDateTime now = LocalDateTime.now();
-        String reviewNote = note == null ? null : note.trim();
 
-        tx.setRefundReviewedBy(admin);
-        tx.setRefundReviewedAt(now);
-        tx.setUpdatedAt(now);
+        LocalDateTime now = LocalDateTime.now();
+        String reviewNote = normalizeText(note);
+        String normalizedInternalNote = normalizeText(internalNote);
 
         if (approve) {
-            List<TeacherEarning> earnings = teacherEarningRepository.findByTransactionTransactionId(transactionId);
-            boolean hasReleasedEarning = earnings.stream()
-                    .anyMatch(e -> "AVAILABLE".equalsIgnoreCase(e.getStatus()) || "WITHDRAWN".equalsIgnoreCase(e.getStatus()));
-            if (hasReleasedEarning) {
-                throw new RuntimeException("Không thể duyệt hoàn tiền — doanh thu giảng viên đã chuyển sang có thể rút");
-            }
-
-            tx.setStatus("REFUNDED");
-            tx.setRefundRejectReason(null);
-
-            if (refundRequest != null) {
-                String oldStatus = refundRequest.getStatus();
-                refundRequest.setStatus("APPROVED");
-                refundRequest.setReviewNote(reviewNote);
-                refundRequest.setReviewedBy(admin);
-                refundRequest.setReviewedAt(now);
-                refundRequest.setPaidAt(now);
-                refundRequest.setUpdatedAt(now);
-                if (internalNote != null && !internalNote.isBlank()) {
-                    refundRequest.setInternalNote(internalNote.trim());
-                }
-                refundRequestRepository.save(refundRequest);
-                refundAuditService.log("APPROVED", refundRequest, admin, oldStatus, "APPROVED", reviewNote);
-            }
-
-            finalizeRefundAccess(transactionId, now);
-            for (TeacherEarning earning : earnings) {
-                earning.setStatus("REFUNDED");
-            }
-            teacherEarningRepository.saveAll(earnings);
-            notifyStudentRefundReviewed(tx.getUser(), refundRequest, true, reviewNote);
+            approveRefund(item, refundRequest, admin, reviewNote, normalizedInternalNote, now);
         } else {
-            if (reviewNote == null || reviewNote.isEmpty()) {
-                throw new RuntimeException("Vui lòng nhập lý do từ chối hoàn tiền");
-            }
-            tx.setStatus("SUCCESS");
-            tx.setRefundRejectReason(reviewNote);
-
-            if (refundRequest != null) {
-                String oldStatus = refundRequest.getStatus();
-                refundRequest.setStatus("REJECTED");
-                refundRequest.setReviewNote(reviewNote);
-                refundRequest.setRejectReason(reviewNote);
-                refundRequest.setReviewedBy(admin);
-                refundRequest.setReviewedAt(now);
-                refundRequest.setUpdatedAt(now);
-                if (internalNote != null && !internalNote.isBlank()) {
-                    refundRequest.setInternalNote(internalNote.trim());
-                }
-                refundRequestRepository.save(refundRequest);
-                refundAuditService.log("REJECTED", refundRequest, admin, oldStatus, "REJECTED", reviewNote);
-            }
-
-            restoreEnrollmentAfterReject(transactionId, now);
-            notifyStudentRefundReviewed(tx.getUser(), refundRequest, false, reviewNote);
+            rejectRefund(refundRequest, admin, reviewNote, normalizedInternalNote, now);
         }
 
-        transactionRepository.save(tx);
+//        refreshTransactionRefundStatus(tx, now);
+
+        return refundRequest;
     }
 
-    RefundEligibilityResponse buildEligibility(User user, Transaction tx, Course course, Enrollment enrollment) {
-        List<String> reasons = new ArrayList<>();
-        LocalDateTime purchaseAt = resolvePurchaseAt(tx);
-        LocalDateTime deadline = purchaseAt.plusSeconds(RefundPolicyConstants.REFUND_WINDOW_SECONDS);
+    /**
+     * Admin xác nhận đã chuyển khoản hoàn tiền.
+     * Nên gọi hàm này sau khi yêu cầu đã APPROVED và admin thực sự đã chuyển tiền.
+     */
+    @Transactional
+    public RefundRequestEntity markRefundPaid(Long refundRequestId, String adminUsername) {
+        RefundRequestEntity refundRequest = refundRequestRepository.findById(refundRequestId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu hoàn tiền"));
+
+        if (!REFUND_APPROVED.equalsIgnoreCase(refundRequest.getStatus())) {
+            throw new RuntimeException("Chỉ có thể xác nhận đã hoàn tiền với yêu cầu đã được duyệt");
+        }
+
+        User admin = userRepository.findByUsername(adminUsername)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy admin"));
+
+        TransactionItem item = refundRequest.getTransactionItem();
+
+        if (item == null || item.getTransaction() == null) {
+            throw new RuntimeException("Yêu cầu hoàn tiền thiếu thông tin giao dịch");
+        }
+
         LocalDateTime now = LocalDateTime.now();
+
+        refundRequest.setStatus(REFUND_PAID);
+        refundRequest.setPaidAt(now);
+        refundRequest.setReviewedBy(admin);
+        refundRequest.setReviewedAt(
+                refundRequest.getReviewedAt() != null ? refundRequest.getReviewedAt() : now
+        );
+        refundRequest.setUpdatedAt(now);
+
+        refundRequest.setRefundReviewedBy(admin);
+        refundRequest.setRefundReviewedAt(
+                refundRequest.getRefundReviewedAt() != null ? refundRequest.getRefundReviewedAt() : now
+        );
+
+        refundRequestRepository.save(refundRequest);
+
+        finalizeRefundAccess(refundRequest, now);
+        refundTeacherEarnings(item, now);
+        refreshTransactionRefundStatus(item.getTransaction(), now);
+
+        notifyStudentRefundPaid(refundRequest.getStudent(), refundRequest);
+
+        return refundRequest;
+    }
+
+    private void approveRefund(
+            TransactionItem item,
+            RefundRequestEntity refundRequest,
+            User admin,
+            String reviewNote,
+            String internalNote,
+            LocalDateTime now
+    ) {
+        List<TeacherEarning> earnings = teacherEarningRepository
+                .findByTransactionItemTransactionItemId(item.getTransactionItemId());
+
+        boolean hasWithdrawnEarning = earnings.stream()
+                .anyMatch(e -> "WITHDRAWN".equalsIgnoreCase(e.getStatus()));
+
+        if (hasWithdrawnEarning) {
+            throw new RuntimeException("Không thể duyệt hoàn tiền — giáo viên đã rút doanh thu của khóa học này");
+        }
+
+        refundRequest.setStatus(REFUND_APPROVED);
+        refundRequest.setReviewNote(reviewNote);
+        refundRequest.setRejectReason(null);
+        refundRequest.setReviewedBy(admin);
+        refundRequest.setReviewedAt(now);
+        refundRequest.setPaidAt(null);
+        refundRequest.setUpdatedAt(now);
+
+        refundRequest.setRefundReviewedBy(admin);
+        refundRequest.setRefundReviewedAt(now);
+        refundRequest.setRefundRejectReason(null);
+
+        if (internalNote != null && !internalNote.isBlank()) {
+            refundRequest.setInternalNote(internalNote);
+        }
+
+        refundRequestRepository.save(refundRequest);
+
+        notifyStudentRefundReviewed(
+                refundRequest.getStudent(),
+                refundRequest,
+                true,
+                reviewNote
+        );
+    }
+
+    private void rejectRefund(
+            RefundRequestEntity refundRequest,
+            User admin,
+            String reviewNote,
+            String internalNote,
+            LocalDateTime now
+    ) {
+        if (reviewNote == null || reviewNote.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập lý do từ chối hoàn tiền");
+        }
+
+        refundRequest.setStatus(REFUND_REJECTED);
+        refundRequest.setReviewNote(reviewNote);
+        refundRequest.setRejectReason(reviewNote);
+        refundRequest.setReviewedBy(admin);
+        refundRequest.setReviewedAt(now);
+        refundRequest.setPaidAt(null);
+        refundRequest.setUpdatedAt(now);
+
+        refundRequest.setRefundReviewedBy(admin);
+        refundRequest.setRefundReviewedAt(now);
+        refundRequest.setRefundRejectReason(reviewNote);
+
+        if (internalNote != null && !internalNote.isBlank()) {
+            refundRequest.setInternalNote(internalNote);
+        }
+
+        refundRequestRepository.save(refundRequest);
+
+        restoreEnrollmentAfterReject(refundRequest, now);
+
+        notifyStudentRefundReviewed(
+                refundRequest.getStudent(),
+                refundRequest,
+                false,
+                reviewNote
+        );
+    }
+
+    private void refundTeacherEarnings(TransactionItem item, LocalDateTime now) {
+        List<TeacherEarning> earnings = teacherEarningRepository
+                .findByTransactionItemTransactionItemId(item.getTransactionItemId());
+
+        for (TeacherEarning earning : earnings) {
+            earning.setStatus(REFUND_REFUNDED);
+
+            try {
+//                earning.set(now);
+            } catch (Exception ignored) {
+                // Nếu entity TeacherEarning của bạn không có updatedAt thì bỏ qua.
+            }
+        }
+
+        teacherEarningRepository.saveAll(earnings);
+    }
+
+    private void lockEnrollment(Long userId, Long courseId, LocalDateTime now) {
+        Enrollment enrollment = enrollmentRepository
+                .findByUserUserIdAndCourseCourseId(userId, courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ghi danh khóa học"));
+
+        enrollment.setHasCourseAccess(false);
+        enrollment.setAccessStatus(EnrollmentAccessStatus.REFUND_PENDING_LOCKED);
+        enrollment.setUpdatedAt(now);
+
+        enrollmentRepository.save(enrollment);
+    }
+
+    private void restoreEnrollmentAfterReject(
+            RefundRequestEntity refundRequest,
+            LocalDateTime now
+    ) {
+        if (refundRequest.getStudent() == null || refundRequest.getCourse() == null) {
+            return;
+        }
+
+        Enrollment enrollment = enrollmentRepository
+                .findByUserUserIdAndCourseCourseId(
+                        refundRequest.getStudent().getUserId(),
+                        refundRequest.getCourse().getCourseId()
+                )
+                .orElse(null);
+
+        if (enrollment == null) {
+            return;
+        }
+
+        enrollment.setHasCourseAccess(true);
+        enrollment.setAccessStatus(EnrollmentAccessStatus.REJECTED_ACTIVE);
+        enrollment.setUpdatedAt(now);
+
+        enrollmentRepository.save(enrollment);
+    }
+
+    private void finalizeRefundAccess(
+            RefundRequestEntity refundRequest,
+            LocalDateTime now
+    ) {
+        if (refundRequest.getStudent() == null || refundRequest.getCourse() == null) {
+            throw new RuntimeException("Thiếu thông tin học viên hoặc khóa học khi hoàn tiền");
+        }
+
+        Enrollment enrollment = enrollmentRepository
+                .findByUserUserIdAndCourseCourseId(
+                        refundRequest.getStudent().getUserId(),
+                        refundRequest.getCourse().getCourseId()
+                )
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ghi danh khóa học"));
+
+        enrollment.setHasCourseAccess(false);
+        enrollment.setAccessStatus(EnrollmentAccessStatus.REFUNDED);
+        enrollment.setUpdatedAt(now);
+
+        enrollmentRepository.save(enrollment);
+    }
+
+    private RefundEligibilityResponse buildEligibilityForCourseItem(
+            User user,
+            Transaction tx,
+            TransactionItem item,
+            Enrollment enrollment,
+            RefundRequestEntity latestRefund
+    ) {
+        Course course = item.getCourse();
+
+        if (course == null) {
+            return RefundEligibilityResponse.builder()
+                    .transactionId(tx.getTransactionId())
+                    .canRequestRefund(false)
+                    .ineligibilityReasons(List.of("Không tìm thấy khóa học trong giao dịch"))
+                    .build();
+        }
+
+        List<String> reasons = new ArrayList<>();
+
+        LocalDateTime purchaseAt = resolvePurchaseAt(tx);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime deadline = purchaseAt.plusSeconds(RefundPolicyConstants.REFUND_WINDOW_SECONDS);
+
         long elapsed = Duration.between(purchaseAt, now).getSeconds();
         long remaining = Math.max(0, RefundPolicyConstants.REFUND_WINDOW_SECONDS - elapsed);
 
         int totalLessons = (int) lessonRepository.countRefundableLessonsByCourseId(course.getCourseId());
+
         int completedLessons = (int) videoProgressRepository.countCompletedLessonsByUserAndCourse(
-                user.getUserId(), course.getCourseId());
+                user.getUserId(),
+                course.getCourseId()
+        );
+
         BigDecimal progressPercent = calculateProgressPercent(completedLessons, totalLessons);
 
         String accessStatus = enrollment != null && enrollment.getAccessStatus() != null
                 ? enrollment.getAccessStatus()
                 : EnrollmentAccessStatus.ACTIVE;
 
-        if (!"SUCCESS".equalsIgnoreCase(tx.getStatus())
-                && !"REFUND_REJECTED".equalsIgnoreCase(tx.getStatus())) {
-            reasons.add("Giao dịch không còn đủ điều kiện hoàn tiền");
+        if (latestRefund != null && latestRefund.getStatus() != null) {
+            String refundStatus = latestRefund.getStatus();
+
+            if (REFUND_PENDING.equalsIgnoreCase(refundStatus)) {
+                reasons.add("Đang có yêu cầu hoàn tiền đang chờ xử lý");
+            }
+
+            if (REFUND_APPROVED.equalsIgnoreCase(refundStatus)) {
+                reasons.add("Yêu cầu hoàn tiền đã được duyệt và đang chờ chuyển tiền");
+            }
+
+            if (REFUND_PAID.equalsIgnoreCase(refundStatus)
+                    || REFUND_REFUNDED.equalsIgnoreCase(refundStatus)) {
+                reasons.add("Khóa học đã được hoàn tiền");
+            }
         }
-        if ("REFUND_REQUESTED".equalsIgnoreCase(tx.getStatus())) {
-            reasons.add("Đang có yêu cầu hoàn tiền đang chờ xử lý");
+
+        String txStatus = tx.getStatus() == null ? "" : tx.getStatus();
+
+        if (TX_REFUNDED.equalsIgnoreCase(txStatus) && latestRefund == null) {
+            reasons.add("Giao dịch đã được hoàn tiền");
         }
-        if ("REFUNDED".equalsIgnoreCase(tx.getStatus())) {
-            reasons.add("Khóa học đã được hoàn tiền");
-        }
+
         if (elapsed > RefundPolicyConstants.REFUND_WINDOW_SECONDS) {
             reasons.add("Đã hết thời hạn hoàn tiền 7 ngày (168 giờ)");
         }
+
         if (totalLessons == 0) {
             reasons.add("Khóa học chưa có bài học để xác định tiến độ");
         } else if (progressPercent.compareTo(RefundPolicyConstants.MAX_PROGRESS_PERCENT) > 0) {
             reasons.add(String.format(
-                    "Bạn đã học %.2f%% (vượt quá 20%%) — không đủ điều kiện hoàn tiền",
+                    "Bạn đã học %.2f%%, vượt quá mức cho phép để hoàn tiền",
                     progressPercent
             ));
         }
+
         if (EnrollmentAccessStatus.REFUNDED.equalsIgnoreCase(accessStatus)) {
             reasons.add("Khóa học đã được hoàn tiền");
         }
+
         if (EnrollmentAccessStatus.REFUND_PENDING_LOCKED.equalsIgnoreCase(accessStatus)) {
             reasons.add("Đang có yêu cầu hoàn tiền chờ xử lý");
         }
@@ -347,45 +616,164 @@ public class RefundService {
                 .build();
     }
 
-    private void lockEnrollment(Long userId, Long courseId, LocalDateTime now) {
-        Enrollment enrollment = enrollmentRepository.findByUserUserIdAndCourseCourseId(userId, courseId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy ghi danh khóa học"));
-        enrollment.setHasCourseAccess(false);
-        enrollment.setAccessStatus(EnrollmentAccessStatus.REFUND_PENDING_LOCKED);
-        enrollment.setUpdatedAt(now);
-        enrollmentRepository.save(enrollment);
+    private void refreshTransactionRefundStatus(Transaction tx, LocalDateTime now) {
+        List<TransactionItem> items = transactionItemRepository
+                .findByTransactionTransactionId(tx.getTransactionId());
+
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+
+        int totalItems = items.size();
+        int pendingCount = 0;
+        int approvedCount = 0;
+        int refundedCount = 0;
+        int rejectedCount = 0;
+        int noRefundCount = 0;
+
+        for (TransactionItem item : items) {
+            RefundRequestEntity latestRefund = refundRequestRepository
+                    .findFirstByTransactionItemTransactionItemIdOrderByCreatedAtDesc(
+                            item.getTransactionItemId()
+                    )
+                    .orElse(null);
+
+            if (latestRefund == null || latestRefund.getStatus() == null) {
+                noRefundCount++;
+                continue;
+            }
+
+            String status = latestRefund.getStatus().toUpperCase();
+
+            switch (status) {
+                case REFUND_PENDING -> pendingCount++;
+                case REFUND_APPROVED -> approvedCount++;
+                case REFUND_PAID, REFUND_REFUNDED -> refundedCount++;
+                case REFUND_REJECTED, REFUND_CANCELLED -> rejectedCount++;
+                default -> noRefundCount++;
+            }
+        }
+
+        if (pendingCount > 0) {
+            tx.setStatus(totalItems == 1 ? TX_REFUND_REQUESTED : TX_PARTIALLY_REFUND_REQUESTED);
+        } else if (approvedCount > 0) {
+            tx.setStatus(totalItems == 1 ? TX_REFUND_APPROVED : TX_PARTIALLY_REFUND_APPROVED);
+        } else if (refundedCount == totalItems) {
+            tx.setStatus(TX_REFUNDED);
+        } else if (refundedCount > 0) {
+            tx.setStatus(TX_PARTIALLY_REFUNDED);
+        } else if (rejectedCount > 0) {
+            tx.setStatus(TX_REFUND_REJECTED);
+        } else {
+            tx.setStatus(TX_SUCCESS);
+        }
+
+        tx.setUpdatedAt(now);
+        transactionRepository.save(tx);
     }
 
-    private void restoreEnrollmentAfterReject(Long transactionId, LocalDateTime now) {
-        List<Enrollment> enrollments = enrollmentRepository
-                .findByCourseTransactionItem_Transaction_TransactionId(transactionId);
-        for (Enrollment enrollment : enrollments) {
-            enrollment.setHasCourseAccess(true);
-            enrollment.setAccessStatus(EnrollmentAccessStatus.REJECTED_ACTIVE);
-            enrollment.setUpdatedAt(now);
+    private RefundRequestEntity findPendingRefundByTransactionId(Long transactionId) {
+        List<TransactionItem> items = transactionItemRepository
+                .findByTransactionTransactionId(transactionId);
+
+        for (TransactionItem item : items) {
+            RefundRequestEntity refund = refundRequestRepository
+                    .findFirstByTransactionItemTransactionItemIdAndStatusOrderByCreatedAtDesc(
+                            item.getTransactionItemId(),
+                            REFUND_PENDING
+                    )
+                    .orElse(null);
+
+            if (refund != null) {
+                return refund;
+            }
         }
-        enrollmentRepository.saveAll(enrollments);
+
+        return null;
     }
 
-    private void finalizeRefundAccess(Long transactionId, LocalDateTime now) {
-        List<Enrollment> enrollments = enrollmentRepository
-                .findByCourseTransactionItem_Transaction_TransactionId(transactionId);
-        for (Enrollment enrollment : enrollments) {
-            enrollment.setHasCourseAccess(false);
-            enrollment.setAccessStatus(EnrollmentAccessStatus.REFUNDED);
-            enrollment.setUpdatedAt(now);
+    private TransactionContext resolveRefundableTransaction(Long userId, Long courseId) {
+        List<TransactionItem> items = transactionItemRepository
+                .findByTransactionUserUserIdAndCourseCourseIdOrderByCreatedAtDesc(
+                        userId,
+                        courseId
+                );
+
+        for (TransactionItem item : items) {
+            Transaction tx = item.getTransaction();
+
+            if (tx == null || tx.getStatus() == null) {
+                continue;
+            }
+
+            String txStatus = tx.getStatus().toUpperCase();
+
+            boolean allowedTransactionStatus =
+                    TX_SUCCESS.equals(txStatus)
+                            || TX_REFUND_REJECTED.equals(txStatus)
+                            || TX_PARTIALLY_REFUNDED.equals(txStatus)
+                            || TX_PARTIALLY_REFUND_REQUESTED.equals(txStatus)
+                            || TX_PARTIALLY_REFUND_APPROVED.equals(txStatus);
+
+            if (!allowedTransactionStatus) {
+                continue;
+            }
+
+            Enrollment enrollment = enrollmentRepository
+                    .findByUserUserIdAndCourseCourseId(userId, courseId)
+                    .orElse(null);
+
+            return new TransactionContext(
+                    tx,
+                    item,
+                    item.getCourse(),
+                    enrollment
+            );
         }
-        enrollmentRepository.saveAll(enrollments);
+
+        return null;
+    }
+
+    private String resolveCourseRefundDisplayStatus(Transaction tx, RefundRequestEntity refund) {
+        if (refund != null && refund.getStatus() != null) {
+            return switch (refund.getStatus().toUpperCase()) {
+                case REFUND_PENDING -> "REFUND_REQUESTED";
+                case REFUND_APPROVED -> "REFUND_APPROVED";
+                case REFUND_REJECTED -> "REFUND_REJECTED";
+                case REFUND_PAID, REFUND_REFUNDED -> "REFUNDED";
+                case REFUND_CANCELLED -> "REFUND_CANCELLED";
+                default -> refund.getStatus();
+            };
+        }
+
+        if (tx.getStatus() == null) {
+            return TX_SUCCESS;
+        }
+
+        if (TX_SUCCESS.equalsIgnoreCase(tx.getStatus())
+                || TX_PARTIALLY_REFUND_REQUESTED.equalsIgnoreCase(tx.getStatus())
+                || TX_PARTIALLY_REFUND_APPROVED.equalsIgnoreCase(tx.getStatus())
+                || TX_PARTIALLY_REFUNDED.equalsIgnoreCase(tx.getStatus())) {
+            return TX_SUCCESS;
+        }
+
+        return tx.getStatus();
     }
 
     private RefundReasonCode resolveReasonCode(RefundRequest request) {
-        if (request != null && request.getReasonCode() != null && !request.getReasonCode().isBlank()) {
+        if (request != null
+                && request.getReasonCode() != null
+                && !request.getReasonCode().isBlank()) {
             return RefundReasonCode.fromCode(request.getReasonCode())
                     .orElseThrow(() -> new RuntimeException("Lý do hoàn tiền không hợp lệ"));
         }
-        if (request != null && request.getReason() != null && !request.getReason().isBlank()) {
+
+        if (request != null
+                && request.getReason() != null
+                && !request.getReason().isBlank()) {
             return RefundReasonCode.OTHER;
         }
+
         throw new RuntimeException("Vui lòng chọn lý do hoàn tiền");
     }
 
@@ -400,21 +788,27 @@ public class RefundService {
         }
     }
 
-    private String normalizeDetail(String detail) {
-        return detail == null ? null : detail.trim();
-    }
-
     private String buildReasonText(RefundReasonCode reasonCode, String detail) {
         if (detail == null || detail.isBlank()) {
             return reasonCode.getLabel();
         }
+
         return reasonCode.getLabel() + " — " + detail;
+    }
+
+    private String normalizeDetail(String detail) {
+        return detail == null ? null : detail.trim();
+    }
+
+    private String normalizeText(String text) {
+        return text == null ? null : text.trim();
     }
 
     private LocalDateTime resolvePurchaseAt(Transaction tx) {
         if (tx.getPaidAt() != null) {
             return tx.getPaidAt();
         }
+
         return tx.getCreatedAt();
     }
 
@@ -422,46 +816,58 @@ public class RefundService {
         if (totalLessons <= 0) {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
-        return BigDecimal.valueOf(completedLessons * 100.0 / totalLessons)
-                .setScale(2, RoundingMode.HALF_UP);
+
+        return BigDecimal.valueOf(completedLessons)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(totalLessons), 2, RoundingMode.HALF_UP);
     }
 
-    private TransactionContext resolveSuccessfulTransaction(Long userId, Long courseId) {
-        List<TransactionItem> items = transactionItemRepository
-                .findByTransactionUserUserIdAndCourseCourseIdOrderByCreatedAtDesc(userId, courseId);
-        for (TransactionItem item : items) {
-            Transaction tx = item.getTransaction();
-            if (tx == null) {
-                continue;
-            }
-            String status = tx.getStatus() == null ? "" : tx.getStatus().toUpperCase();
-            if ("SUCCESS".equals(status) || "REFUND_REJECTED".equals(status)) {
-                Enrollment enrollment = enrollmentRepository
-                        .findByUserUserIdAndCourseCourseId(userId, courseId)
-                        .orElse(null);
-                return new TransactionContext(tx, item.getCourse(), enrollment);
-            }
+    private String resolveRefundReason(RefundRequestEntity refund) {
+        if (refund == null) {
+            return null;
         }
-        return null;
+
+        if (refund.getRefundReason() != null && !refund.getRefundReason().isBlank()) {
+            return refund.getRefundReason();
+        }
+
+        return refund.getReason();
     }
 
-    private String resolveDisplayStatus(Transaction tx, RefundRequestEntity refund) {
-        if (refund != null) {
-            return switch (refund.getStatus().toUpperCase()) {
-                case "PENDING" -> "REFUND_REQUESTED";
-                case "REJECTED" -> "REFUND_REJECTED";
-                case "APPROVED", "PAID" -> "REFUNDED";
-                default -> tx.getStatus();
-            };
+    private String resolveRefundRejectReason(RefundRequestEntity refund) {
+        if (refund == null) {
+            return null;
         }
-        return tx.getStatus();
+
+        if (refund.getRefundRejectReason() != null && !refund.getRefundRejectReason().isBlank()) {
+            return refund.getRefundRejectReason();
+        }
+
+        if (refund.getRejectReason() != null && !refund.getRejectReason().isBlank()) {
+            return refund.getRejectReason();
+        }
+
+        return refund.getReviewNote();
     }
 
-    private String resolveRejectReason(RefundRequestEntity refund, Transaction tx) {
-        if (refund != null && "REJECTED".equalsIgnoreCase(refund.getStatus())) {
-            return refund.getRejectReason() != null ? refund.getRejectReason() : refund.getReviewNote();
+    private LocalDateTime resolveRefundRequestedAt(RefundRequestEntity refund) {
+        if (refund == null) {
+            return null;
         }
-        return tx.getRefundRejectReason();
+
+        return refund.getRefundRequestedAt() != null
+                ? refund.getRefundRequestedAt()
+                : refund.getCreatedAt();
+    }
+
+    private LocalDateTime resolveRefundReviewedAt(RefundRequestEntity refund) {
+        if (refund == null) {
+            return null;
+        }
+
+        return refund.getRefundReviewedAt() != null
+                ? refund.getRefundReviewedAt()
+                : refund.getReviewedAt();
     }
 
     private void notifyAdminsNewRefundRequest(
@@ -483,6 +889,7 @@ public class RefundService {
                     refundRequest.getTotalLessons(),
                     refundRequest.getProgressPercent()
             );
+
             if (bankAccount != null) {
                 message += String.format(
                         "\nSTK nhận hoàn: %s | %s | %s",
@@ -491,44 +898,96 @@ public class RefundService {
                         bankAccount.getAccountName()
                 );
             }
+
             List<User> admins = userRepository.searchUsers(null, "admin", null);
+
             if (admins.isEmpty()) {
                 admins = userRepository.findEligibleByRoleName("admin");
             }
+
             for (User admin : admins) {
-                notificationService.notifyUser(admin, "Yêu cầu hoàn tiền mới", message, student);
+                notificationService.notifyUser(
+                        admin,
+                        "Yêu cầu hoàn tiền mới",
+                        message,
+                        student
+                );
             }
         } catch (Exception ex) {
             System.err.println("Không gửi được thông báo hoàn tiền cho admin: " + ex.getMessage());
         }
     }
 
-    private void notifyStudentRefundReviewed(User student, RefundRequestEntity refundRequest, boolean approved, String note) {
+    private void notifyStudentRefundReviewed(
+            User student,
+            RefundRequestEntity refundRequest,
+            boolean approved,
+            String note
+    ) {
         if (student == null) {
             return;
         }
+
         try {
-            String title = approved ? "Hoàn tiền được duyệt" : "Yêu cầu hoàn tiền bị từ chối";
+            String title = approved
+                    ? "Yêu cầu hoàn tiền đã được duyệt"
+                    : "Yêu cầu hoàn tiền bị từ chối";
+
             String message = approved
-                    ? "Yêu cầu hoàn tiền của bạn đã được duyệt. Khoản tiền sẽ được admin chuyển khoản trong vòng 01 ngày làm việc."
+                    ? "Yêu cầu hoàn tiền của bạn đã được duyệt. Admin sẽ chuyển khoản hoàn tiền trong thời gian sớm nhất."
                     : "Yêu cầu hoàn tiền bị từ chối. Lý do: " + note + ". Quyền học khóa học đã được mở lại.";
-            notificationService.notifyUser(student, title, message, student);
+
+            notificationService.notifyUser(
+                    student,
+                    title,
+                    message,
+                    student
+            );
         } catch (Exception ex) {
             System.err.println("Không gửi được thông báo hoàn tiền cho học viên: " + ex.getMessage());
         }
     }
 
+    private void notifyStudentRefundPaid(
+            User student,
+            RefundRequestEntity refundRequest
+    ) {
+        if (student == null) {
+            return;
+        }
+
+        try {
+            notificationService.notifyUser(
+                    student,
+                    "Đã hoàn tiền",
+                    "Khoản hoàn tiền của bạn đã được xác nhận là đã chuyển khoản.",
+                    student
+            );
+        } catch (Exception ex) {
+            System.err.println("Không gửi được thông báo đã hoàn tiền cho học viên: " + ex.getMessage());
+        }
+    }
+
     private User getCurrentUser() {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        var authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
         if (authentication == null
                 || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getName())) {
             throw new RuntimeException("Người dùng chưa đăng nhập");
         }
+
         return userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
     }
 
-    private record TransactionContext(Transaction transaction, Course course, Enrollment enrollment) {
+    private record TransactionContext(
+            Transaction transaction,
+            TransactionItem transactionItem,
+            Course course,
+            Enrollment enrollment
+    ) {
     }
 }

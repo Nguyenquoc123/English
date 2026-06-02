@@ -6,6 +6,7 @@ import CourseBreadcrumb from "../../components/CourseBreadcrumb/CourseBreadcrumb
 import { studentHome, studentCourses } from "../../utils/breadcrumbPaths";
 import StudentExamListSection from "./exam/components/StudentExamListSection";
 import CertificateSection from "../../components/certificate/CertificateSection";
+import { toast } from "react-toastify";
 
 function StudentCourseDetail() {
     const navigate = useNavigate();
@@ -237,7 +238,8 @@ function StudentCourseDetail() {
             }
 
             if (!response.ok) {
-                setError(data?.message || "Không thể tải chi tiết khóa học");
+                // setError(data?.message || "Không thể tải chi tiết khóa học");
+                toast.error(data?.message || "Không thể tải chi tiết khóa học");
                 return;
             }
 
@@ -326,7 +328,8 @@ function StudentCourseDetail() {
 
             const data = await response.json();
             if (!response.ok) {
-                alert(data?.message || "Không thể tải đánh giá");
+                // alert(data?.message || "Không thể tải đánh giá");
+                toast.error(data?.message || "Không thể tải đánh giá");
                 return;
             }
 
@@ -368,11 +371,13 @@ function StudentCourseDetail() {
 
         if (!response.ok) {
             console.log(data)
-            alert(data.message);
+            // alert(data.message);
+            toast.error(data.message);
             return;
         }
 
-        alert(data.message);
+        // alert(data.message);
+        toast.success(data.message);
         window.dispatchEvent(new Event('cartChanged'));
 
         return data;
@@ -389,7 +394,8 @@ function StudentCourseDetail() {
 
         } catch (error) {
 
-            alert(error.message);
+            // alert(error.message);
+            toast.error(error.message);
 
         }
     };
@@ -398,12 +404,14 @@ function StudentCourseDetail() {
         e.preventDefault();
 
         if (!course?.isEnrolled) {
-            alert("Bạn cần mua khóa học trước khi đánh giá");
+            // alert("Bạn cần mua khóa học trước khi đánh giá");
+            toast.error("Bạn cần mua khóa học trước khi đánh giá");
             return;
         }
 
         if (!reviewComment.trim()) {
-            alert("Vui lòng nhập nội dung đánh giá");
+            // alert("Vui lòng nhập nội dung đánh giá");
+            toast.error("Vui lòng nhập nội dung đánh giá");
             return;
         }
 
@@ -433,11 +441,13 @@ function StudentCourseDetail() {
             }
 
             if (!response.ok) {
-                alert(data?.message || "Gửi đánh giá thất bại");
+                // alert(data?.message || "Gửi đánh giá thất bại");
+                toast.error(data?.message || "Gửi đánh giá thất bại");
                 return;
             }
 
-            alert("Gửi đánh giá thành công");
+            // alert("Gửi đánh giá thành công");
+            toast.success("Gửi đánh giá thành công");
 
             setReviewRating(5);
             setReviewComment("");
@@ -530,7 +540,8 @@ function StudentCourseDetail() {
 
     const handleContentClick = async (item) => {
         if (item.locked) {
-            alert(item.lockReason || "Nội dung này đang bị khóa");
+            // alert(item.lockReason || "Nội dung này đang bị khóa");
+            toast.error(item.lockReason || "Nội dung này đang bị khóa")
             return;
         }
 
@@ -560,7 +571,8 @@ function StudentCourseDetail() {
                 });
             } catch (error) {
                 console.error("Lỗi khi lấy chi tiết bài thi:", error);
-                alert("Không thể lấy chi tiết bài thi");
+                // alert("Không thể lấy chi tiết bài thi");
+                toast.error("Không thể lấy chi tiết bài thi");
                 setPreviewModal({
                     open: false,
                     type: "",
@@ -604,7 +616,7 @@ function StudentCourseDetail() {
         let url = "";
 
         if (childType === "videos") {
-            url = `${API_BASE}/video/${lessonId}/lessons`;
+            url = `${API_BASE}/video/${lessonId}/publish`;
         }
 
         if (childType === "vocabularies") {
@@ -679,7 +691,8 @@ function StudentCourseDetail() {
             setChildData(lessonId, childType, data);
         } catch (err) {
             console.error(err);
-            alert(err.message || "Không thể tải dữ liệu");
+            // alert(err.message || "Không thể tải dữ liệu");
+            toast.error(err.message || "Không thể tải dữ liệu");
         } finally {
             setLoadingChild(false);
         }
@@ -746,13 +759,15 @@ function StudentCourseDetail() {
                 throw new Error(data.message || "Đăng ký thất bại");
             }
 
-            alert(data.message);
+            // alert(data.message);
+            toast.success(data.message);
 
             window.location.reload();
 
         } catch (error) {
             console.error(error);
-            alert(error.message);
+            // alert(error.message);
+            toast.error(error.message);
         } finally {
             setPurchasing(false);
         }
@@ -2069,21 +2084,21 @@ function StudentCourseDetail() {
                     <div className="col-md-6">
                         <div className="border rounded-3 p-3 h-100">
                             <div className="text-muted small">Số lần thi</div>
-                            <strong>{previewModal.data.soLanLam || 0} lần</strong>
+                            <strong>{previewModal.data.attemptCount || 0} lần</strong>
                         </div>
                     </div>
 
                     <div className="col-md-6">
                         <div className="border rounded-3 p-3 h-100">
                             <div className="text-muted small">Điểm cao nhất</div>
-                            <strong>{formatScore(previewModal.data.diemCaoNhat)}</strong>
+                            <strong>{formatScore(previewModal.data.bestScore)}</strong>
                         </div>
                     </div>
 
                     <div className="col-md-6">
                         <div className="border rounded-3 p-3 h-100">
                             <div className="text-muted small">Lần thi gần nhất</div>
-                            <strong>{formatDateTime(previewModal.data.lanCuoi)}</strong>
+                            <strong>{formatDateTime(previewModal.data.lastSubmittedAt)}</strong>
                         </div>
                     </div>
 

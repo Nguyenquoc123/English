@@ -1,3 +1,5 @@
+import { getFileUrl } from "../../../utils/fileurl";
+
 const ListeningChoiceQuestion = ({
     question,
     value,
@@ -13,7 +15,7 @@ const ListeningChoiceQuestion = ({
 
             <audio
                 controls
-                src={question.mediaUrl}
+                src={getFileUrl(question.mediaUrl)}
                 className="question-audio"
             />
 

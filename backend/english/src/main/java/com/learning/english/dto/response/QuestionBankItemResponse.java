@@ -24,4 +24,8 @@ public class QuestionBankItemResponse {
     private String status;
 
     private Long optionCount;
+    
+    private Long levelId;
+    
+    private String levelName;
 }

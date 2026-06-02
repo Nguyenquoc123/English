@@ -385,11 +385,11 @@ body {
 }
 
 .course-body {
-  flex: 0 0 350px;
+  /* flex: 0 0 350px; */
   display: flex;
   flex-direction: column;
-  height: 350px;
-  min-height: 350px;
+  /* height: 350px; */
+  /* min-height: 350px; */
   max-height: 350px;
   box-sizing: border-box;
   overflow: hidden;
@@ -450,7 +450,7 @@ body {
 }
 
 .course-price-row {
-  margin-top: auto;
+  /* margin-top: auto; */
 }
 
 @media (max-width: 1000px) {

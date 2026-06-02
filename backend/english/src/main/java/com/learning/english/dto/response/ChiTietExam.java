@@ -17,7 +17,7 @@ import lombok.Setter;
 public class ChiTietExam {
 
     private Long examId;
-
+    
     private String examType;
 
     private String examName;
@@ -31,4 +31,5 @@ public class ChiTietExam {
     private BigDecimal bestScore;
 
     private LocalDateTime lastSubmittedAt;
+    private Long courseId;
 }

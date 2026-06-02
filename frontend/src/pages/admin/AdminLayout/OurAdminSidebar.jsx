@@ -158,7 +158,7 @@ function OurAdminSidebar({ isOpen, onClose }) {
           Thống kê &amp; Báo cáo
         </NavLink>
 
-        <p className="admin-sidebar-title">Trải nghiệm giao diện</p>
+        {/* <p className="admin-sidebar-title">Trải nghiệm giao diện</p>
         <NavLink
           to="/teacher/courses"
           className={({ isActive }) =>
@@ -179,7 +179,7 @@ function OurAdminSidebar({ isOpen, onClose }) {
         >
           <i className="bi bi-mortarboard"></i>
           Xem giao diện học viên
-        </NavLink>
+        </NavLink> */}
 
         <p className="admin-sidebar-title">Hệ thống</p>
         <NavLink
@@ -191,6 +191,17 @@ function OurAdminSidebar({ isOpen, onClose }) {
         >
           <i className="bi bi-key"></i>
           Đổi mật khẩu
+        </NavLink>
+
+        <NavLink
+          to="/admin/system-settings"
+          className={({ isActive }) =>
+            "admin-sidebar-link" + (isActive ? " active" : "")
+          }
+          onClick={onClose}
+        >
+          <i className="bi bi-key"></i>
+          Cấu hình hệ thống
         </NavLink>
 
         <button

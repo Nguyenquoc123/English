@@ -80,6 +80,15 @@ function TeacherSidebar({ isOpen, onClose }) {
           Tạo khóa học
         </NavLink>
 
+        <NavLink
+          to="/teacher/questions-bank"
+          className="sidebar-link"
+          onClick={onClose}
+        >
+          <i className="bi bi-wallet2"></i>
+          Ngân hàng câu hỏi
+        </NavLink>
+
         <p className="sidebar-title">Doanh thu</p>
 
         <NavLink to="/teacher/revenue" className="sidebar-link" onClick={onClose}>
@@ -93,17 +102,17 @@ function TeacherSidebar({ isOpen, onClose }) {
           onClick={onClose}
         >
           <i className="bi bi-wallet2"></i>
-          Danh sách giao dịch
+          Số dư
         </NavLink>
 
-        <NavLink
+        {/* <NavLink
           to="/teacher/withdrawals"
           className="sidebar-link"
           onClick={onClose}
         >
           <i className="bi bi-clock-history"></i>
           Lịch sử rút tiền
-        </NavLink>
+        </NavLink> */}
 
         <p className="sidebar-title">Hệ thống</p>
 
