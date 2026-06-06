@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import com.learning.english.entity.RefundRequestEntity;
 
 public interface RefundRequestRepository extends JpaRepository<RefundRequestEntity, Long> {
+	
+	List<RefundRequestEntity> findByStudent_UserIdOrderByCreatedAtDesc(Long studentId);
 
     @Query("""
             SELECT DISTINCT r FROM RefundRequestEntity r
@@ -19,12 +21,12 @@ public interface RefundRequestRepository extends JpaRepository<RefundRequestEnti
             LEFT JOIN FETCH ti.transaction
             LEFT JOIN FETCH ti.course
             LEFT JOIN FETCH r.course
-            LEFT JOIN FETCH r.studentBankAccount
+            
             LEFT JOIN FETCH r.reviewedBy
             
             ORDER BY r.createdAt DESC
             """)
-    List<RefundRequestEntity> findByStatusWithDetails(@Param("status") String status);
+    List<RefundRequestEntity> findAllRefunds();
     
     @Query("""
             SELECT DISTINCT r FROM RefundRequestEntity r
@@ -33,7 +35,7 @@ public interface RefundRequestRepository extends JpaRepository<RefundRequestEnti
             LEFT JOIN FETCH ti.transaction
             LEFT JOIN FETCH ti.course
             LEFT JOIN FETCH r.course
-            LEFT JOIN FETCH r.studentBankAccount
+
             LEFT JOIN FETCH r.reviewedBy
             Where r.status = 'PENDING'
             ORDER BY r.createdAt DESC

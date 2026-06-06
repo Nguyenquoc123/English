@@ -19,4 +19,5 @@ public class AuthenticationResponse {
     String status;
     String role;
     String fullname;
+    Long userId;
 }

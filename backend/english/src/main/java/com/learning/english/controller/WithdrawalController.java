@@ -28,4 +28,12 @@ public class WithdrawalController {
     ) {
         return withdrawalService.duyetWithdrawn(withdrawnId);
     }
+    
+    @PutMapping("/rejected")
+    public WithdrawalResponse tuChoiWithdrawal(
+            @RequestParam(name = "withdrawnId") Long withdrawnId,
+            @RequestParam(name = "rejectReason") String rejectReason
+    ) {
+        return withdrawalService.tuChoiWithdrawal(withdrawnId, rejectReason);
+    }
 }

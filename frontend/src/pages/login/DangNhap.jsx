@@ -25,6 +25,8 @@ function Login() {
         password: password.trim(),
       });
       if (data.token) localStorage.setItem("token", data.token);
+
+      localStorage.setItem("userId", data.userId);
       console.log(data)
       const role = data.role?.toLowerCase();
       if (role === "admin") navigate("/admin", { replace: true });

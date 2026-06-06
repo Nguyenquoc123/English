@@ -29,6 +29,8 @@ const TeacherProfilePage = () => {
             }
 
             const data = await response.json();
+            console.log(data);
+            
             setProfile(data);
         } catch (err) {
             setError(err.message || "Đã xảy ra lỗi");

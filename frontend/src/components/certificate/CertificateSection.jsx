@@ -27,8 +27,7 @@ function CertificateSection({ courseId, courseTitle, isEnrolled, lessons }) {
     } catch (err) {
       console.error(err);
       const msg = getApiErrorMessage(
-        err,
-        "Không thể kiểm tra trạng thái chứng chỉ. Hãy chạy script SQL và khởi động lại backend."
+        err
       );
       setStatus({
         courseTitle: courseTitle || "",

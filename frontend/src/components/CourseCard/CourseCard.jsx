@@ -15,13 +15,15 @@ export default function CourseCard({ course }) {
     color: "#374151",
   };
 
+  const teacherAvatar = course.teacherAvatarUrl
+    ? getFileUrl(course.teacherAvatarUrl)
+    : "/default-avatar.png";
+
   return (
     <Link to={`/khoa-hoc/${course.courseId}`} className="course-card">
       <div className="course-card-thumb">
-        <img
-          src={getFileUrl(course.thumbnailUrl) || "/placeholder-course.jpg"}
-          alt={course.title}
-        />
+        <img src={getFileUrl(course.thumbnailUrl)} alt={course.title} />
+
         <span
           className="course-card-badge"
           style={{ background: level.bg, color: level.color }}
@@ -32,11 +34,20 @@ export default function CourseCard({ course }) {
 
       <div className="course-card-body">
         <h3 className="course-card-title">{course.title}</h3>
-        <p className="course-card-teacher">👨‍🏫 {course.teacherName}</p>
+
+        <div className="course-card-teacher">
+          <img
+            src={getFileUrl(course.avatarUrl)}
+            alt={course.teacherName || "Giáo viên"}
+            className="course-card-teacher-avatar"
+          />
+          <span>{course.teacherName}</span>
+        </div>
+
         <p className="course-card-desc">{course.shortDescription}</p>
 
         <div className="course-card-footer">
-          {course.courseType === "Free" ? (
+          {course.courseType === "Free" || course.courseType === "FREE" ? (
             <span className="course-card-free">Miễn phí</span>
           ) : (
             <span className="course-card-price">

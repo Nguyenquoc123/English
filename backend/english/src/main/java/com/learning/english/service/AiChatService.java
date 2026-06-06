@@ -208,7 +208,7 @@ public class AiChatService {
 				SUMMARY_MESSAGE, startOfDay, endOfDay);
 
 		if (usedToday >= dailyLimit) {
-			throw new RuntimeException("Bạn đã hết lượt sử dụng AI hôm nay.");
+			throw new RuntimeException("Bạn đã sử dụng hết lượt quota hôm nay, vui lòng quay lại vào ngày mai!");
 		}
 	}
 

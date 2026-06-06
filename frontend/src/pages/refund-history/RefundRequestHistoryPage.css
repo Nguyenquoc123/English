@@ -1,0 +1,107 @@
+.refund-history-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.refund-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.refund-course-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eef2ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.refund-course-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.refund-course-thumb span {
+  font-size: 22px;
+}
+
+.refund-course-title {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.refund-progress {
+  width: 110px;
+  height: 8px;
+}
+
+.refund-empty-box,
+.refund-loading-box {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 24px;
+  border: 1px solid #edf0f5;
+}
+
+.refund-loading-box {
+  text-align: center;
+}
+
+.refund-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.refund-detail-box {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 14px 16px;
+  height: 100%;
+}
+
+.refund-detail-box label {
+  display: block;
+  font-size: 13px;
+  color: #6c757d;
+  margin-bottom: 6px;
+}
+
+.refund-detail-box div {
+  font-size: 15px;
+}
+
+.refund-modal {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  .refund-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .refund-page-header button {
+    width: 100%;
+  }
+
+  .refund-course-title {
+    max-width: 180px;
+  }
+}
+
+.one-line-text {
+  display: block;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

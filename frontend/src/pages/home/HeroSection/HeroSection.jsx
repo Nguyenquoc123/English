@@ -12,7 +12,7 @@ export default function HeroSection() {
     const params = new URLSearchParams();
     if (keyword) params.set("keyword", keyword);
     if (levelId) params.set("levelId", levelId);
-    navigate(`/courses?${params.toString()}`);
+    navigate(`/danh-sach-khoa-hoc?${params.toString()}`);
   };
 
   return (

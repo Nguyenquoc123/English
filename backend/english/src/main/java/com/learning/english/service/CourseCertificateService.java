@@ -62,7 +62,9 @@ public class CourseCertificateService {
         User user = getCurrentUser();
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học"));
-
+//        if(course.getCourseType().equals("FREE")) 
+//        	return null;
+        
         CourseProgress progress = calculateProgress(user.getUserId(), courseId);
         CourseCertificate existing = courseCertificateRepository
                 .findByUserUserIdAndCourseCourseId(user.getUserId(), courseId)

@@ -320,7 +320,7 @@ public class TeacherProfileService {
 		 */
 
 		userRepository.save(user);
-		TeacherProfile savedProfile = teacherProfileRepository.save(teacherProfile);
+		teacherProfile = teacherProfileRepository.save(teacherProfile);
 
 		return teacherProfileMapper.toTeacherProfileResponse(teacherProfile);
 	}

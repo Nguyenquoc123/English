@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getPendingWithdrawals, getAllWithdrawals, reviewWithdrawal, approveWithdrawal } from "../../../api/adminApi";
+import { getPendingWithdrawals, getAllWithdrawals, reviewWithdrawal, approveWithdrawal, rejectWithdrawal } from "../../../api/adminApi";
 import AdminUserLink from "../../../components/admin/AdminUserLink";
 import "./Withdrawal.css";
 import { toast } from "react-toastify";
@@ -14,6 +14,7 @@ function Withdrawal() {
   const [actionLoading, setActionLoading] = useState(false);
   const [paymentModal, setPaymentModal] = useState(null);
   const [sseMessage, setSseMessage] = useState("");
+  const [rejectModal, setRejectModal] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -98,13 +99,50 @@ function Withdrawal() {
 
       const res = await approveWithdrawal(withdrawalId);
       const approvedWithdrawal = res.data?.result ?? res.data?.data ?? res.data;
-      console.log(approvedWithdrawal);
 
+      toast.success("Duyệt yêu cầu rút tiền thành công");
 
       setPaymentModal(approvedWithdrawal);
       loadData();
     } catch (err) {
       alert(err.response?.data?.message || "Duyệt yêu cầu rút tiền thất bại");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openRejectModal = (withdrawal) => {
+    setRejectModal(withdrawal);
+    setRejectReason("");
+  };
+
+  const closeRejectModal = () => {
+    setRejectModal(null);
+    setRejectReason("");
+  };
+
+  const handleReject = async () => {
+    if (!rejectModal?.withdrawalId) return;
+
+    if (!rejectReason.trim()) {
+      alert("Vui lòng nhập lý do từ chối");
+      return;
+    }
+
+    const ok = window.confirm("Từ chối yêu cầu rút tiền này?");
+    if (!ok) return;
+
+    try {
+      setActionLoading(true);
+
+      await rejectWithdrawal(rejectModal.withdrawalId, rejectReason.trim());
+
+      toast.success("Đã từ chối yêu cầu rút tiền");
+
+      closeRejectModal();
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Từ chối yêu cầu rút tiền thất bại");
     } finally {
       setActionLoading(false);
     }
@@ -285,56 +323,21 @@ function Withdrawal() {
                       <div className="d-flex justify-content-end gap-1">
                         {w.status === "PENDING" && (
                           <>
-                            {selected === w.withdrawalId ? (
-                              <div className="withdrawal-reject-form">
-                                <input
-                                  className="form-control form-control-sm mb-1"
-                                  placeholder="Lý do từ chối..."
-                                  value={rejectReason}
-                                  onChange={(e) => setRejectReason(e.target.value)}
-                                />
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              disabled={actionLoading}
+                              onClick={() => handleApprove(w.withdrawalId)}
+                            >
+                              {actionLoading ? "..." : "Duyệt"}
+                            </button>
 
-                                <div className="d-flex gap-1">
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    disabled={actionLoading}
-                                    onClick={() => handleReview(w.withdrawalId, "REJECTED")}
-                                  >
-                                    {actionLoading ? "..." : "Từ chối"}
-                                  </button>
-
-                                  <button
-                                    className="btn btn-sm btn-light"
-                                    onClick={() => {
-                                      setSelected(null);
-                                      setRejectReason("");
-                                    }}
-                                  >
-                                    Huỷ
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  disabled={actionLoading}
-                                  onClick={() => handleApprove(w.withdrawalId)}
-                                >
-                                  {actionLoading ? "..." : "Duyệt"}
-                                </button>
-
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => {
-                                    setSelected(w.withdrawalId);
-                                    setRejectReason("");
-                                  }}
-                                >
-                                  Từ chối
-                                </button>
-                              </>
-                            )}
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              disabled={actionLoading}
+                              onClick={() => openRejectModal(w)}
+                            >
+                              Từ chối
+                            </button>
                           </>
                         )}
 
@@ -369,6 +372,76 @@ function Withdrawal() {
         </div>
       </div>
 
+      {rejectModal && (
+        <div className="withdrawal-modal-backdrop">
+          <div className="withdrawal-payment-modal">
+            <div className="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 className="fw-bold mb-1">Từ chối yêu cầu rút tiền</h5>
+                <small className="text-muted">
+                  Vui lòng nhập lý do từ chối yêu cầu rút tiền của giáo viên.
+                </small>
+              </div>
+
+              <button
+                className="btn btn-sm btn-light"
+                onClick={closeRejectModal}
+                disabled={actionLoading}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div className="withdrawal-payment-info mb-3">
+              <div>
+                <strong>Giáo viên:</strong> {rejectModal.teacherName || "--"}
+              </div>
+              <div>
+                <strong>Email:</strong> {rejectModal.teacherEmail || "--"}
+              </div>
+              <div>
+                <strong>Số tiền:</strong> {formatPrice(rejectModal.amount)}
+              </div>
+              <div>
+                <strong>Ngân hàng:</strong> {rejectModal.bankName || "--"}
+              </div>
+              <div>
+                <strong>Số tài khoản:</strong> {rejectModal.accountNumber || "--"}
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Lý do từ chối</label>
+              <textarea
+                className="form-control"
+                rows="4"
+                placeholder="Nhập lý do từ chối..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                disabled={actionLoading}
+              />
+            </div>
+
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <button
+                className="btn btn-light"
+                onClick={closeRejectModal}
+                disabled={actionLoading}
+              >
+                Huỷ
+              </button>
+
+              <button
+                className="btn btn-danger"
+                onClick={handleReject}
+                disabled={actionLoading}
+              >
+                {actionLoading ? "Đang xử lý..." : "Xác nhận từ chối"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {paymentModal && (
         <div className="withdrawal-modal-backdrop">
           <div className="withdrawal-payment-modal">

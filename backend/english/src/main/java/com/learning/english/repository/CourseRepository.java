@@ -34,6 +34,59 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 			      AND (:username IS NULL OR c.teacher.username = :username)
 			""")
 	List<Course> dsKhoaHocCuaTeacher(@Param("username") String username);
+	
+	
+	@EntityGraph(attributePaths = { "teacher", "level" })
+	@Query(
+	    value = """
+	        SELECT c
+	        FROM Course c
+	        WHERE c.status = 'PUBLISHED'
+	          AND (:levelId IS NULL OR c.level.levelId = :levelId)
+	          AND (
+	                :keyword IS NULL
+	                OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                OR LOWER(c.teacher.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                OR LOWER(c.teacher.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	          )
+	        ORDER BY
+	          (
+	            SELECT COUNT(DISTINCT ti.transactionItemId)
+	            FROM TransactionItem ti
+	            JOIN ti.transaction t
+	            WHERE ti.course = c
+	              AND t.status = 'SUCCESS'
+	          ) DESC,
+	          (
+	            SELECT COALESCE(AVG(r.rating), 0)
+	            FROM CourseReview r
+	            WHERE r.course = c
+	          ) DESC,
+	          (
+	            SELECT COUNT(r.reviewId)
+	            FROM CourseReview r
+	            WHERE r.course = c
+	          ) DESC,
+	          c.createdAt DESC
+	        """,
+	    countQuery = """
+	        SELECT COUNT(c)
+	        FROM Course c
+	        WHERE c.status = 'PUBLISHED'
+	          AND (:levelId IS NULL OR c.level.levelId = :levelId)
+	          AND (
+	                :keyword IS NULL
+	                OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                OR LOWER(c.teacher.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	                OR LOWER(c.teacher.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+	          )
+	        """
+	)
+	Page<Course> dsKhoaHocNoiBat(
+	        @Param("keyword") String keyword,
+	        @Param("levelId") Long levelId,
+	        Pageable pageable
+	);
 
 	@EntityGraph(attributePaths = { "teacher", "level" })
 	@Query("""

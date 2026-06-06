@@ -117,6 +117,7 @@ public class AuthenticationService {
                 .status(user.get().getStatus())
                 .role(user.get().getRole().getRoleName())
                 .fullname(user.get().getFullName())
+                .userId(user.get().getUserId())
                 .build();
     }
 

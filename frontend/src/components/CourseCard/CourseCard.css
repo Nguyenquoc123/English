@@ -51,9 +51,21 @@
 }
 
 .course-card-teacher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
   color: var(--text-gray);
   margin-bottom: 6px;
+}
+
+.course-card-teacher-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f3f4f6;
 }
 
 .course-card-desc {
