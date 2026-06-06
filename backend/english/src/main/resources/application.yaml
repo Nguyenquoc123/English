@@ -61,7 +61,7 @@ sepay:
     
 gemini:
   api:
-    key: AQ.Ab8RN6KE2CrzPQJ9pOTiXbRYLI8rnUyg7apQVQD6cbKNP4DN4w212121
+    key: AQ.Ab8RN6LRUKmfOKgGwRIyG5R10BsRC60vcvReOb6K-rwLSaRpJwzzzzz
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
     fallback-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
     

@@ -99,6 +99,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ForgotPassword from "./pages/forgot-password/ForgotPassword.jsx";
 import SystemSettingsPage from "./pages/admin/SystemSetting/SystemSettingsPage.jsx";
+import RefundRequestHistoryPage from "./pages/refund-history/RefundRequestHistoryPage.jsx";
 
 function ProtectedAdminRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -275,6 +276,10 @@ function App() {
           <ThanhToanGioHang />
         </>} />
 
+        <Route path="/refunds-history" element={<>
+          <Navbar />
+          <RefundRequestHistoryPage />
+        </>} />
 
         <Route path="/quen-mat-khau" element={<ForgotPassword />} />
 

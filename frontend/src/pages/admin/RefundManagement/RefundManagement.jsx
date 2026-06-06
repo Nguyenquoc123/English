@@ -14,7 +14,13 @@ function RefundManagement() {
   const [reviewingId, setReviewingId] = useState(null);
   const [error, setError] = useState("");
   const [transferRefund, setTransferRefund] = useState(null);
+  const [rejectModal, setRejectModal] = useState({
+    open: false,
+    refundRequestId: null,
+    reason: "",
+  });
   const [sseMessage, setSseMessage] = useState("");
+
 
   useEffect(() => {
     loadRefunds();
@@ -37,7 +43,7 @@ function RefundManagement() {
       console.log("SSE PAID:", data);
 
       setSseMessage(data.message || "Đã chuyển tiền thành công.");
-      toast.success(data.message );
+      toast.success(data.message);
 
       setTransferRefund(null);
 
@@ -181,15 +187,22 @@ function RefundManagement() {
             type="button"
             className="btn btn-sm btn-success"
             disabled={isReviewing}
-            onClick={() => handleReview(refund.refundRequestId, true)}
+            onClick={() => handleApprove(refund.refundRequestId)}
           >
             Duyệt
           </button>
+
           <button
             type="button"
             className="btn btn-sm btn-outline-danger"
             disabled={isReviewing}
-            onClick={() => handleReview(refund.refundRequestId, false)}
+            onClick={() =>
+              setRejectModal({
+                open: true,
+                refundRequestId: refund.refundRequestId,
+                reason: "",
+              })
+            }
           >
             Từ chối
           </button>
@@ -212,27 +225,50 @@ function RefundManagement() {
     return <span className="text-muted small">--</span>;
   };
 
-  const handleReview = async (transactionId, approve) => {
-    console.log(transactionId);
-
-    const note = window.prompt(
-      approve
-        ? "Ghi chú duyệt hoàn tiền (không bắt buộc):"
-        : "Nhập lý do từ chối hoàn tiền:"
-    );
-    if (note === null) return;
-
-    const internalNote = approve
-      ? window.prompt("Ghi chú nội bộ admin (không bắt buộc):") || ""
-      : "";
-
+  const handleApprove = async (transactionId) => {
     try {
       setReviewingId(transactionId);
-      await reviewRefund(transactionId, approve, note.trim(), internalNote.trim());
+
+      // Duyệt thì không nhập thêm gì cả
+      await reviewRefund(transactionId, true, "", "");
+
       await loadRefunds();
-      alert(approve ? "Đã duyệt hoàn tiền" : "Đã từ chối hoàn tiền");
+      toast.success("Đã duyệt hoàn tiền");
     } catch (err) {
-      alert(err.response?.data?.message || "Xử lý hoàn tiền thất bại");
+      toast.error(err.response?.data?.message || "Xử lý hoàn tiền thất bại");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const closeRejectModal = () => {
+    setRejectModal({
+      open: false,
+      refundRequestId: null,
+      reason: "",
+    });
+  };
+
+  const handleRejectSubmit = async (e) => {
+    e.preventDefault();
+
+    const reason = rejectModal.reason.trim();
+
+    if (!reason) {
+      toast.warning("Vui lòng nhập lý do từ chối");
+      return;
+    }
+
+    try {
+      setReviewingId(rejectModal.refundRequestId);
+
+      await reviewRefund(rejectModal.refundRequestId, false, reason, "");
+
+      closeRejectModal();
+      await loadRefunds();
+      toast.success("Đã từ chối hoàn tiền");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Xử lý hoàn tiền thất bại");
     } finally {
       setReviewingId(null);
     }
@@ -396,6 +432,77 @@ function RefundManagement() {
                 ) : null}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {rejectModal.open && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          aria-modal="true"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.45)" }}
+          onClick={closeRejectModal}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            role="document"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <form className="modal-content" onSubmit={handleRejectSubmit}>
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Nhập lý do từ chối hoàn tiền #{rejectModal.refundRequestId}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Đóng"
+                  onClick={closeRejectModal}
+                />
+              </div>
+
+              <div className="modal-body">
+                <label className="form-label fw-semibold">
+                  Lý do từ chối
+                </label>
+                <textarea
+                  className="form-control"
+                  rows="4"
+                  value={rejectModal.reason}
+                  onChange={(e) =>
+                    setRejectModal((prev) => ({
+                      ...prev,
+                      reason: e.target.value,
+                    }))
+                  }
+                  placeholder="Nhập lý do từ chối yêu cầu hoàn tiền..."
+                  autoFocus
+                />
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={closeRejectModal}
+                  disabled={reviewingId === rejectModal.refundRequestId}
+                >
+                  Hủy
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn btn-danger"
+                  disabled={reviewingId === rejectModal.refundRequestId}
+                >
+                  {reviewingId === rejectModal.refundRequestId
+                    ? "Đang xử lý..."
+                    : "Xác nhận từ chối"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

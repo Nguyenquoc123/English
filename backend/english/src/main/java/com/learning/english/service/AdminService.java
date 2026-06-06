@@ -373,7 +373,7 @@ public class AdminService {
 
 	@Transactional(readOnly = true)
 	public List<RefundRequestAdminResponse> getAllRefunds() {
-		return loadPendingRefundEntities().stream().map(this::toRefundRequestAdminResponse).toList();
+		return refundRequestRepository.findAllRefunds().stream().map(this::toRefundRequestAdminResponse).toList();
 	}
 	
 	@Transactional(readOnly = true)
@@ -381,19 +381,7 @@ public class AdminService {
 		return refundRequestRepository.findRefundPending().stream().map(this::toRefundRequestAdminResponse).toList();
 	}
 
-	private List<RefundRequestEntity> loadPendingRefundEntities() {
-		try {
-			List<RefundRequestEntity> withDetails = refundRequestRepository.findByStatusWithDetails("PENDING");
-
-			if (!withDetails.isEmpty()) {
-				return withDetails;
-			}
-		} catch (Exception ex) {
-			System.err.println("findByStatusWithDetails failed: " + ex.getMessage());
-		}
-
-		return refundRequestRepository.findAllByStatusIgnoreCase("PENDING");
-	}
+	
 
 	private List<RefundRequestEntity> ensureRefundRequestsForTransaction(Transaction tx) {
 		List<RefundRequestEntity> results = new ArrayList<>();
@@ -420,8 +408,7 @@ public class AdminService {
 			return null;
 		}
 
-		if (refundRequestRepository.existsByTransactionItemTransactionItemIdAndStatusIn(item.getTransactionItemId(),
-				Set.of("PENDING"))) {
+		if (refundRequestRepository.existsByTransactionItemTransactionItemIdAndStatusIn(item.getTransactionItemId(), Set.of("PENDING"))) {
 			return refundRequestRepository
 					.findFirstByTransactionItemTransactionItemIdAndStatusOrderByCreatedAtDesc(
 							item.getTransactionItemId(), "PENDING")
@@ -442,20 +429,17 @@ public class AdminService {
 		User student = tx.getUser();
 		Course course = item.getCourse();
 
-		LocalDateTime requestedAt = existing.getRefundRequestedAt() != null ? existing.getRefundRequestedAt() : LocalDateTime.now();
+		LocalDateTime requestedAt = existing.getCreatedAt() != null ? existing.getCreatedAt() : LocalDateTime.now();
 
-		String reason = existing.getRefundReason() != null && !existing.getRefundReason().isBlank() ? existing.getRefundReason()
-				: "Yêu cầu hoàn tiền";
+		String reason = existing.getReason();
 
-		StudentBankAccount defaultBank = student != null
-				? studentBankAccountRepository.findByStudentUserIdAndIsDefaultTrue(student.getUserId()).orElse(null)
-				: null;
+		
 
 		RefundRequestEntity created = RefundRequestEntity.builder().transactionItem(item).course(course)
-				.student(student).studentBankAccount(defaultBank).reason(reason).reasonCode(null)
-				.detailDescription(null).status("PENDING").reviewNote(null).reviewedBy(null).reviewedAt(null)
+				.student(student).nameBank(tx.getNameBank()).accountBank(tx.getAccountBank()).reason(reason).reasonCode(null)
+				.detailDescription(null).status("PENDING").reviewedBy(null).reviewedAt(null)
 				.paidAt(null).purchaseAt(tx.getPaidAt() != null ? tx.getPaidAt() : tx.getCreatedAt())
-				.createdAt(requestedAt).updatedAt(LocalDateTime.now()).build();
+				.createdAt(requestedAt).build();
 
 		return refundRequestRepository.save(created);
 	}
@@ -510,13 +494,15 @@ public class AdminService {
 
 		Course course = rr.getCourse() != null ? rr.getCourse() : item != null ? item.getCourse() : null;
 
-		var bank = rr.getStudentBankAccount();
+//		var bank = rr.getStudentBankAccount();
 
 		User teacher = course != null ? course.getTeacher() : null;
 
 		String reasonCode = rr.getReasonCode();
 
 		String reasonLabel = RefundReasonCode.fromCode(reasonCode).map(RefundReasonCode::getLabel).orElse(null);
+		
+		
 
 		Long remainingSeconds = null;
 
@@ -528,10 +514,9 @@ public class AdminService {
 			remainingSeconds = Math.max(0, RefundPolicyConstants.REFUND_WINDOW_SECONDS - elapsed);
 		}
 
-		BigDecimal amount = item != null && item.getPrice() != null ? item.getPrice()
-				: tx != null ? tx.getTotalAmount() : null;
+		BigDecimal amount = rr.getAmount();
 		String paymenCode = buildPaymentCode(rr.getRefundRequestId());
-		String qrPay = buildSePayQrUrl(paymenCode, amount, bank.getAccountNumber(), bank.getBankName());
+		String qrPay = buildSePayQrUrl(paymenCode, amount, rr.getAccountBank(), rr.getNameBank());
 		return RefundRequestAdminResponse.builder().refundRequestId(rr.getRefundRequestId())
 				.transactionItemId(rr != null ? rr.getTransactionItem().getTransactionItemId() : null)
 				.courseId(course != null ? course.getCourseId() : null)
@@ -543,9 +528,9 @@ public class AdminService {
 				.studentFullName(student != null ? student.getFullName() : null)
 				.studentEmail(student != null ? student.getEmail() : null)
 				.studentPhone(student != null ? student.getPhone() : null)
-				.refundBankName(bank != null ? bank.getBankName() : null)
-				.refundAccountNumber(bank != null ? bank.getAccountNumber() : null)
-				.refundAccountName(bank != null ? bank.getAccountName() : null).amount(amount).reasonCode(reasonCode)
+				.refundBankName(rr.getNameBank())
+				.refundAccountNumber(rr.getAccountBank())
+				.amount(amount).reasonCode(reasonCode)
 				.reasonLabel(reasonLabel).reason(rr.getReason()).detailDescription(rr.getDetailDescription())
 				.status(rr.getStatus()).purchaseAt(rr.getPurchaseAt()).refundDeadlineAt(rr.getRefundDeadlineAt())
 				.remainingSecondsAtRequest(remainingSeconds).progressPercent(rr.getProgressPercent())
@@ -601,7 +586,7 @@ public class AdminService {
 
 		
 		Long refundRequestId = null;
-		StudentBankAccount refundBank = null;
+//		StudentBankAccount refundBank = null;
 
 		RefundRequestEntity latestRefund = findLatestRefundByTransactionId(t.getTransactionId());
 		String refundReason = null;
@@ -609,27 +594,32 @@ public class AdminService {
 		LocalDateTime refundRequestedAt = null;
 		LocalDateTime refundReviewedAt = null;
 		String refundReviewedByUsername =  null;
+		String nameBank = null;
+		String accountBank = null;
 		if (latestRefund != null) {
-			refundReason =  latestRefund.getRefundReason();
-			refundRejectReason = latestRefund.getRefundRejectReason();
-			refundRequestedAt = latestRefund.getRefundRequestedAt();
-			refundReviewedAt = latestRefund.getRefundReviewedAt();
+			refundReason =  latestRefund.getReason();
+			refundRejectReason = latestRefund.getRejectReason();
+			refundRequestedAt = latestRefund.getCreatedAt();
+			refundReviewedAt = latestRefund.getReviewedAt();
 
-			refundReviewedByUsername = latestRefund.getRefundReviewedBy() != null ? latestRefund.getRefundReviewedBy().getUsername()
+			refundReviewedByUsername = latestRefund.getReviewedBy() != null ? latestRefund.getReviewedBy().getUsername()
 					: null;
+			
 
 			refundRequestId = latestRefund.getRefundRequestId();
 			refundReason = latestRefund.getReason();
 			refundRequestedAt = latestRefund.getCreatedAt();
 			refundReviewedAt = latestRefund.getReviewedAt();
-			refundBank = latestRefund.getStudentBankAccount();
+			nameBank = latestRefund.getNameBank();
+			accountBank = latestRefund.getAccountBank();
+//			refundBank = latestRefund.getStudentBankAccount();
 
 			if (latestRefund.getReviewedBy() != null) {
 				refundReviewedByUsername = latestRefund.getReviewedBy().getUsername();
 			}
 
 			if ("REJECTED".equalsIgnoreCase(latestRefund.getStatus())) {
-				refundRejectReason = latestRefund.getReviewNote();
+				refundRejectReason = latestRefund.getRejectReason();
 			}
 
 			Course refundCourse = latestRefund.getCourse();
@@ -657,9 +647,9 @@ public class AdminService {
 
 				.amount(t.getTotalAmount()).status(displayStatus)
 
-				.refundBankName(refundBank != null ? refundBank.getBankName() : null)
-				.refundAccountNumber(refundBank != null ? refundBank.getAccountNumber() : null)
-				.refundAccountName(refundBank != null ? refundBank.getAccountName() : null)
+				.refundBankName(nameBank)
+				.refundAccountNumber(accountBank)
+				
 
 				.refundReason(refundReason).refundRejectReason(refundRejectReason).refundRequestedAt(refundRequestedAt)
 				.refundReviewedAt(refundReviewedAt).refundReviewedByUsername(refundReviewedByUsername)

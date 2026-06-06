@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,5 +32,11 @@ public class CourseReviewController {
 	public ResponseEntity<CourseReviewResponse> themDanhGia(@PathVariable Long courseId,
 			@RequestBody CourseReviewRequest request) {
 		return ResponseEntity.ok(courseReviewService.taoDanhGia(courseId, request));
+	}
+	
+	@PutMapping("/sua-danh-gia/{courseId}/{courseReviewId}")
+	public ResponseEntity<CourseReviewResponse> chinhSuaDanhGia(@PathVariable Long courseId, @PathVariable Long courseReviewId,
+			@RequestBody CourseReviewRequest request) {
+		return ResponseEntity.ok(courseReviewService.updateDanhGia(courseId, courseReviewId, request));
 	}
 }

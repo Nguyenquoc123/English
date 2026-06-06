@@ -31,45 +31,45 @@ public class RefundRequestEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "studentid", nullable = false)
     private User student;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "studentbankaccountid")
-    private StudentBankAccount studentBankAccount;
+    
+    @Column(name = "namebank", nullable = true)
+    private String nameBank;
+    
+    
+    @Column(name = "accountbank", nullable = true)
+    private String accountBank;
 
     @Column(name = "reason", nullable = false, columnDefinition = "NVARCHAR(1000)")
     private String reason;
 
-    @Column(name = "reason_code", length = 50)
+    @Column(name = "reasoncode", length = 50)
     private String reasonCode;
 
-    @Column(name = "detail_description", columnDefinition = "NVARCHAR(2000)")
+    @Column(name = "detaildescription", columnDefinition = "NVARCHAR(2000)")
     private String detailDescription;
 
-    @Column(name = "internal_note", columnDefinition = "NVARCHAR(2000)")
-    private String internalNote;
-
-    @Column(name = "purchase_at")
+    @Column(name = "purchaseat")
     private LocalDateTime purchaseAt;
 
-    @Column(name = "progress_percent", precision = 5, scale = 2)
+    @Column(name = "progresspercent", precision = 5, scale = 2)
     private BigDecimal progressPercent;
+    
+    @Column(name = "amount", precision = 18, scale = 2)
+    private BigDecimal amount;
 
-    @Column(name = "completed_lessons")
+    @Column(name = "completedlessons")
     private Integer completedLessons;
 
-    @Column(name = "total_lessons")
+    @Column(name = "totallessons")
     private Integer totalLessons;
 
-    @Column(name = "refund_deadline_at")
+    @Column(name = "refunddeadlineat")
     private LocalDateTime refundDeadlineAt;
 
     @Column(name = "status", nullable = false, length = 30)
     private String status;
 
-    @Column(name = "reviewnote", columnDefinition = "NVARCHAR(1000)")
-    private String reviewNote;
-
-    @Column(name = "reject_reason", columnDefinition = "NVARCHAR(1000)")
+    @Column(name = "rejectreason", columnDefinition = "NVARCHAR(1000)")
     private String rejectReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -84,23 +84,6 @@ public class RefundRequestEntity {
 
     @Column(name = "createdat", nullable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "updatedat", nullable = false)
-    private LocalDateTime updatedAt;
     
-    @Column(name = "refundreason", columnDefinition = "NVARCHAR(1000)")
-    private String refundReason;
-
-    @Column(name = "refundrequestat")
-    private LocalDateTime refundRequestedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "refundreviewedby")
-    private User refundReviewedBy;
-
-    @Column(name = "refundreviewedat")
-    private LocalDateTime refundReviewedAt;
-
-    @Column(name = "refundrejectreason", columnDefinition = "NVARCHAR(1000)")
-    private String refundRejectReason;
+ 
 }

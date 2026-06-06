@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "../courselist/DSKhoaHoc.css";
 import { getFileUrl } from "../../utils/fileurl.js";
 import Page from "../../compenents/phantrang/page.jsx";
@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 
 function DSKhoaHoc() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [keyword, setKeyword] = useState("");
   const [levelId, setLevelId] = useState("");
@@ -24,8 +25,23 @@ function DSKhoaHoc() {
 
   useEffect(() => {
     loadLevels();
-    loadCourses(0);
   }, []);
+
+  useEffect(() => {
+    const urlKeyword = searchParams.get("keyword") || "";
+    const urlLevelId = searchParams.get("levelId") || "";
+    const urlPage = Number(searchParams.get("page") || 0);
+
+    setKeyword(urlKeyword);
+    setLevelId(urlLevelId);
+    setPage(urlPage);
+
+    loadCourses({
+      pageValue: urlPage,
+      keywordValue: urlKeyword,
+      levelIdValue: urlLevelId,
+    });
+  }, [searchParams]);
 
   const loadLevels = async () => {
     try {
@@ -49,19 +65,23 @@ function DSKhoaHoc() {
     }
   };
 
-  const loadCourses = async (pageValue = page) => {
+  const loadCourses = async ({
+    pageValue = 0,
+    keywordValue = "",
+    levelIdValue = "",
+  } = {}) => {
     try {
       setLoading(true);
       setError("");
 
       const params = new URLSearchParams();
 
-      if (keyword.trim()) {
-        params.append("keyword", keyword.trim());
+      if (keywordValue.trim()) {
+        params.append("keyword", keywordValue.trim());
       }
 
-      if (levelId) {
-        params.append("levelId", levelId);
+      if (levelIdValue) {
+        params.append("levelId", levelIdValue);
       }
 
       params.append("page", pageValue);
@@ -83,8 +103,8 @@ function DSKhoaHoc() {
       }
 
       if (!response.ok) {
-        // setError(data?.message || "Không thể tải danh sách khóa học");
-        toast.error(data?.message || "Không thể tải danh sách khóa học")
+        toast.error(data?.message || "Không thể tải danh sách khóa học");
+        setCourses([]);
         return;
       }
 
@@ -93,32 +113,54 @@ function DSKhoaHoc() {
       setTotalPages(data.totalPages || 0);
     } catch (err) {
       console.error(err);
-      // setError("Lỗi kết nối server.");
-      toast.error("Lỗi kết nối server.")
+      toast.error("Lỗi kết nối server.");
+      setCourses([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const updateUrlParams = ({ keywordValue, levelIdValue, pageValue }) => {
+    const params = new URLSearchParams();
+
+    if (keywordValue?.trim()) {
+      params.set("keyword", keywordValue.trim());
+    }
+
+    if (levelIdValue) {
+      params.set("levelId", levelIdValue);
+    }
+
+    if (pageValue && Number(pageValue) > 0) {
+      params.set("page", pageValue);
+    }
+
+    setSearchParams(params);
+  };
+
   const handlePageChange = (newPage) => {
-    setPage(newPage);
-    loadCourses(newPage);
+    updateUrlParams({
+      keywordValue: keyword,
+      levelIdValue: levelId,
+      pageValue: newPage,
+    });
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(0);
-    loadCourses(0);
+
+    updateUrlParams({
+      keywordValue: keyword,
+      levelIdValue: levelId,
+      pageValue: 0,
+    });
   };
 
   const handleReset = () => {
     setKeyword("");
     setLevelId("");
     setPage(0);
-
-    setTimeout(() => {
-      loadCourses(0);
-    }, 0);
+    setSearchParams({});
   };
 
   const formatPrice = (price) => {
@@ -127,11 +169,6 @@ function DSKhoaHoc() {
     }
 
     return Number(price).toLocaleString("vi-VN") + " VNĐ";
-  };
-
-  const formatNumber = (number) => {
-    if (!number) return "0";
-    return Number(number).toLocaleString("vi-VN");
   };
 
   const handleViewDetail = (courseId) => {
@@ -165,7 +202,7 @@ function DSKhoaHoc() {
                 </option>
 
                 {levels.map((level) => (
-                  <option key={level.levelId} value={level.levelId}>
+                  <option key={level.levelId} value={String(level.levelId)}>
                     {level.levelName}
                   </option>
                 ))}
@@ -200,47 +237,52 @@ function DSKhoaHoc() {
                     src={getFileUrl(course.thumbnailUrl)}
                     alt={course.title}
                   />
-
-
                 </div>
 
                 <div className="course-body">
                   <div className="teacher-info">
-                    <img src={getFileUrl(course.avatarUrl)} alt={course.teacherName || "Giáo viên"} />
+                    <img
+                      src={getFileUrl(course.avatarUrl)}
+                      alt={course.teacherName || "Giáo viên"}
+                    />
                     <span>{course.teacherName || "Chưa có giáo viên"}</span>
                   </div>
 
                   <div className="course-tags">
-                    <span className="level-tag">{course.levelName || "Chưa có cấp độ"}</span>
+                    <span className="level-tag">
+                      {course.levelName || "Chưa có cấp độ"}
+                    </span>
 
                     {course.accessType === "FREE" ||
-                      course.courseType === "FREE" ||
-                      Number(course.price) === 0 ? (
+                    course.courseType === "FREE" ||
+                    Number(course.price) === 0 ? (
                       <span className="free-tag">FREE</span>
                     ) : (
                       <span className="paid-tag">PAID</span>
                     )}
                   </div>
 
-                  <h2 title={course.title}>{course.title || "Chưa có tiêu đề"}</h2>
+                  <h2 title={course.title}>
+                    {course.title || "Chưa có tiêu đề"}
+                  </h2>
 
-                  <p className="course-description" title={course.shortDescription}>
+                  <p
+                    className="course-description"
+                    title={course.shortDescription}
+                  >
                     {course.shortDescription || "Chưa có mô tả ngắn."}
                   </p>
 
                   <div className="course-price-row">
                     <span
                       className={
-                        Number(course.price) === 0 ? "course-price free" : "course-price"
+                        Number(course.price) === 0
+                          ? "course-price free"
+                          : "course-price"
                       }
                     >
                       {formatPrice(course.price)}
                     </span>
-
-                    {/* <div className="course-meta">
-                      <span>👥 {formatNumber(course.totalStudents)}</span>
-                      <span>⭐ {course.rating || 0}</span>
-                    </div> */}
                   </div>
 
                   <button

@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "withdrawals")
@@ -60,5 +62,7 @@ public class Withdrawal {
     private String paymentcode;
     
     
+    @OneToMany(mappedBy = "withdrawal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WithdrawalEarning> withdrawalEarnings = new ArrayList<>();
     
 }

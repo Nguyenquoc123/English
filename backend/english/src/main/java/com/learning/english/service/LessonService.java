@@ -331,7 +331,7 @@ public class LessonService {
 	            } else {
 	                locked = true;
 	                if(enrollment != null && !enrollment.getHasCourseAccess())
-	                	lockReason = "Quyền học của bạn đang bị khóa";
+	                	lockReason = "Quyền học của bạn đang bị khóa vì bạn đang có yêu cầu hoàn tiền!";
 	                else
 	                	lockReason = "Bạn cần mua khóa học";
 	            }

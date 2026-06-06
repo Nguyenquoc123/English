@@ -96,9 +96,9 @@ public class CourseService {
 	public Page<CourseResponse> dsAllKhoaHocPublic(String keyword, Long levelId, int page, int size) {
 		keyword = normalize(keyword);
 
-		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Pageable pageable = PageRequest.of(page, size);
 
-		return courseRepository.searchCourses(null, "Published", keyword, levelId, pageable)
+		return courseRepository.dsKhoaHocNoiBat(keyword, levelId, pageable)
 				.map(courseMapper::toCourseResponse);
 	}
 	

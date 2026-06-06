@@ -51,6 +51,13 @@ function StudentCourseDetail() {
     const [attemptHistories, setAttemptHistories] = useState([]);
     const [loadingAttemptHistory, setLoadingAttemptHistory] = useState(false);
     const [loadingExamDetail, setLoadingExamDetail] = useState(false);
+    const currentUserId = localStorage.getItem("userId");
+    const [editingReviewId, setEditingReviewId] = useState(null);
+    const [openReviewMenuId, setOpenReviewMenuId] = useState(null);
+    
+    const [editRating, setEditRating] = useState("5");
+    const [editComment, setEditComment] = useState("");
+    const [savingReview, setSavingReview] = useState(false);
 
     useEffect(() => {
         loadCourseDetail();
@@ -458,6 +465,89 @@ function StudentCourseDetail() {
             alert("Lỗi hệ thống khi gửi đánh giá");
         } finally {
             setSubmittingReview(false);
+        }
+    };
+
+
+    const handleOpenEditReview = (review) => {
+        setOpenReviewMenuId(null);
+        setEditingReviewId(review.reviewId);
+        setEditRating(String(review.rating || 5));
+        setEditComment(review.comment || "");
+    };
+
+    const handleCancelEditReview = () => {
+        setEditingReviewId(null);
+        setEditRating("5");
+        setEditComment("");
+    };
+
+    const handleUpdateReview = async (review) => {
+        const isMyReview = Number(review.userId) === Number(currentUserId);
+
+        if (!isMyReview) {
+            toast.error("Bạn chỉ có thể sửa đánh giá của mình.");
+            return;
+        }
+
+        if (!editComment.trim()) {
+            toast.error("Vui lòng nhập nội dung đánh giá.");
+            return;
+        }
+
+        try {
+            setSavingReview(true);
+
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                `http://localhost:8080/danh-gia/sua-danh-gia/${courseId}/${review.reviewId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify({
+                        rating: Number(editRating),
+                        comment: editComment.trim(),
+                    }),
+                }
+            );
+
+            let data = null;
+
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+
+            if (!response.ok) {
+                toast.error(data?.message || "Không thể cập nhật đánh giá.");
+                return;
+            }
+
+            toast.success("Cập nhật đánh giá thành công.");
+
+            setReviews((prev) =>
+                prev.map((item) =>
+                    item.reviewId === review.reviewId
+                        ? {
+                            ...item,
+                            rating: Number(editRating),
+                            comment: editComment.trim(),
+                        }
+                        : item
+                )
+            );
+
+            handleCancelEditReview();
+        } catch (err) {
+            console.error(err);
+            toast.error("Lỗi kết nối server.");
+        } finally {
+            setSavingReview(false);
         }
     };
 
@@ -1544,7 +1634,7 @@ function StudentCourseDetail() {
                                         );
                                     })}
 
-                                    {course?.isEnrolled && (
+                                    {course?.isEnrolled && course?.courseType === 'PAID' && (
                                         <CertificateSection
                                             courseId={Number(courseId)}
                                             courseTitle={course?.title}
@@ -1662,32 +1752,122 @@ function StudentCourseDetail() {
                                         Đang tải đánh giá...
                                     </div>
                                 ) : reviews.length > 0 ? (
-                                    reviews.map((review) => (
-                                        <div className="review-shop-item" key={review.reviewId}>
-                                            <div className="review-avatar">
-                                                {review.fullName?.charAt(0)?.toUpperCase() || "U"}
-                                            </div>
+                                    reviews.map((review) => {
+                                        const isMyReview = Number(review.userId) === Number(currentUserId);
+                                        const isEditing = editingReviewId === review.reviewId;
 
-                                            <div className="review-item-body">
-                                                <div className="review-item-top">
-                                                    <div>
-                                                        <h6>{review.fullName || "Học viên"}</h6>
+                                        return (
+                                            <div className="review-shop-item" key={review.reviewId}>
+                                                <div className="review-avatar">
+                                                    {review.fullName?.charAt(0)?.toUpperCase() || "U"}
+                                                </div>
 
-                                                        <div className="review-stars">
-                                                            {"★★★★★".slice(0, Number(review.rating || 0))}
-                                                            <span>
-                                                                {"★★★★★".slice(Number(review.rating || 0))}
-                                                            </span>
+                                                <div className="review-item-body">
+                                                    <div className="review-item-top">
+                                                        <div>
+                                                            <h6>{review.fullName || "Học viên"}</h6>
+
+                                                            {!isEditing && (
+                                                                <div className="review-stars">
+                                                                    {"★★★★★".slice(0, Number(review.rating || 0))}
+                                                                    <span>
+                                                                        {"★★★★★".slice(Number(review.rating || 0))}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="review-top-right">
+                                                            <small>{review.createdAt || "--"}</small>
+
+                                                            {isMyReview && !isEditing && (
+                                                                <div className="review-menu-wrap">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="review-menu-btn"
+                                                                        onClick={() =>
+                                                                            setOpenReviewMenuId(
+                                                                                openReviewMenuId === review.reviewId
+                                                                                    ? null
+                                                                                    : review.reviewId
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <i className="bi bi-three-dots"></i>
+                                                                    </button>
+
+                                                                    {openReviewMenuId === review.reviewId && (
+                                                                        <div className="review-menu-dropdown">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleOpenEditReview(review)}
+                                                                            >
+                                                                                <i className="bi bi-pencil-square"></i>
+                                                                                Sửa đánh giá
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
-                                                    <small>{review.createdAt || "--"}</small>
-                                                </div>
+                                                    {isEditing ? (
+                                                        <div className="review-edit-box">
+                                                            <div className="review-form-group">
+                                                                <label>Số sao</label>
 
-                                                <p>{review.comment || "Không có nội dung đánh giá."}</p>
+                                                                <select
+                                                                    value={editRating}
+                                                                    onChange={(e) => setEditRating(e.target.value)}
+                                                                    disabled={!isMyReview || savingReview}
+                                                                >
+                                                                    <option value="5">★★★★★ - Rất tốt</option>
+                                                                    <option value="4">★★★★☆ - Tốt</option>
+                                                                    <option value="3">★★★☆☆ - Bình thường</option>
+                                                                    <option value="2">★★☆☆☆ - Chưa tốt</option>
+                                                                    <option value="1">★☆☆☆☆ - Tệ</option>
+                                                                </select>
+                                                            </div>
+
+                                                            <div className="review-form-group">
+                                                                <label>Nhận xét</label>
+
+                                                                <textarea
+                                                                    rows="3"
+                                                                    value={editComment}
+                                                                    onChange={(e) => setEditComment(e.target.value)}
+                                                                    disabled={!isMyReview || savingReview}
+                                                                ></textarea>
+                                                            </div>
+
+                                                            <div className="review-edit-actions">
+                                                                <button
+                                                                    type="button"
+                                                                    className="review-save-btn"
+                                                                    disabled={!isMyReview || savingReview}
+                                                                    onClick={() => handleUpdateReview(review)}
+                                                                >
+                                                                    {savingReview ? "Đang lưu..." : "Lưu"}
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="review-cancel-btn"
+                                                                    disabled={savingReview}
+                                                                    onClick={handleCancelEditReview}
+                                                                >
+                                                                    Hủy
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <p>{review.comment || "Không có nội dung đánh giá."}</p>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 ) : (
                                     <div className="review-empty compact">
                                         <i className="bi bi-chat-dots"></i>
@@ -2036,185 +2216,185 @@ function StudentCourseDetail() {
                                 )}
 
                                 {previewModal.type === "exam" && (
-    <div>
-        {loadingExamDetail || !previewModal.data ? (
-            <div className="text-center py-4">
-                <div className="spinner-border text-primary mb-3" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-                <div className="text-muted">Đang tải thông tin bài thi...</div>
-            </div>
-        ) : (
-            <>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <span className="badge text-bg-warning">
-                        Bài thi
-                    </span>
-
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={lichSuThi}
-                    >
-                        <i className="bi bi-clock-history me-1"></i>
-                        Lịch sử thi
-                    </button>
-                </div>
-
-                <h4 className="fw-bold mb-2">
-                    {previewModal.data.title ||
-                        previewModal.data.examTitle ||
-                        previewModal.data.name ||
-                        "Bài thi"}
-                </h4>
-
-                <div className="text-muted mb-4">
-                    {previewModal.data.description ||
-                        "Bạn hãy kiểm tra thông tin bài thi trước khi bắt đầu."}
-                </div>
-
-                <div className="row g-3 mb-3">
-                    <div className="col-md-6">
-                        <div className="border rounded-3 p-3 h-100">
-                            <div className="text-muted small">Số câu hỏi</div>
-                            <strong>{previewModal.data.questionCount || 0} câu hỏi</strong>
-                        </div>
-                    </div>
-
-                    <div className="col-md-6">
-                        <div className="border rounded-3 p-3 h-100">
-                            <div className="text-muted small">Số lần thi</div>
-                            <strong>{previewModal.data.attemptCount || 0} lần</strong>
-                        </div>
-                    </div>
-
-                    <div className="col-md-6">
-                        <div className="border rounded-3 p-3 h-100">
-                            <div className="text-muted small">Điểm cao nhất</div>
-                            <strong>{formatScore(previewModal.data.bestScore)}</strong>
-                        </div>
-                    </div>
-
-                    <div className="col-md-6">
-                        <div className="border rounded-3 p-3 h-100">
-                            <div className="text-muted small">Lần thi gần nhất</div>
-                            <strong>{formatDateTime(previewModal.data.lastSubmittedAt)}</strong>
-                        </div>
-                    </div>
-
-                    {(previewModal.data.durationMinutes || previewModal.data.duration) && (
-                        <div className="col-md-6">
-                            <div className="border rounded-3 p-3 h-100">
-                                <div className="text-muted small">Thời gian làm bài</div>
-                                <strong>
-                                    {previewModal.data.durationMinutes ||
-                                        previewModal.data.duration} phút
-                                </strong>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {showAttemptHistory && (
-                    <div className="border rounded-3 p-3 mb-3">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h6 className="fw-bold mb-0">
-                                <i className="bi bi-clock-history me-1"></i>
-                                Lịch sử thi
-                            </h6>
-
-                            <button
-                                type="button"
-                                className="btn-close"
-                                aria-label="Close"
-                                onClick={() => setShowAttemptHistory(false)}
-                            ></button>
-                        </div>
-
-                        {loadingAttemptHistory ? (
-                            <div className="text-muted small">
-                                Đang tải lịch sử thi...
-                            </div>
-                        ) : attemptHistories.length === 0 ? (
-                            <div className="text-muted small">
-                                Chưa có lần thi nào.
-                            </div>
-                        ) : (
-                            <div className="table-responsive">
-                                <table className="table table-sm table-bordered align-middle mb-0">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th style={{ width: "60px" }}>#</th>
-                                            <th>Bắt đầu</th>
-                                            <th>Nộp bài</th>
-                                            <th>Điểm</th>
-                                            <th>Số câu đúng</th>
-                                            <th className="text-center">Hành động</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {attemptHistories.map((attempt, index) => (
-                                            <tr key={attempt.attemptId || index}>
-                                                <td>{index + 1}</td>
-
-                                                <td>{formatDateTime(attempt.startedAt)}</td>
-
-                                                <td>{formatDateTime(attempt.submittedAt)}</td>
-
-                                                <td>
-                                                    <strong>{formatScore(attempt.score)}</strong>
-                                                </td>
-
-                                                <td>
-                                                    <span className="badge text-bg-light">
-                                                        {attempt.totalCorrect || "0"}
+                                    <div>
+                                        {loadingExamDetail || !previewModal.data ? (
+                                            <div className="text-center py-4">
+                                                <div className="spinner-border text-primary mb-3" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                                <div className="text-muted">Đang tải thông tin bài thi...</div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                    <span className="badge text-bg-warning">
+                                                        Bài thi
                                                     </span>
-                                                </td>
 
-                                                <td className="text-center">
                                                     <button
                                                         type="button"
-                                                        className="btn btn-primary btn-sm"
-                                                        onClick={() =>
-                                                            handleViewDetail(attempt.attemptId)
-                                                        }
+                                                        className="btn btn-outline-secondary btn-sm"
+                                                        onClick={lichSuThi}
                                                     >
-                                                        <i className="bi bi-eye me-1"></i>
-                                                        Xem
+                                                        <i className="bi bi-clock-history me-1"></i>
+                                                        Lịch sử thi
                                                     </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                )}
+                                                </div>
 
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                        const examId = previewModal.data.examId || previewModal.data.id;
+                                                <h4 className="fw-bold mb-2">
+                                                    {previewModal.data.title ||
+                                                        previewModal.data.examTitle ||
+                                                        previewModal.data.name ||
+                                                        "Bài thi"}
+                                                </h4>
 
-                        setPreviewModal({
-                            open: false,
-                            type: "",
-                            data: null,
-                        });
+                                                <div className="text-muted mb-4">
+                                                    {previewModal.data.description ||
+                                                        "Bạn hãy kiểm tra thông tin bài thi trước khi bắt đầu."}
+                                                </div>
 
-                        navigate(`/exams/${examId}`);
-                    }}
-                >
-                    <i className="bi bi-play-circle me-1"></i>
-                    Bắt đầu làm bài
-                </button>
-            </>
-        )}
-    </div>
-)}
+                                                <div className="row g-3 mb-3">
+                                                    <div className="col-md-6">
+                                                        <div className="border rounded-3 p-3 h-100">
+                                                            <div className="text-muted small">Số câu hỏi</div>
+                                                            <strong>{previewModal.data.questionCount || 0} câu hỏi</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-md-6">
+                                                        <div className="border rounded-3 p-3 h-100">
+                                                            <div className="text-muted small">Số lần thi</div>
+                                                            <strong>{previewModal.data.attemptCount || 0} lần</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-md-6">
+                                                        <div className="border rounded-3 p-3 h-100">
+                                                            <div className="text-muted small">Điểm cao nhất</div>
+                                                            <strong>{formatScore(previewModal.data.bestScore)}</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-md-6">
+                                                        <div className="border rounded-3 p-3 h-100">
+                                                            <div className="text-muted small">Lần thi gần nhất</div>
+                                                            <strong>{formatDateTime(previewModal.data.lastSubmittedAt)}</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    {(previewModal.data.durationMinutes || previewModal.data.duration) && (
+                                                        <div className="col-md-6">
+                                                            <div className="border rounded-3 p-3 h-100">
+                                                                <div className="text-muted small">Thời gian làm bài</div>
+                                                                <strong>
+                                                                    {previewModal.data.durationMinutes ||
+                                                                        previewModal.data.duration} phút
+                                                                </strong>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {showAttemptHistory && (
+                                                    <div className="border rounded-3 p-3 mb-3">
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 className="fw-bold mb-0">
+                                                                <i className="bi bi-clock-history me-1"></i>
+                                                                Lịch sử thi
+                                                            </h6>
+
+                                                            <button
+                                                                type="button"
+                                                                className="btn-close"
+                                                                aria-label="Close"
+                                                                onClick={() => setShowAttemptHistory(false)}
+                                                            ></button>
+                                                        </div>
+
+                                                        {loadingAttemptHistory ? (
+                                                            <div className="text-muted small">
+                                                                Đang tải lịch sử thi...
+                                                            </div>
+                                                        ) : attemptHistories.length === 0 ? (
+                                                            <div className="text-muted small">
+                                                                Chưa có lần thi nào.
+                                                            </div>
+                                                        ) : (
+                                                            <div className="table-responsive">
+                                                                <table className="table table-sm table-bordered align-middle mb-0">
+                                                                    <thead className="table-light">
+                                                                        <tr>
+                                                                            <th style={{ width: "60px" }}>#</th>
+                                                                            <th>Bắt đầu</th>
+                                                                            <th>Nộp bài</th>
+                                                                            <th>Điểm</th>
+                                                                            <th>Số câu đúng</th>
+                                                                            <th className="text-center">Hành động</th>
+                                                                        </tr>
+                                                                    </thead>
+
+                                                                    <tbody>
+                                                                        {attemptHistories.map((attempt, index) => (
+                                                                            <tr key={attempt.attemptId || index}>
+                                                                                <td>{index + 1}</td>
+
+                                                                                <td>{formatDateTime(attempt.startedAt)}</td>
+
+                                                                                <td>{formatDateTime(attempt.submittedAt)}</td>
+
+                                                                                <td>
+                                                                                    <strong>{formatScore(attempt.score)}</strong>
+                                                                                </td>
+
+                                                                                <td>
+                                                                                    <span className="badge text-bg-light">
+                                                                                        {attempt.totalCorrect || "0"}
+                                                                                    </span>
+                                                                                </td>
+
+                                                                                <td className="text-center">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className="btn btn-primary btn-sm"
+                                                                                        onClick={() =>
+                                                                                            handleViewDetail(attempt.attemptId)
+                                                                                        }
+                                                                                    >
+                                                                                        <i className="bi bi-eye me-1"></i>
+                                                                                        Xem
+                                                                                    </button>
+                                                                                </td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    onClick={() => {
+                                                        const examId = previewModal.data.examId || previewModal.data.id;
+
+                                                        setPreviewModal({
+                                                            open: false,
+                                                            type: "",
+                                                            data: null,
+                                                        });
+
+                                                        navigate(`/exams/${examId}`);
+                                                    }}
+                                                >
+                                                    <i className="bi bi-play-circle me-1"></i>
+                                                    Bắt đầu làm bài
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
 
 
                             </div>

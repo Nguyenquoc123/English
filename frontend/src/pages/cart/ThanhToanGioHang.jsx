@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getFileUrl } from "../../utils/fileurl";
 import "./ThanhToanGioHang.css";
+import { toast } from "react-toastify";
 
 function ThanhToanGioHang() {
     const navigate = useNavigate();
@@ -18,6 +19,8 @@ function ThanhToanGioHang() {
     const [paymentInfo, setPaymentInfo] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+    const [sseMessage, setSseMessage] = useState("");
+
     const getToken = () => {
         return localStorage.getItem("english_token") || localStorage.getItem("token");
     };
@@ -25,6 +28,50 @@ function ThanhToanGioHang() {
     useEffect(() => {
         loadCartItems();
     }, []);
+
+    useEffect(() => {
+            const eventSource = new EventSource("http://localhost:8080/webhooks/sepay/sse");
+    
+            eventSource.addEventListener("CONNECTED", (event) => {
+                console.log("Admin SSE connected:", event.data);
+            });
+    
+            eventSource.addEventListener("PAID", (event) => {
+                const data = JSON.parse(event.data);
+    
+                setSseMessage(data.message || "Đã chuyển tiền cho giáo viên thành công.");
+    
+                if (paymentInfo?.paymentCode === data.transactionCode) {
+                    setShowPaymentModal(null);
+                }
+                console.log(data);
+                console.log(paymentInfo);
+    
+                toast.success(data.message)
+                window.dispatchEvent(new Event('cartChanged'));
+                setTimeout(() => {
+                    navigate(`/khoa-hoc-da-mua`);
+                }, 1500);
+    
+                // loadData();
+            });
+    
+            eventSource.addEventListener("FAILED", (event) => {
+                const data = JSON.parse(event.data);
+    
+                setSseMessage(data.message || "Chuyển tiền thất bại hoặc số tiền không khớp.");
+    
+                // loadData();
+            });
+    
+            eventSource.onerror = (error) => {
+                console.error("SSE error:", error);
+            };
+    
+            return () => {
+                eventSource.close();
+            };
+        }, [paymentInfo]);
 
     const loadCartItems = async () => {
         try {

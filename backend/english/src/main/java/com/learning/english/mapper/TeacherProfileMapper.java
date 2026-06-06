@@ -14,6 +14,7 @@ public interface TeacherProfileMapper {
     @Mapping(source = "user.email", target = "email")
     @Mapping(source = "user.avatarUrl", target = "avatarUrl")
     @Mapping(source = "user.phone", target = "phone")
+    @Mapping(source = "user.username", target = "username")
     TeacherProfileResponse toTeacherProfileResponse(TeacherProfile teacherProfile);
 
     default TeacherProfileResponse toResponse(TeacherProfile teacherProfile) {

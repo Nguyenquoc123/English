@@ -46,6 +46,15 @@ export const approveWithdrawal = (withdrawnId) => {
   });
 };
 
+export const rejectWithdrawal = (withdrawnId, rejectReason) => {
+  return axiosClient.put("/withdraw/rejected", null, {
+    params: {
+      withdrawnId,
+      rejectReason,
+    },
+  });
+};
+
 export const reviewWithdrawal = (withdrawalId, status, rejectReason) =>
   axiosClient.put(`/admin/withdrawals/${withdrawalId}/review`, { status, rejectReason });
 

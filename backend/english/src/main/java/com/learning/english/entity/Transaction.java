@@ -43,4 +43,11 @@ public class Transaction {
 
     @Column(name = "updatedat", nullable = false)
     private LocalDateTime updatedAt;
+    
+    @Column(name = "namebank", nullable = true)
+    private String nameBank;
+    
+    
+    @Column(name = "accountbank", nullable = true)
+    private String accountBank;
 }

@@ -126,10 +126,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/lich-su-lam-bai/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAuthority("SCOPE_student")
+                .requestMatchers(HttpMethod.PUT, "/danh-gia/sua-danh-gia/*").hasAuthority("SCOPE_student")
                 
                 .requestMatchers(HttpMethod.POST, "/chatbot/ask", "/chatbot/recommend-courses", "/chatbot/history", "/chatbot/course-history").hasAuthority("SCOPE_student")
                 
-                
+                .requestMatchers(HttpMethod.GET, "/refunds/history").hasAuthority("SCOPE_student")
                 
                 .requestMatchers(HttpMethod.POST, "/gio-hang/them/*", "/gio-hang/xoa/*").hasAuthority("SCOPE_student")
                 .requestMatchers(HttpMethod.GET, "/gio-hang/khoa-hoc").hasAuthority("SCOPE_student")
@@ -144,7 +145,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/teacher/dashboard/**", "/teacher/earnings", "/teacher/withdrawals").hasAuthority("SCOPE_teacher")
                 .requestMatchers(HttpMethod.POST, "/withdraw/create").hasAuthority("SCOPE_teacher")
                 
-                .requestMatchers(HttpMethod.POST, "/withdraw/approve").hasAuthority("SCOPE_admin")
+                .requestMatchers(HttpMethod.PUT, "/withdraw/approve", "/withdraw/rejected").hasAuthority("SCOPE_admin")
                 
                 
                 .requestMatchers(HttpMethod.POST, "/danh-gia/them-danh-gia/*").hasAnyAuthority("SCOPE_student", "SCOPE_teacher")

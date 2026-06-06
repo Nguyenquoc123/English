@@ -42,6 +42,7 @@ public class SePayWebhookService {
 	private final WithdrawalRepository withdrawalRepository;
 	private final CartItemRepository cartItemRepository;
 	private final RefundRequestRepository refundRequestRepository;
+	private final WithdrawalService withdrawalService;
 
 	private final SseService sseService;
 
@@ -95,6 +96,8 @@ public class SePayWebhookService {
 		transaction.setStatus("SUCCESS");
 		transaction.setPaidAt(now);
 		transaction.setUpdatedAt(now);
+		transaction.setNameBank(request.getGateway());
+		transaction.setAccountBank(request.getAccountNumber());;
 
 		Transaction savedTransaction = transactionRepository.save(transaction);
 		Double fee = systemSettingService.getPhiNenTang();
@@ -150,10 +153,7 @@ public class SePayWebhookService {
 
 		LocalDateTime now = LocalDateTime.now();
 
-		withdrawal.setStatus("PAID");
-		withdrawal.setPaidAt(now);
-
-		withdrawalRepository.save(withdrawal);
+		withdrawal = withdrawalService.markWithdrawalPaid(withdrawnId);
 
 		sseService.sendWithdrawalPaid(
 				NotificationSseResponse.builder().amount(paidAmount).message("Thanh toán thành công").paidAt(now)
@@ -192,7 +192,7 @@ public class SePayWebhookService {
 		BigDecimal paidAmount = BigDecimal
 				.valueOf(request.getTransferAmount() != null ? request.getTransferAmount() : 0);
 
-		if (paidAmount.compareTo(transactionItem.getPrice()) < 0) {
+		if (paidAmount.compareTo(refundRequestEntity.getAmount()) < 0) {
 			refundRequestEntity.setStatus("FAILED");
 			refundRequestRepository.save(refundRequestEntity);
 			return;

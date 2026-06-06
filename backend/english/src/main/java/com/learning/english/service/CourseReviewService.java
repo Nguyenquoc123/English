@@ -81,6 +81,29 @@ public class CourseReviewService {
         return courseReviewMapper.toCourseReviewResponse(courseReview);
 	}
 	
+	public CourseReviewResponse updateDanhGia(Long courseId, Long courseReviewId, CourseReviewRequest request){
+		
+		CourseReview courseReview = courseReviewRepository.findById(courseReviewId).orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+		
+		User user = getCurrentUser();
+		if(courseReview.getUser().getUserId() != user.getUserId())
+			throw new RuntimeException("Đánh giá này không phải của bạn!");
+		Enrollment enrollment = enrollmentRepository.findByUserUserIdAndCourseCourseId(user.getUserId(), courseId).orElse(null);
+		
+        if (enrollment == null) {
+            throw new RuntimeException("Bạn cần mua khóa học trước khi đánh giá.");
+        }
+        else if(!enrollment.getHasCourseAccess())
+        	throw new RuntimeException("Không thể chỉnh sủa đánh giá vì quyền học của bạn đang bị khóa!.");
+        
+        courseReview.setRating(request.getRating());
+        courseReview.setComment(request.getComment());
+        
+        courseReview = courseReviewRepository.save(courseReview);
+        
+        return courseReviewMapper.toCourseReviewResponse(courseReview);
+	}
+	
 	private User getCurrentUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
